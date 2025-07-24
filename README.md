@@ -62,6 +62,10 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/m
 This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
 
 ### Deployment
+note:คนที่อยากเอาไฟล์client ต้องโคลนตามนี้
+git clone https://github.com/nnimkanSong/Project_Webapp.git
+cd Project_Webapp
+git submodule update --init --recursive
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
 
