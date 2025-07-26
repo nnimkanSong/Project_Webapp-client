@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import Nav from './component/nav';
+import Nav from './component/Nav';
 import './css/layout.css'
 const Layout = () => {
   return (
