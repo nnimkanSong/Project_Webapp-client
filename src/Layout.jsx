@@ -4,7 +4,7 @@ import Nav from './component/nav';
 import './css/layout.css'
 const Layout = () => {
   return (
-    <div>
+    <div className='bg'>
       <header>
         <Nav/>
       </header>
