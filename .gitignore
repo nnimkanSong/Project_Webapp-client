@@ -7,18 +7,40 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Dependency directories
+node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+.vite/
+
+# Local env files
+.env
+.env.*
+
+# System files
 *.local
+.DS_Store
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Optional: skip coverage report if using testing tools
+coverage/
+
+# Optional: skip SQLite or local DB
+*.sqlite
+*.db
+
+# Optional: skip logs from PM2 or other process managers
+pids/
+*.pid
+*.seed

@@ -1,11 +1,21 @@
-import React from 'react'
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import Layout from './layout';
+import Home from './Home';
+import Login from './page/Login';
 
-function App() {
+const App = () => {
   return (
-    <div>
-      <h1>sdfasffas</h1>
-    </div>
-  ) 
-}
+    <Routes>
+      {/* Route ครอบ Layout */}
+      <Route element={<Layout />}>
+        <Route path="/" element={<Home />} />
+      </Route>
 
-export default App
+      {/* Route ไม่ใช้ Layout */}
+      <Route path="/login" element={<Login />} />
+    </Routes>
+  );
+};
+
+export default App;
