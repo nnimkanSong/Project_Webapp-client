@@ -1,8 +1,10 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Layout from './layout';
+import Layout from './Layout';
 import Home from './Home';
 import Login from './page/Login';
+import Create_acount from './page/Create_acount';
+import Change_password from './page/Change_password';
 
 const App = () => {
   return (
@@ -14,6 +16,8 @@ const App = () => {
 
       {/* Route ไม่ใช้ Layout */}
       <Route path="/login" element={<Login />} />
+      <Route path="/create" element={<Create_acount />} />
+      <Route path="/change" element={<Change_password />} />
     </Routes>
   );
 };
