@@ -15,6 +15,7 @@ const App = () => {
       </Route>
 
       {/* Route ไม่ใช้ Layout */}
+      <Route path="/home" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/create" element={<Create_acount />} />
       <Route path="/change" element={<Change_password />} />

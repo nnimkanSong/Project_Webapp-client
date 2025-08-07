@@ -9,7 +9,7 @@ body {
 
 }
 
-.change-bg {
+.create-bg {
     background-color: #0E141C;
     display: flex;
     flex-direction: column;
@@ -19,7 +19,7 @@ body {
     height: 100vh;
 }
 
-.ch-rgb {
+.cr-rgb {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -28,7 +28,7 @@ body {
 
 }
 
-.ch-rgb {
+.cr-rgb {
     border: 2px solid #ffff;
     border: 2px solid transparent;
     border-radius: 20px;
@@ -36,7 +36,7 @@ body {
     animation: rgb 3s linear infinite;
 }
 
-@keyframes ch-rgb {
+@keyframes cr-rgb {
     0% {
         box-shadow: 0 0 10px white;
     }
@@ -58,19 +58,22 @@ body {
     }
 }
 
-.ch-box {
+.cr-box {
     border: 2px solid white;
     border-radius: 20px;
 }
 
-img {
-    width: 300px;
-    height: auto;
+.cr-logo {
+    img {
+        width: 200px;
+        height: auto;
+    }
+
 }
 
 
 
-.ch-input {
+.cr-input {
     display: grid;
     grid-template-columns: 1fr 65%;
     align-items: center;
@@ -83,17 +86,17 @@ img {
     }
 
 
-    .ch-name {
+    .cr-name {
         color: #ffff;
         font-family: "Ledger", serif;
         font-size: 28px;
         width: max-content;
         display: flex;
         flex-direction: column;
-        gap: 30px;
+        gap: 9px;
     }
 
-    .ch-box-input {
+    .cr-box-input {
         display: flex;
         flex-direction: column;
         align-items: start;
@@ -117,7 +120,7 @@ img {
     }
 }
 
-.ch-btn-end {
+.cr-btn-end {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -131,11 +134,11 @@ img {
         font-size: 28px;
     }
 
-    .ch-btn-done {
+    .cr-btn-done {
         display: flex;
         justify-content: end;
 
-        .ch-done {
+        .cr-done {
             background-color: #8197AC;
             color: #ffff;
             width: 140px;

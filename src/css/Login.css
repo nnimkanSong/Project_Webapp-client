@@ -38,15 +38,15 @@ body {
 
 @keyframes rgb {
     0% {
-        box-shadow: 0 0 10px red;
+        box-shadow: 0 0 10px white;
     }
 
     25% {
-        box-shadow: 0 0 10px yellow;
+        box-shadow: 0 0 10px cyan;
     }
 
     50% {
-        box-shadow: 0 0 10px lime;
+        box-shadow: 0 0 10px white;
     }
 
     75% {
@@ -54,7 +54,7 @@ body {
     }
 
     100% {
-        box-shadow: 0 0 10px red;
+        box-shadow: 0 0 10px white;
     }
 }
 
@@ -63,10 +63,13 @@ body {
     border-radius: 20px;
 }
 
-img {
-    width: 150px;
-    height: auto;
+.logo {
+    img {
+        width: 150px;
+        height: auto;
+    }
 }
+
 
 .btn-google {
     margin-top: 30px;
@@ -165,17 +168,21 @@ img {
 
         color: #ffff;
         font-size: 28px;
+        text-decoration: none;
     }
-    .btn-done{
+
+    .btn-done {
         display: flex;
         justify-content: end;
-        .done{
-        background-color: #8197AC;
-        color: #ffff;
-        width: 140px;
-        height: 50px;
-        font-size: 28px;
-        border-radius: 20px;
-    }
+
+        .done {
+            background-color: #8197AC;
+            color: #ffff;
+            width: 140px;
+            height: 50px;
+            font-size: 28px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
     }
 }

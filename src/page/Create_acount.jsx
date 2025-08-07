@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-
+import '../css/create.css'
 function Create_acount() {
   const [username, setUser] = useState('');
   const [email, setEmail] = useState('');
@@ -7,7 +7,7 @@ function Create_acount() {
 
   const handleSubmit = async () => {
     try {
-      const res = await fetch('http://localhost:5001/api/register', {
+      const res = await fetch('http://localhost:5001/api/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -25,23 +25,23 @@ function Create_acount() {
   };
 
   return (
-    <div className="login-bg">
-      <div className="box">
-        <div className="rgb">
-          <div className="logo">
+    <div className="create-bg">
+      <div className="cr-box">
+        <div className="cr-rgb">
+          <div className="cr-logo">
             <img src="/Create_acount.png" alt="" />
           </div>
           <br />
 
-          <div className="input">
-            <div className="name">
+          <div className="cr-input">
+            <div className="cr-name">
               <p>User :</p>
               <hr />
               <p>Email :</p>
               <hr />
               <p>Password :</p>
             </div>
-            <div className="box-input">
+            <div className="cr-box-input">
               <input
                 type="text"
                 placeholder="User"
@@ -65,9 +65,9 @@ function Create_acount() {
             </div>
             <br />
           </div>
-          <div className="btn-end">
-            <div className="btn-done">
-              <button className="done" onClick={handleSubmit}>
+          <div className="cr-btn-end">
+            <div className="cr-btn-done">
+              <button className="cr-done" onClick={handleSubmit}>
                 Done
               </button>
             </div>

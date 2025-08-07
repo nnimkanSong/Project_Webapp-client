@@ -25,21 +25,21 @@ function Change_password() {
   };
 
   return (
-    <div className="login-bg">
-      <div className="box">
-        <div className="rgb">
-          <div className="logo">
+    <div className="change-bg">
+      <div className="ch-box">
+        <div className="ch-rgb">
+          <div className="ch-logo">
             <img src="/Chang_password.png" alt="" />
           </div>
           <br />
 
-          <div className="input">
-            <div className="name">
+          <div className="ch-input">
+            <div className="ch-name">
               <p>User :</p>
               <p>New password :</p>
               <p>Confirm password :</p>
             </div>
-            <div className="box-input">
+            <div className="ch-box-input">
               <input
                 type="text"
                 placeholder="User"
@@ -63,9 +63,9 @@ function Change_password() {
             </div>
             <br />
           </div>
-          <div className="btn-end">
-            <div className="btn-done">
-              <button className="done" onClick={handleSubmit}>
+          <div className="ch-btn-end">
+            <div className="ch-btn-done">
+              <button className="ch-done" onClick={handleSubmit}>
                 Done
               </button>
             </div>
