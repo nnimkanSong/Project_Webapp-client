@@ -5,9 +5,10 @@
 }
 
 Nav {
-    background-color: #BCB3A2;
+    background-color: #0E141C;
+;
     display: grid;
-    grid-template-columns: 5% 1fr;
+    grid-template-columns: 1fr 90% ;
     height: 103px;
     align-items: center;
     .logo {
@@ -19,20 +20,19 @@ Nav {
         justify-content: center;
         align-items: center;
         height: 100%;
-        border-right: 5px solid #0E141C;
 
     }
 
     ul {
-        margin-left: 30px;
+        margin-right: 30px;
         display: flex;
         flex-direction: row;
-        justify-content: flex-start;
+        justify-content: flex-end;
         gap: 54px;
         list-style-type: none;
 
         li {
-            color: #48331A;
+            color: #ffff;
             font-family: "Ledger", serif;
             font-size: 24px;
         }

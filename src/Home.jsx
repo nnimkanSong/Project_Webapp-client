@@ -1,11 +1,36 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import './css/layout.css'
+import './Home.css'
 const Home = () => {
   return (
-    <div>
-      <h1>Home Page</h1>
-      <Link to="/login">Go to Login</Link>
+    <div className='pg-home'>
+      <div className='top'>
+        <img src="./home_top.png" alt="" />
+      </div>
+      <div className='midle'>
+        <div>Status Now</div>
+        <div>
+          <p>All</p>
+          <p>num</p>
+        </div>
+        <div>
+          <p>Available</p>
+          <p>num</p>
+        </div>
+        <div>
+          <p>Use</p>
+          <p>num</p>
+        </div>
+        <div>
+          <p>Renovation</p>
+          <p>num</p>
+        </div>
+      </div>
+      <div className='end'>
+        <img src="" alt="" />
+        <div className="list">รายละเอียด</div>
+      </div>
+      <a href="/login"></a>
     </div>
   );
 };

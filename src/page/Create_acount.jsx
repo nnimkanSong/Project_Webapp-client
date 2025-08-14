@@ -1,26 +1,34 @@
 import React, { useState } from "react";
-import '../css/create.css'
+import axios from "axios";
+import "../css/create.css";
+import { useNavigate } from "react-router-dom";
+
 function Create_acount() {
-  const [username, setUser] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const handleSubmit = async () => {
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
     try {
-      const res = await fetch('http://localhost:5001/api/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-      console.log(data);
-      alert('Account created!');
+      await axios.post("http://localhost:5000/api/auth/register", formData);
+      alert("User registered successfully");
+      navigate("/login");
     } catch (err) {
-      console.error('Error:', err);
-      alert('Failed to create account');
+      console.error(err);
+      setError(err.response?.data?.error || "Server error");
     }
   };
 
@@ -41,37 +49,42 @@ function Create_acount() {
               <hr />
               <p>Password :</p>
             </div>
-            <div className="cr-box-input">
+
+            <div className="cr-box-input" onSubmit={handleSubmit}>
               <input
+                name="username"
                 type="text"
                 placeholder="User"
-                value={username}
-                onChange={(e) => setUser(e.target.value)}
+                value={formData.username}
+                onChange={handleChange}
               />
               <hr />
               <input
+                name="email"
                 type="email"
                 placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={formData.email}
+                onChange={handleChange}
               />
               <hr />
               <input
+                name="password"
                 type="password"
                 placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={handleChange}
               />
             </div>
-            <br />
+
+            {error && <p style={{ color: "red", marginTop: 10 }}>{error}</p>}
           </div>
-          <div className="cr-btn-end">
-            <div className="cr-btn-done">
-              <button className="cr-done" onClick={handleSubmit}>
-                Done
-              </button>
-            </div>
-          </div>
+              <div className="cr-btn-end">
+                <div className="cr-btn-done">
+                  <button className="cr-done" type="submit" onClick={handleSubmit}>
+                    Done
+                  </button>
+                </div>
+              </div>
         </div>
       </div>
     </div>
