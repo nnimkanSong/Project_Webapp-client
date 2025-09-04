@@ -28,9 +28,6 @@ const App = () => {
       </Route>
 
       {/* Route ไม่ใช้ Layout */}
-      <Route path="/login" element={<Login setAuth={setAuth} />} />
-      <Route path="/starf" element={<Starf />} />
-      <Route path="/forgot-password" element={<Forgot />} />
       <Route
         path="/register"
         element={
@@ -39,10 +36,34 @@ const App = () => {
           </PublicRoute>
         }
       />
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <Login setAuth={setAuth}  />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          <PublicRoute>
+            <Forgot />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/starf"
+        element={
+          <ProtectedRoute>
+            <Starf />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/reset-password" element={
-        <PublicRoute>
+        <ProtectedRoute>
           <Change_password />
-        </PublicRoute>
+        </ProtectedRoute>
         } />
 
     </Routes>
