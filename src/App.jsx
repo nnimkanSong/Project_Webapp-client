@@ -10,6 +10,7 @@ import Starf from "./page/Starf";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useState } from "react";
 import PublicRoute from "./components/PublicRoute";
+import FeedbackForm from "./page/Feedback";
 const App = () => {
   const [isAuthenticated, setAuth] = useState(!!localStorage.getItem("token"));
 
@@ -25,6 +26,15 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/feedback"
+          element={
+            <PublicRoute>
+              <FeedbackForm />
+            </PublicRoute>
+          }
+        />
+        
       </Route>
 
       {/* Route ไม่ใช้ Layout */}
