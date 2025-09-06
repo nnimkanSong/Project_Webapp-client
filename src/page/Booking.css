@@ -4,37 +4,23 @@ body {
   background-color: #0E141C;
 }
 
-/* Navbar (คงเดิม) */
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #000000;
-  color: white;
-  padding: 10px 30px;
-}
-.logo { border: none; }
-.logo img { height: 50px; border: none; }
-.nav-links { list-style: none; display: flex; gap: 30px; }
-.nav-links li { cursor: pointer; font-size: 18px; }
-.nav-links .active { color: #bfa67a; }
-
 /* กรอบจองห้อง */
 .booking-page {
   background-color: #D9D9D9;
-  padding: 15px;
-  border-radius: 10px;
-  margin: 50px;
+  padding: clamp(12px, 1.2vw, 20px);
+  border-radius: 12px;
+  margin: 10px auto 30px;     /* ชิด navbar ขึ้น */
+  width: min(96vw, 1800px);
 }
 
 /* ---------- Layout ---------- */
 .content {
   display: grid;
-  grid-template-columns: 64% 36%;
-  gap: 28px;
-  padding: 40px;
+  grid-template-columns: minmax(560px, 1fr) minmax(420px, 520px);
+  gap: clamp(20px, 2vw, 32px);
+  padding: clamp(20px, 2vw, 40px);
   align-items: stretch;
-  max-width: 1440px;
+  max-width: min(100%, 1560px);
   margin: 0 auto;
 }
 
@@ -42,7 +28,7 @@ body {
 .image-section {
   display: flex;
   align-items: stretch;
-  min-height: 640px;
+  min-height: min(72vh, 820px);
 }
 .image-section > .slider-root,
 .image-section > .slider-root .slider-box,
@@ -51,11 +37,13 @@ body {
 /* ขวา: การ์ดฟอร์ม + เงา */
 .form-section {
   background-color: white;
-  border-radius: 12px;
-  padding: 36px 40px;
+  border-radius: 14px;
+  padding: clamp(28px, 2vw, 40px);
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;     /* ✅ ดันเนื้อหาให้เริ่มบนสุด */
+  max-width: 540px;
+  margin-left: auto;
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
   transition: transform .2s ease, box-shadow .2s ease;
 }
@@ -68,15 +56,17 @@ body {
   text-align: center;
   font-size: 2rem;
   color: #5e4c2e;
-  margin-bottom: 36px;
+  margin: 8px 0 28px;
+  margin-top: 20px;            /* ✅ ขยับขึ้น (เพิ่ม margin-top เล็กน้อย) */
 }
 
 /* ฟอร์ม */
 .booking-form {
   display: flex;
   flex-direction: column;
-  gap: 22px; /* ลดนิดให้แน่นขึ้น */
+  gap: 22px;
   padding: 0;
+  margin-top: 50px;
 }
 
 .booking-form label {
@@ -113,6 +103,7 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 14px;
+  margin-top: 50px;
 }
 .btn-primary, .btn-ghost {
   margin-top: 8px;
@@ -148,11 +139,10 @@ body {
 .time-row .time-range {
   display: flex;
   align-items: center;
-  gap: 25px;             /* ✅ ระยะพอดี */
+  gap: 25px;
   flex-wrap: nowrap;
   margin-left: 10px;
 }
-/* ช่องเวลา: สั้นลง และไม่ยืด */
 .time-row .time-range input[type="time"] {
   box-sizing: border-box;
   width: 120px;
@@ -161,7 +151,6 @@ body {
   padding: 4px 8px;
   margin-left: 0;
 }
-/* คำว่า "to" ให้เท่าขนาด label อื่น */
 .time-row .time-sep {
   font-size: 1.35rem;
   font-weight: 500;
@@ -173,6 +162,7 @@ body {
 @media (max-width: 1100px) {
   .content { grid-template-columns: 1fr; }
   .image-section { min-height: 420px; }
+  .form-section { max-width: 680px; margin: 0 auto; }
 }
 @media (max-width: 480px) {
   .time-row .time-range input[type="time"] {

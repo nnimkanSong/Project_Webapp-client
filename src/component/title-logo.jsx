@@ -1,6 +1,6 @@
 import React from 'react'
 
-function title-logo() {
+function titlelogo() {
   return (
     <div>
       <title></title>
@@ -8,4 +8,4 @@ function title-logo() {
   )
 }
 
-export default title-logo
+export default titlelogo
