@@ -10,6 +10,8 @@ import Starf from "./page/Starf";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useState } from "react";
 import PublicRoute from "./components/PublicRoute";
+import Booking from "./page/Booking";
+
 const App = () => {
   const [isAuthenticated, setAuth] = useState(!!localStorage.getItem("token"));
 
@@ -22,6 +24,14 @@ const App = () => {
           element={
             <ProtectedRoute>
               <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Booking"
+          element={
+            <ProtectedRoute>
+              <Booking />
             </ProtectedRoute>
           }
         />
