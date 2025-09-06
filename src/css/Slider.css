@@ -1,0 +1,47 @@
+.slider-root { width: 100%; background: transparent; }
+.slider-root img { display: block; width: 100%; }
+
+.slider-box{
+  width: 100%;
+  height: 100%;          /* รับความสูงจากคอลัมน์ซ้าย */
+  overflow: hidden;      /* กันรูปถัดไปโผล่ */
+  border-radius: 16px;   /* ปรับเป็น 0 ได้ */
+  background: transparent;
+}
+
+.slider-box .swiper{
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;      /* กันล้นขอบ */
+}
+
+.slider-box .swiper-wrapper{ align-items: stretch; }
+
+.slider-box .swiper-slide{
+  width: 100% !important;   /* ✅ บังคับเต็มกว้าง */
+  height: 100%;
+  margin-right: 0 !important; /* กัน margin ภายใน Swiper */
+}
+
+.slide-media{
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 16px;      /* เอามุมโค้งออกได้ */
+  background: transparent;
+}
+
+.slide-media img{
+  width: 100%;
+  height: 100% !important;
+  object-fit: cover;        /* เติมเต็มเฟรม */
+}
+
+/* bullets (ลบทั้งบล็อกนี้ได้ถ้าไม่ใช้) */
+.slider-box .swiper-pagination{
+  position: absolute; left:0; right:0; bottom: 10px;
+  display:flex; justify-content:center; gap:8px; z-index:5;
+}
+.slider-box .swiper-pagination-bullet{ background:#c9c9c9; opacity:1; }
+.slider-box .swiper-pagination-bullet-active{ width:28px; border-radius:9999px; background:#333; }

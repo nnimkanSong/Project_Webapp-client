@@ -30,9 +30,9 @@ const App = () => {
         <Route
           path="/Booking"
           element={
-            <ProtectedRoute>
+            <PublicRoute>
               <Booking />
-            </ProtectedRoute>
+            </PublicRoute>
           }
         />
       </Route>

@@ -1,10 +1,10 @@
 body {
   margin: 0;
   font-family: 'Segoe UI', sans-serif;
-  background-color: #000000;
+  background-color: #0E141C;
 }
 
-/* Navbar อยู่บนสุด */
+/* Navbar (คงเดิม) */
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -13,74 +13,70 @@ body {
   color: white;
   padding: 10px 30px;
 }
-.logo {
-  border: none;
-}
-.logo img {
-  height: 50px;
-  border: none;
-}
-
-
-.nav-links {
-  list-style: none;
-  display: flex;
-  gap: 30px;
-}
-
-.nav-links li {
-  cursor: pointer;
-  font-size: 18px;
-}
-
-.nav-links .active {
-  color: #bfa67a;
-}
+.logo { border: none; }
+.logo img { height: 50px; border: none; }
+.nav-links { list-style: none; display: flex; gap: 30px; }
+.nav-links li { cursor: pointer; font-size: 18px; }
+.nav-links .active { color: #bfa67a; }
 
 /* กรอบจองห้อง */
 .booking-page {
   background-color: #D9D9D9;
-  padding: 20px;
-  border-radius: 15px;
+  padding: 15px;
+  border-radius: 10px;
   margin: 50px;
 }
 
-/* Layout */
+/* ---------- Layout ---------- */
 .content {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 50px;
+  display: grid;
+  grid-template-columns: 64% 36%;
+  gap: 28px;
+  padding: 40px;
+  align-items: stretch;
+  max-width: 1440px;
+  margin: 0 auto;
 }
 
+/* ซ้าย: สไลด์เต็มคอลัมน์ */
 .image-section {
-  flex: 1;
+  display: flex;
+  align-items: stretch;
+  min-height: 640px;
 }
+.image-section > .slider-root,
+.image-section > .slider-root .slider-box,
+.image-section > .slider-root .swiper { height: 100%; }
 
-.booking-image {
-  width: 800px;
-  border-radius: 10px;
-}
-
+/* ขวา: การ์ดฟอร์ม + เงา */
 .form-section {
-  flex: 1;
   background-color: white;
-  border-radius: 10px;
-  padding: 50px;
+  border-radius: 12px;
+  padding: 36px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.form-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.18);
 }
 
 .form-section h2 {
   text-align: center;
-    font-size: 2rem;
+  font-size: 2rem;
   color: #5e4c2e;
-  margin-bottom: 50px;
+  margin-bottom: 36px;
 }
 
+/* ฟอร์ม */
 .booking-form {
   display: flex;
   flex-direction: column;
-  gap: 50px;
-  padding: 10px;
+  gap: 22px; /* ลดนิดให้แน่นขึ้น */
+  padding: 0;
 }
 
 .booking-form label {
@@ -88,80 +84,98 @@ body {
   justify-content: space-between;
   color: #5e4c2e;
   font-weight: 500;
-  font-size: 1.5rem;
+  font-size: 1.35rem;
+  align-items: center;
+  gap: 12px;
 }
 
 .booking-form input,
 .booking-form select {
   height: 40px;
   background-color: #ddd;
-  border: none;
+  border: 2px solid transparent;
   padding: 5px 10px;
-  border-radius: 5px;
+  border-radius: 8px;
   margin-left: 10px;
   flex: 1;
-  
+  transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.booking-form input:focus,
+.booking-form select:focus {
+  outline: none;
+  background-color: #f5f6ff;
+  border-color: #6d75ff;
+  box-shadow: 0 0 0 3px rgba(109,117,255,0.15);
 }
 
-.booking-form button {
-  margin-top: 20px;
-  padding: 10px;
-  background-color: #ccc;
+/* ปุ่ม */
+.Buttoning {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+.btn-primary, .btn-ghost {
+  margin-top: 8px;
+  padding: 10px 16px;
   border: none;
   border-radius: 20px;
   cursor: pointer;
-  width: 100px;
-  align-self: center;
+  width: 48%;
+  font-weight: 600;
+  letter-spacing: .3px;
+  transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
 }
-/* ----- Carousel (แสดง 4–5 รูป/ครั้ง) ----- */
-.carousel {
+.btn-primary {
+  color: #fff;
+  background: linear-gradient(135deg, #6d75ff, #bfa67a);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+}
+.btn-primary:hover { transform: translateY(-1px) scale(1.02); }
+.btn-ghost {
+  background: #e6e6e6;
+  color: #2b2b2b;
+}
+.btn-ghost:hover { opacity: .9; }
+
+/* ---------- TIME ROW FIX ---------- */
+.time-row {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+.time-row .time-range {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 25px;             /* ✅ ระยะพอดี */
+  flex-wrap: nowrap;
+  margin-left: 10px;
+}
+/* ช่องเวลา: สั้นลง และไม่ยืด */
+.time-row .time-range input[type="time"] {
+  box-sizing: border-box;
+  width: 120px;
+  max-width: 120px;
+  flex: 0 0 120px;
+  padding: 4px 8px;
+  margin-left: 0;
+}
+/* คำว่า "to" ให้เท่าขนาด label อื่น */
+.time-row .time-sep {
+  font-size: 1.35rem;
+  font-weight: 500;
+  color: #5e4c2e;
+  margin: 0 4px;
 }
 
-.carousel-btn {
-  background: #333;
-  color: #fff;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: opacity .2s ease;
+/* Responsive */
+@media (max-width: 1100px) {
+  .content { grid-template-columns: 1fr; }
+  .image-section { min-height: 420px; }
 }
-.carousel-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.carousel-viewport {
-  overflow: hidden;
-  width: 100%;
-}
-
-.carousel-track {
-  display: flex;
-  transition: transform 0.35s ease;
-  will-change: transform;
-}
-
-.carousel-item {
-  /* แบ่งกว้างเท่า ๆ กันตามจำนวนที่โชว์ */
-  flex: 0 0 calc(100% / 4); /* ถ้าอยากโชว์ 5 รูป/ครั้ง เปลี่ยนเป็น / 5 */
-  padding: 4px;
-}
-
-.carousel-item img {
-  width: 100%;
-  height: 220px;         /* ปรับสูงตามต้องการ */
-  object-fit: cover;
-  border-radius: 10px;
-}
-
-/* ปรับให้เข้ากับ layout เดิม */
-.image-section { flex: 1; }
-
-/* ตัวอย่าง responsive: มือถือแสดง 2 รูป */
-@media (max-width: 768px) {
-  .carousel-item { flex: 0 0 calc(100% / 2); }
+@media (max-width: 480px) {
+  .time-row .time-range input[type="time"] {
+    width: 100px; max-width: 100px; flex-basis: 100px;
+  }
 }

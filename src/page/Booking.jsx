@@ -1,114 +1,84 @@
+// src/pages/Booking.jsx
 import '../page/Booking.css';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Swal from 'sweetalert2';
+import Slider from '../components/Slider';
+import { useNavigate } from 'react-router-dom';
 
-function Booking() {
+export default function Booking() {
+  const navigate = useNavigate();
+
+  // คำนวณวันที่วันนี้เพื่อห้ามเลือกย้อนหลัง
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0,0,0,0);
+    return d.toISOString().split('T')[0];
+  }, []);
+
   const [formData, setFormData] = useState({
     room: '',
     date: '',
-    time: '',
+    startTime: '',
+    endTime: '',
     people: '',
     objective: ''
   });
 
-  // ====== เริ่ม: ข้อมูลและสถานะของแกลเลอรีรูป ======
-  const images = [
-    "/img/room1.jpg",
-    "/img/room2.jpg",
-    "/img/room3.jpg",
-    "/img/room4.jpg",
-    "/img/room5.jpg",
-    "/img/room6.jpg",
-  ];
-  const VISIBLE = 4; // ถ้าอยากแสดง 5 รูป เปลี่ยนเป็น 5
-  const [slideIndex, setSlideIndex] = useState(0);
-
-  const next = () => {
-    if (slideIndex < images.length - VISIBLE) setSlideIndex(slideIndex + 1);
-  };
-  const prev = () => {
-    if (slideIndex > 0) setSlideIndex(slideIndex - 1);
-  };
-  // ====== จบ: ข้อมูลและสถานะของแกลเลอรีรูป ======
-
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'people') {
+      const v = value === '' ? '' : Math.max(1, Number(value));
+      setFormData({ ...formData, [name]: v });
+      return;
+    }
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!formData.room || !formData.date || !formData.time || !formData.people || !formData.objective) {
-      Swal.fire({
-        title: 'failure',
-        text: 'กรุณากรอกข้อมูลให้ครบทุกช่อง',
-        icon: 'error',
-        confirmButtonText: 'OK',
-      });
+    const { room, date, startTime, endTime, people, objective } = formData;
+
+    if (!room || !date || !startTime || !endTime || !people || !objective) {
+      Swal.fire({ title: 'Failure', text: 'กรุณากรอกข้อมูลให้ครบทุกช่อง', icon: 'error', confirmButtonText: 'OK' });
       return;
     }
+    if (endTime <= startTime) {
+      Swal.fire({ title: 'เวลาไม่ถูกต้อง', text: 'กรุณาเลือกเวลาสิ้นสุดให้มากกว่าเวลาเริ่ม', icon: 'warning', confirmButtonText: 'OK' });
+      return;
+    }
+
+    const payload = {
+      room,
+      date,
+      timeRange: { start: startTime, end: endTime },
+      people: Number(people),
+      objective,
+    };
+    // TODO: เรียก API ส่ง payload
 
     Swal.fire({
       title: 'Succeed!',
       text: 'คุณได้ทำการจองสำเร็จแล้ว โปรดรอการยืนยันจากเจ้าหน้าที่',
       icon: 'success',
       confirmButtonText: 'OK',
+      showClass: { popup: 'swal2-show animate__animated animate__fadeInUp' },
+      hideClass: { popup: 'swal2-hide animate__animated animate__fadeOutDown' },
     });
 
-    setFormData({
-      room: '',
-      date: '',
-      time: '',
-      people: '',
-      objective: ''
-    });
-    setSlideIndex(0); // รีเซ็ตตำแหน่งแกลเลอรี
+    setFormData({ room: '', date: '', startTime: '', endTime: '', people: '', objective: '' });
   };
 
   return (
-    <div>
-      {/* กล่อง booking */}
+    <>
       <div className="booking-page">
         <div className="content">
-          {/* ========= แทนที่ image-section เดิมด้วย Carousel ========= */}
+          {/* ซ้าย: สไลด์รูป */}
           <div className="image-section">
-            <div className="carousel">
-              <button
-                type="button"
-                className="carousel-btn"
-                onClick={prev}
-                disabled={slideIndex === 0}
-                aria-label="Previous"
-              >
-                ◀
-              </button>
-
-              <div className="carousel-viewport">
-                <div
-                  className="carousel-track"
-                  style={{ transform: `translateX(-${(100 / VISIBLE) * slideIndex}%)` }}
-                >
-                  {images.map((src, i) => (
-                    <div className="carousel-item" key={i}>
-                      <img src={src} alt={`room-${i}`} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                type="button"
-                className="carousel-btn"
-                onClick={next}
-                disabled={slideIndex >= images.length - VISIBLE}
-                aria-label="Next"
-              >
-                ▶
-              </button>
-            </div>
+            <Slider />
           </div>
-          {/* =========================================================== */}
 
+          {/* ขวา: ฟอร์ม */}
           <div className="form-section">
             <h2>Booking</h2>
             <form className="booking-form" onSubmit={handleSubmit}>
@@ -116,35 +86,75 @@ function Booking() {
                 Room :
                 <select name="room" value={formData.room} onChange={handleChange}>
                   <option value="">-- เลือกห้อง --</option>
-                  <option>E107</option>
-                  <option>E111</option>
-                  <option>E113</option>
-                  <option>B317</option>
+                  <option value="E107">E107</option>
+                  <option value="E111">E111</option>
+                  <option value="E113">E113</option>
+                  <option value="B317">B317</option>
                 </select>
               </label>
+
               <label>
                 Date :
-                <input type="date" name="date" value={formData.date} onChange={handleChange} />
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleChange}
+                  min={today}
+                />
               </label>
-              <label>
+
+              <label className="time-row">
                 Time :
-                <input type="time" name="time" value={formData.time} onChange={handleChange} />
+                <div className="time-range">
+                  <input
+                    type="time"
+                    name="startTime"
+                    value={formData.startTime}
+                    onChange={handleChange}
+                  />
+                  <span className="time-sep">to</span>
+                  <input
+                    type="time"
+                    name="endTime"
+                    value={formData.endTime}
+                    onChange={handleChange}
+                  />
+                </div>
               </label>
+
               <label>
                 People :
-                <input type="number" name="people" value={formData.people} onChange={handleChange} />
+                <input
+                  type="number"
+                  name="people"
+                  value={formData.people}
+                  onChange={handleChange}
+                  min={1}
+                  placeholder="เช่น 10"
+                  inputMode="numeric"
+                />
               </label>
+
               <label>
                 Objective :
-                <input type="text" name="objective" value={formData.objective} onChange={handleChange} />
+                <input
+                  type="text"
+                  name="objective"
+                  value={formData.objective}
+                  onChange={handleChange}
+                  placeholder="เช่น สอบ ควิซ ประชุม"
+                />
               </label>
-              <button type="submit">Book</button>
+
+              <div className="Buttoning">
+                <button type="button" className="btn-ghost" onClick={() => navigate(-1)}>Back</button>
+                <button type="submit" className="btn-primary">Book</button>
+              </div>
             </form>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
-
-export default Booking;

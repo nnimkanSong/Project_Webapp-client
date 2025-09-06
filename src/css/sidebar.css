@@ -1,0 +1,119 @@
+:root{
+  --sb-bg:#0f1419;
+  --sb-panel:#11161d;
+  --sb-surface:#171c23;
+  --sb-text:#e7ecf3;
+  --sb-muted:#9aa7b2;
+  --sb-accent:#6d75ff;
+  --sb-hover:rgba(255,255,255,.06);
+  --sb-active:rgba(109,117,255,.18);
+  --radius:16px;
+}
+
+.sb{
+  width: 280px;
+  /* height: 100%;  <-- ลบ */
+  min-height: 100vh;   /* สูงเต็มจอ */
+  height: auto;        /* ให้ยืดตามคอนเทนต์ */
+  background: linear-gradient(180deg,var(--sb-panel),#0e1319 60%);
+  color: var(--sb-text);
+  padding: 14px;
+  border-radius: 20px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.45);
+}
+
+.sb--collapsed{ width:84px; }
+
+.sb__header{
+  display:flex; align-items:center; justify-content:space-between;
+}
+.sb__brand{display:flex; align-items:center; gap:10px;}
+.sb__logo{
+  width:32px;height:32px;border-radius:10px;display:grid;place-items:center;
+  background: radial-gradient(80% 80% at 50% 20%, #8d93ff, #5b5fff);
+  box-shadow: 0 8px 18px rgba(105,105,255,.35);
+}
+.sb__title{font-weight:600; font-size:18px; letter-spacing:.3px;}
+.sb__collapse{
+  background:var(--sb-surface); border:none; color:var(--sb-muted);
+  width:32px;height:32px;border-radius:10px; cursor:pointer;
+}
+.sb__collapse:hover{ background:var(--sb-hover); color:var(--sb-text); }
+
+.sb__search{
+  display:flex; align-items:center; gap:10px;
+  background:var(--sb-surface); border-radius:12px; padding:10px 12px;
+  color:var(--sb-muted);
+}
+.sb__search input{
+  background:transparent; border:none; outline:none; color:var(--sb-text);
+  width:100%;
+}
+
+/* เมนู: ไม่ให้มีสกรอลบาร์ และให้ยืดตัวกินพื้นที่ที่เหลือ */
+.sb__menu{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  /* overflow:auto;  <-- ลบ */
+  overflow:hidden;      /* กันแถบสกรอล */
+  flex: 1 1 auto;       /* ยืดได้ตามพื้นที่แนวตั้ง */
+}
+
+.sb__item{
+  position:relative;
+  display:flex; align-items:center; gap:12px;
+  width:100%; padding:12px 12px; border:none; background:transparent;
+  color:var(--sb-text); border-radius:12px; cursor:pointer;
+  text-align:left;
+}
+.sb__item:hover{ background:var(--sb-hover); }
+.sb__item.is-active{
+  background:var(--sb-active);
+  outline:1px solid rgba(109,117,255,.35);
+}
+.sb__icon{ width:24px; height:24px; display:grid; place-items:center; color:#c8d1dc; }
+.sb__label{ flex:1; font-size:14.5px; }
+.sb__badge{
+  font-size:11px; color:#dfe5ff; background:var(--sb-accent);
+  padding:2px 8px; border-radius:999px; margin-left:8px;
+}
+.sb__chev{ color:var(--sb-muted); }
+
+.sb__footer{ margin-top:auto; display:flex; flex-direction:column; gap:12px; }
+.sb__cta{
+  display:flex; align-items:center; gap:10px; justify-content:center;
+  background:#1c212b; color:#eaeef7; border:none; border-radius:12px;
+  padding:12px; cursor:pointer;
+}
+.sb__cta:hover{ background:#222735; }
+
+.sb__user{
+  display:flex; align-items:center; gap:12px;
+  background:#10151b; padding:10px 12px; border-radius:16px;
+  border:1px solid rgba(255,255,255,.05);
+}
+.sb__avatar{ width:34px; height:34px; border-radius:50%; object-fit:cover; }
+.sb__userInfo{ line-height:1.1; }
+.sb__userName{ font-size:14px; font-weight:600; }
+.sb__userRole{ font-size:12px; color:var(--sb-muted); }
+
+/* ซ่อนสกรอลบาร์เผื่อบางเบราว์เซอร์ยังแสดง */
+.sb, .sb * { scrollbar-width: none; }           /* Firefox */
+.sb::-webkit-scrollbar,
+.sb *::-webkit-scrollbar{ display: none; }      /* Chrome/Edge */
+
+/* collapsed tooltips */
+.sb--collapsed .sb__item[data-tooltip]{ position:relative; }
+.sb--collapsed .sb__item[data-tooltip]::after{
+  content: attr(data-tooltip);
+  position:absolute; left:72px; top:50%; transform:translateY(-50%);
+  background:#5865ff; color:white; font-size:12.5px; padding:6px 10px;
+  border-radius:9px; opacity:0; pointer-events:none; white-space:nowrap;
+  box-shadow:0 10px 20px rgba(88,101,255,.35);
+  transition:opacity .12s ease;
+}
+.sb--collapsed .sb__item:hover::after{ opacity:1; }
