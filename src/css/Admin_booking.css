@@ -1,0 +1,76 @@
+.booking-container {
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  width: fit-content;
+  margin: auto;
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 12px;
+  font-size: 20px;
+  font-weight: bold;
+  color: #5a3b1e;
+}
+
+/* ตาราง */
+.booking-table {
+  border-collapse: separate; /* ต้องเป็น separate เพื่อให้ border-radius ทำงาน */
+  border-spacing: 0;         /* กำจัดช่องว่างระหว่างเซลล์ */
+  border-radius: 12px;
+  overflow: hidden;          /* ป้องกันเซลล์ล้นมุม */
+  min-width: 600px;
+}
+
+/* หัวตารางและเซลล์ */
+.booking-table th,
+.booking-table td {
+  text-align: center;       
+  vertical-align: middle;   
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+/* หัวตาราง */
+.booking-table th {
+  background: #BCB3A2;
+  color: #333;
+  font-weight: 600;
+}
+
+/* มนเฉพาะมุมของตาราง (ยกเว้นเลขห้อง) */
+.booking-table thead tr:first-child th:first-child {
+  border-top-left-radius: 12px; /* เฉพาะ Time header */
+}
+.booking-table tr:last-child td:first-child {
+  border-bottom-left-radius: 12px;
+}
+.booking-table tr:last-child td:last-child {
+  border-bottom-right-radius: 12px;
+}
+
+/* ช่องเวลา */
+.time-cell {
+  background: #e4decb;
+  font-weight: 500;
+}
+
+/* ช่องที่ถูกจอง */
+.booked-cell {
+  background: #b0b0b0;
+}
+
+/* DatePicker ปรับสไตล์ให้เข้ากับตาราง */
+.react-datepicker-wrapper {
+  display: inline-block;
+  margin-bottom: 12px;
+}
+.react-datepicker__input-container input {
+  padding: 8px 12px;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
