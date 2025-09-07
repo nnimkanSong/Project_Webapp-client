@@ -1,0 +1,85 @@
+.card-wrapper {
+  background-color: #0E141C;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.history-card {
+  background-color: white;
+  width: 1370px;
+  height: 780px;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+.history-title {
+  font-size: 40px;
+  margin-bottom: 20px;
+  font-family: "Ledger", serif;
+  color: #48331A;
+}
+
+.profile-img {
+  width: 170px;
+  height: 170px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  display: block;
+    /* ✅ กรอบวงกลมสีเทา */
+  border: 6px solid #D9D9D9;
+}
+
+.history-info {
+  font-size: 24px;
+  text-align: center; /* ✅ ให้ข้อความอยู่ตรงกลาง */
+  margin: 0 auto 20px;
+  line-height: 1.8;
+  width: fit-content;
+}
+
+.history-info strong {
+  color: #48331A;
+}
+
+/* ✅ เพิ่มช่องว่างระหว่างแต่ละบรรทัด */
+.history-info p {
+  margin-bottom: 35px;
+}
+
+.btn-group {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.btn-edit,
+.btn-cancel {
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-edit {
+  background-color: #e6e6e6;
+  color: #000000;
+}
+
+.btn-edit:hover {
+  background-color: #d0d0d0;
+}
+
+.btn-cancel {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.btn-cancel:hover {
+  background-color: #c0392b;
+}

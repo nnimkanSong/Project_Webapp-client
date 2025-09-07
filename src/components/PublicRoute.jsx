@@ -5,7 +5,7 @@ function PublicRoute({children}) {
     const token = localStorage.getItem('token')
     
     if (token) {
-        return <Navigate to='/'/>
+        return <Navigate to='/' replace />
     }
 
   return (
