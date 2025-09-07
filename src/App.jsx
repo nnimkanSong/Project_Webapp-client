@@ -10,6 +10,11 @@ import Starf from "./page/Starf";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useState } from "react";
 import PublicRoute from "./components/PublicRoute";
+import FeedbackForm from "./page/Feedback";
+import Profile_user from "./page/Profile_user";
+import History from "./page/History";
+import BookingTable from "./page/Admin_booking";
+
 const App = () => {
   const [isAuthenticated, setAuth] = useState(!!localStorage.getItem("token"));
 
@@ -27,6 +32,49 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/feedback"
+          element={
+            <ProtectedRoute>
+              <FeedbackForm />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile_user />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/history"
+          element={
+            <ProtectedRoute>
+              <History />
+            </ProtectedRoute>
+          }
+        />
+      
+
+      <Route
+        path="/starf"
+        element={
+          <ProtectedRoute>
+            <Starf />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/reset-password"
+        element={
+          <ProtectedRoute>
+            <Change_password />
+          </ProtectedRoute>
+        }
+      />
       </Route>
 
       {/* Route ไม่ใช้ Layout */}
