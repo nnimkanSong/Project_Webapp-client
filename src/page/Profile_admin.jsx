@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import "../css/Profile_user.css";
+import "../css/Profile_admin.css";
 
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
-  const [user, setUser] = useState({
-    username: "lnwza007",
+  const [admin, setadmin] = useState({
+    adminname: "lnwza007",
     studentId: "66200999",
     email: "lnwza007@kmitl.ac.th",
     password: "***************",
@@ -14,7 +14,7 @@ const Profile = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setUser((prev) => ({
+    setadmin((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -27,18 +27,18 @@ const Profile = () => {
           <h2 className="profile-title">Profile</h2>
 
           <div className="profile-image">
-            <img src={user.photo} alt="Profile" />
+            <img src={admin.photo} alt="Profile" />
           </div>
 
           <div className="profile-info">
             {isEditing ? (
               <>
                 <div>
-                  <span>User Name :</span>
+                  <span>Admin Name :</span>
                   <input
                     type="text"
-                    name="username"
-                    value={user.username}
+                    name="adminname"
+                    value={admin.adminname}
                     onChange={handleChange}
                   />
                 </div>
@@ -47,7 +47,7 @@ const Profile = () => {
                   <input
                     type="text"
                     name="studentId"
-                    value={user.studentId}
+                    value={admin.studentId}
                     disabled
                   />
                 </div>
@@ -56,7 +56,7 @@ const Profile = () => {
                   <input
                     type="email"
                     name="email"
-                    value={user.email}
+                    value={admin.email}
                     onChange={handleChange}
                   />
                 </div>
@@ -65,17 +65,17 @@ const Profile = () => {
                   <input
                     type="password"
                     name="password"
-                    value={user.password}
+                    value={admin.password}
                     onChange={handleChange}
                   />
                 </div>
               </>
             ) : (
               <>
-                <div><span>User Name :</span> {user.username}</div>
-                <div><span>Student ID :</span> {user.studentId}</div>
-                <div><span>Email :</span> {user.email}</div>
-                <div><span>Password :</span> {"*".repeat(user.password.length)}</div>
+                <div><span>Admin Name :</span> {admin.adminname}</div>
+                <div><span>Student ID :</span> {admin.studentId}</div>
+                <div><span>Email :</span> {admin.email}</div>
+                <div><span>Password :</span> {"*".repeat(admin.password.length)}</div>
               </>
             )}
           </div>
@@ -118,7 +118,7 @@ const Profile = () => {
             <button className="popup-close" onClick={() => setShowPopup(false)}>×</button>
             <div className="popup-icon">✔</div>
             <h2>Succeed</h2>
-            <p>ข้อมูลของคุณได้รับการอัปเดตเรียบร้อย<br/>คุณสามารถดำเนินการต่อหรือกลับไปยังหน้าหลักได้</p>         
+            <p>ข้อมูลของคุณได้รับการอัปเดตเรียบร้อย<br/>คุณสามารถดำเนินการต่อหรือกลับไปยังหน้าหลักได้</p>
           </div>
         </div>
       )}

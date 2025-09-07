@@ -6,6 +6,7 @@ import Login from './page/Login';
 import Create_acount from './page/Create_acount';
 import Profile_user from './page/Profile_user';
 import Change_password from './page/Change_password';
+import Profile_admin from './page/Profile_admin';
 
 const App = () => {
   return (
@@ -21,6 +22,7 @@ const App = () => {
       <Route path="/Profile_user" element={<Profile_user />} />
       <Route path="/create" element={<Create_acount />} />
       <Route path="/change" element={<Change_password />} />
+      <Route path="/Profile_admin" element={<Profile_admin />} />
     </Routes>
   );
 };
