@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Swal from 'sweetalert2';
-import '../css/FeedbackForm.css';
+import styles from '../css/FeedbackForm.module.css';
 
 const roomOptions = ['B317', 'E107', 'E111', 'E113'];
 
@@ -42,7 +42,6 @@ const FeedbackForm = () => {
         icon: 'success',
         confirmButtonText: 'Done'
       }).then(() => {
-        // เคลียร์ฟอร์มหรือทำอย่างอื่นหลังจากกดตกลง
         setSelectedRoom('');
         setRating(0);
         setComment('');
@@ -52,28 +51,29 @@ const FeedbackForm = () => {
   };
 
   return (
-    <div className="feedback-back">
-      <div className="feedback-form">
+  <main className={styles.main}>
+    <div className={styles.feedbackBack}>
+      <div className={styles.feedbackForm}>
         <h2>Feedback</h2>
 
         {/* Room */}
-        <div className="form-group horizontal">
+        <div className={styles.formGroup}>
           <label>Room :</label>
           <div
-            className={`custom-dropdown ${dropdownOpen ? 'open' : ''}`}
+            className={`${styles.customDropdown} ${dropdownOpen ? styles.open : ''}`}
             onClick={() => setDropdownOpen(!dropdownOpen)}
             ref={dropdownRef}
           >
-            <div className="dropdown-selected">
+            <div className={styles.dropdownSelected}>
               {selectedRoom || 'Select a room'}
-              <i className={`fa-solid ${dropdownOpen ? 'fa-angle-up' : 'fa-angle-down'} dropdown-arrow`}></i>
+              <i className={`fa-solid ${dropdownOpen ? 'fa-angle-up' : 'fa-angle-down'} ${styles.dropdownArrow}`}></i>
             </div>
             {dropdownOpen && (
-              <ul className="dropdown-list">
+              <ul className={styles.dropdownList}>
                 {roomOptions.map((room) => (
                   <li
                     key={room}
-                    className={room === selectedRoom ? 'selected' : ''}
+                    className={room === selectedRoom ? styles.selected : ''}
                     onClick={() => handleSelectRoom(room)}
                   >
                     {room}
@@ -85,7 +85,7 @@ const FeedbackForm = () => {
         </div>
 
         {/* Comments */}
-        <div className="form-group horizontal">
+        <div className={styles.formGroup}>
           <label>Comments:</label>
           <input
             type="text"
@@ -96,15 +96,15 @@ const FeedbackForm = () => {
         </div>
 
         {/* Complacence (Rating) */}
-        <div className="form-group horizontal">
+        <div className={styles.formGroup}>
           <label>Complacence :</label>
-          <div className="star-rating">
+          <div className={styles.starRating}>
             {[...Array(5)].map((_, index) => {
               const starValue = index + 1;
               return (
                 <span
                   key={starValue}
-                  className={`star ${starValue <= (hover || rating) ? 'filled' : ''}`}
+                  className={`${styles.star} ${starValue <= (hover || rating) ? styles.filled : ''}`}
                   onClick={() => setRating(starValue)}
                   onMouseEnter={() => setHover(starValue)}
                   onMouseLeave={() => setHover(0)}
@@ -117,7 +117,7 @@ const FeedbackForm = () => {
         </div>
 
         {/* Broken Equipment */}
-        <div className="form-group horizontal">
+        <div className={styles.formGroup}>
           <label>Broken Equipment:</label>
           <input
             type="text"
@@ -128,12 +128,17 @@ const FeedbackForm = () => {
         </div>
 
         {/* Done Button */}
-        <button disabled={!isFormComplete} onClick={handleSubmit}>
+        <button
+          className={styles.button}
+          disabled={!isFormComplete}
+          onClick={handleSubmit}
+        >
           Done
         </button>
       </div>
     </div>
-  );
+  </main>
+)
 };
 
 export default FeedbackForm;
