@@ -43,7 +43,8 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between; /* ให้เนื้อหาอยู่ด้านบน และปุ่มอยู่ด้านล่าง */
+  justify-content: space-between;
+  /* ให้เนื้อหาอยู่ด้านบน และปุ่มอยู่ด้านล่าง */
 }
 
 .feedback-form h2 {
@@ -59,9 +60,11 @@ body {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 16px; /* เพิ่มเล็กน้อยให้หายแน่น */
+  gap: 16px;
+  /* เพิ่มเล็กน้อยให้หายแน่น */
   margin-bottom: 24px;
-  width: 100%; /* ให้ครอบคลุมทั้งหมด */
+  width: 100%;
+  /* ให้ครอบคลุมทั้งหมด */
 }
 
 .form-group label {
@@ -72,35 +75,40 @@ body {
   white-space: nowrap;
   flex-shrink: 0;
   text-align: right;
-  min-width: 130px; /* ปรับให้พอเหมาะกับ "Broken Equipment" */
+  min-width: 130px;
+  /* ปรับให้พอเหมาะกับ "Broken Equipment" */
   font-size: 14px;
 }
 
 /* ฟิลด์ input และ select */
-input[type="text"],
-select,
-textarea {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background-color: #D9D9D9;
-  color: #48331A;
-  box-sizing: border-box;
-  font-family: "Ledger", Georgia, serif;
-  font-size: 14px;
-  line-height: 1.5;
-  transition: all 0.2s ease;
-  flex: 1;
-  min-width: 450px;
+.form-group horizontal {
+
+  input[type="text"],
+  select,
+  textarea {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #D9D9D9;
+    color: #48331A;
+    box-sizing: border-box;
+    font-family: "Ledger", Georgia, serif;
+    font-size: 14px;
+    line-height: 1.5;
+    transition: all 0.2s ease;
+    flex: 1;
+    min-width: 450px;
+  }
+
+  input[type="text"]:focus,
+  select:focus,
+  textarea:focus {
+    outline: none;
+    border-color: #48331A;
+    box-shadow: 0 0 0 2px rgba(72, 51, 26, 0.2);
+  }
 }
 
-input[type="text"]:focus,
-select:focus,
-textarea:focus {
-  outline: none;
-  border-color: #48331A;
-  box-shadow: 0 0 0 2px rgba(72, 51, 26, 0.2);
-}
 
 
 /* Dropdown แบบ Custom */
@@ -193,9 +201,11 @@ button {
   transition: background-color 0.3s, color 0.3s;
   width: 80px;
   font-family: "Ledger", Georgia, serif;
-  margin-top: auto; /* ให้ลอยไปด้านล่าง */
+  margin-top: auto;
+  /* ให้ลอยไปด้านล่าง */
   margin-bottom: 0;
-  align-self: center; /* จัดให้อยู่ตรงกลางแนวนอน */
+  align-self: center;
+  /* จัดให้อยู่ตรงกลางแนวนอน */
 }
 
 button:disabled {

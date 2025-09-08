@@ -5,20 +5,20 @@ const Nav = ( isAuthenticated, setAuth) => {
       <div className="logo"><img src="/Logo_Home.png" alt="" /></div>
       <ul>
         {isAuthenticated ? (
-          <><li>Profile</li>
-            <li>Booking </li>
-            <li>History</li>
-            <li>Feedback</li>
+          <><li><a href="/profile">Profile</a></li>
+            <li><a href="/Booking">Booking</a> </li>
+            <li><a href="/history">History</a></li>
+            <li><a href="/feedback">Feedback</a></li>
             {/* <li><a href="/starf">Admin</a></li> */}
             
           </>
           
         ) : (
           <>
-            <li>Profile</li>
-            <li>Booking </li>
-            <li>History</li>
-            <li>Feedback</li>
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/Booking">Booking</a> </li>
+            <li><a href="/history">History</a></li>
+            <li><a href="/feedback">Feedback</a></li>
           </>
           
         )}
