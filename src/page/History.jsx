@@ -9,9 +9,9 @@ export default function History() {
       text: "คุณแน่ใจหรือว่าต้องการยกเลิก",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "ใช่, ยกเลิกเลย",
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#D9D9D9",
+      confirmButtonText: "ใช่",
       cancelButtonText: "ไม่",
     }).then((result) => {
       if (result.isConfirmed) {

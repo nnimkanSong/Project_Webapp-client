@@ -9,7 +9,7 @@ const Nav = ( isAuthenticated, setAuth) => {
             <li>Booking </li>
             <li>History</li>
             <li>Feedback</li>
-            <li><a href="/starf">Admin</a></li>
+            {/* <li><a href="/starf">Admin</a></li> */}
             
           </>
           

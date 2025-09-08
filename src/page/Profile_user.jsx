@@ -1,5 +1,6 @@
 import React from "react";
 import "../page/Profile_user"
+import "../css/Profile_user.css"
 
 const Profile = () => {
   const user = {
@@ -7,19 +8,11 @@ const Profile = () => {
     studentId: "66200999",
     email: "lnwza007@kmitl.ac.th",
     password: "***************",
-    photo: "/path/to/photo.jpg", // เปลี่ยนเป็น path รูปจริง
+    photo: "../../public/favicon.ico", // เปลี่ยนเป็น path รูปจริง
   };
 
   return (
     <div className="profile-page">
-      {/* Navbar */}
-      <nav className="navbar">
-        <a href="/profile" className="active">Profile</a>
-        <a href="/booking">Booking</a>
-        <a href="/history">History</a>
-        <a href="/feedback">Feedback</a>
-      </nav>
-
       {/* Profile Card */}
       <div className="profile-card">
         <h2 className="profile-title">Profile</h2>

@@ -1,6 +1,5 @@
 .card-wrapper {
-  background-color: #1b2129; /* เทาเข้ม */
-  height: 100vh;
+  background-color: #0E141C;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -8,7 +7,7 @@
 
 .history-card {
   background-color: white;
-  width: 1180px;
+  width: 1370px;
   height: 780px;
   border-radius: 12px;
   padding: 30px;
@@ -69,7 +68,7 @@
 
 .btn-edit {
   background-color: #e6e6e6;
-  color: #333;
+  color: #000000;
 }
 
 .btn-edit:hover {

@@ -8,7 +8,6 @@ import { useNavigate } from 'react-router-dom';
 export default function Booking() {
   const navigate = useNavigate();
 
-  // คำนวณวันที่วันนี้เพื่อห้ามเลือกย้อนหลัง
   const today = useMemo(() => {
     const d = new Date();
     d.setHours(0,0,0,0);
@@ -36,7 +35,6 @@ export default function Booking() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     const { room, date, startTime, endTime, people, objective } = formData;
 
     if (!room || !date || !startTime || !endTime || !people || !objective) {
@@ -48,113 +46,67 @@ export default function Booking() {
       return;
     }
 
-    const payload = {
-      room,
-      date,
-      timeRange: { start: startTime, end: endTime },
-      people: Number(people),
-      objective,
-    };
-    // TODO: เรียก API ส่ง payload
-
     Swal.fire({
       title: 'Succeed!',
       text: 'คุณได้ทำการจองสำเร็จแล้ว โปรดรอการยืนยันจากเจ้าหน้าที่',
       icon: 'success',
       confirmButtonText: 'OK',
-      showClass: { popup: 'swal2-show animate__animated animate__fadeInUp' },
-      hideClass: { popup: 'swal2-hide animate__animated animate__fadeOutDown' },
     });
 
     setFormData({ room: '', date: '', startTime: '', endTime: '', people: '', objective: '' });
   };
 
   return (
-    <>
-      <div className="booking-page">
-        <div className="content">
-          {/* ซ้าย: สไลด์รูป */}
-          <div className="image-section">
-            <Slider />
-          </div>
+    <div className="bookg-page">
+      <div className="bookg-content">
+        <div className="bookg-image">
+          <Slider />
+        </div>
+        <div className="bookg-form-card">
+          <h2>Booking</h2>
+          <form className="bookg-form" onSubmit={handleSubmit}>
+            <label>
+              Room :
+              <select name="room" value={formData.room} onChange={handleChange}>
+                <option value="">-- เลือกห้อง --</option>
+                <option value="E107">E107</option>
+                <option value="E111">E111</option>
+                <option value="E113">E113</option>
+                <option value="B317">B317</option>
+              </select>
+            </label>
 
-          {/* ขวา: ฟอร์ม */}
-          <div className="form-section">
-            <h2>Booking</h2>
-            <form className="booking-form" onSubmit={handleSubmit}>
-              <label>
-                Room :
-                <select name="room" value={formData.room} onChange={handleChange}>
-                  <option value="">-- เลือกห้อง --</option>
-                  <option value="E107">E107</option>
-                  <option value="E111">E111</option>
-                  <option value="E113">E113</option>
-                  <option value="B317">B317</option>
-                </select>
-              </label>
+            <label>
+              Date :
+              <input type="date" name="date" value={formData.date} onChange={handleChange} min={today} />
+            </label>
 
-              <label>
-                Date :
-                <input
-                  type="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleChange}
-                  min={today}
-                />
-              </label>
-
-              <label className="time-row">
-                Time :
-                <div className="time-range">
-                  <input
-                    type="time"
-                    name="startTime"
-                    value={formData.startTime}
-                    onChange={handleChange}
-                  />
-                  <span className="time-sep">to</span>
-                  <input
-                    type="time"
-                    name="endTime"
-                    value={formData.endTime}
-                    onChange={handleChange}
-                  />
-                </div>
-              </label>
-
-              <label>
-                People :
-                <input
-                  type="number"
-                  name="people"
-                  value={formData.people}
-                  onChange={handleChange}
-                  min={1}
-                  placeholder="เช่น 10"
-                  inputMode="numeric"
-                />
-              </label>
-
-              <label>
-                Objective :
-                <input
-                  type="text"
-                  name="objective"
-                  value={formData.objective}
-                  onChange={handleChange}
-                  placeholder="เช่น สอบ ควิซ ประชุม"
-                />
-              </label>
-
-              <div className="Buttoning">
-                <button type="button" className="btn-ghost" onClick={() => navigate(-1)}>Back</button>
-                <button type="submit" className="btn-primary">Book</button>
+            <label className="bookg-time-row">
+              Time :
+              <div className="bookg-time-range">
+                <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} />
+                <span className="bookg-time-sep">to</span>
+                <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} />
               </div>
-            </form>
-          </div>
+            </label>
+
+            <label>
+              People :
+              <input type="number" name="people" value={formData.people} onChange={handleChange} min={1} placeholder="เช่น 10" />
+            </label>
+
+            <label>
+              Objective :
+              <input type="text" name="objective" value={formData.objective} onChange={handleChange} placeholder="เช่น สอบ ควิซ ประชุม" />
+            </label>
+
+            <div className="bookg-buttons">
+              <button type="button" className="bookg-btn-ghost" onClick={() => navigate(-1)}>Back</button>
+              <button type="submit" className="bookg-btn-primary">Book</button>
+            </div>
+          </form>
         </div>
       </div>
-    </>
+    </div>
   );
 }

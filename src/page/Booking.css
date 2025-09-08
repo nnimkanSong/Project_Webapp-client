@@ -1,3 +1,6 @@
+/* reset เล็กน้อยให้คุมขนาดชัวร์ */
+* { box-sizing: border-box; }
+
 body {
   margin: 0;
   font-family: 'Segoe UI', sans-serif;
@@ -5,18 +8,19 @@ body {
 }
 
 /* กรอบจองห้อง */
-.booking-page {
+.bookg-page {
   background-color: #D9D9D9;
   padding: clamp(12px, 1.2vw, 20px);
   border-radius: 12px;
-  margin: 10px auto 30px;     /* ชิด navbar ขึ้น */
+  margin: 10px auto 30px;
   width: min(96vw, 1800px);
 }
 
 /* ---------- Layout ---------- */
-.content {
+.bookg-content {
   display: grid;
-  grid-template-columns: minmax(560px, 1fr) minmax(420px, 520px);
+  /* ซ้ายคงเดิม, ขวาล็อก ~520px ให้เท่ารูปแรก */
+  grid-template-columns: minmax(560px, 1fr) 520px;
   gap: clamp(20px, 2vw, 32px);
   padding: clamp(20px, 2vw, 40px);
   align-items: stretch;
@@ -24,88 +28,113 @@ body {
   margin: 0 auto;
 }
 
-/* ซ้าย: สไลด์เต็มคอลัมน์ */
-.image-section {
+/* ซ้าย: slider กินความสูง */
+.bookg-image {
   display: flex;
   align-items: stretch;
   min-height: min(72vh, 820px);
 }
-.image-section > .slider-root,
-.image-section > .slider-root .slider-box,
-.image-section > .slider-root .swiper { height: 100%; }
+.bookg-image > .slider-root,
+.bookg-image > .slider-root .slider-box,
+.bookg-image > .slider-root .swiper { height: 100%; }
 
-/* ขวา: การ์ดฟอร์ม + เงา */
-.form-section {
-  background-color: white;
+/* ขวา: การ์ดฟอร์ม */
+.bookg-form-card {
+  background-color: #fff;
   border-radius: 14px;
   padding: clamp(28px, 2vw, 40px);
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;     /* ✅ ดันเนื้อหาให้เริ่มบนสุด */
-  max-width: 540px;
+  justify-content: flex-start;
+  /* ล็อกความกว้างให้ไม่ยืด */
+  width: 520px;
+  max-width: 520px;
   margin-left: auto;
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-  transition: transform .2s ease, box-shadow .2s ease;
 }
-.form-section:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.18);
-}
-
-.form-section h2 {
+.bookg-form-card h2 {
   text-align: center;
   font-size: 2rem;
   color: #5e4c2e;
-  margin: 8px 0 28px;
-  margin-top: 20px;            /* ✅ ขยับขึ้น (เพิ่ม margin-top เล็กน้อย) */
+  margin: 20px 0 28px;
 }
 
-/* ฟอร์ม */
-.booking-form {
+/* ---------- Form ---------- */
+.bookg-form {
   display: flex;
   flex-direction: column;
   gap: 22px;
-  padding: 0;
   margin-top: 50px;
 }
 
-.booking-form label {
-  display: flex;
-  justify-content: space-between;
+/* label เป็น grid 2 คอลัมน์: label | control
+   ใช้ minmax(0,1fr) เพื่อให้คอลัมน์ขวาหดได้และไม่ดันการ์ดล้น */
+.bookg-form label {
+  display: grid;
+  grid-template-columns: 100px minmax(0,1fr);
+  column-gap: 12px;
+  align-items: center;
   color: #5e4c2e;
   font-weight: 500;
-  font-size: 1.35rem;
-  align-items: center;
-  gap: 12px;
+  font-size: 1.15rem;
 }
 
-.booking-form input,
-.booking-form select {
+/* คุมขนาดช่องกรอกให้เต็มคอลัมน์ขวาแบบไม่ล้น */
+.bookg-form input,
+.bookg-form select {
   height: 40px;
+  width: 100%;
+  max-width: 100%;
   background-color: #ddd;
   border: 2px solid transparent;
   padding: 5px 10px;
   border-radius: 8px;
-  margin-left: 10px;
-  flex: 1;
+  margin: 0; /* ตัด margin-left เดิม */
   transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
 }
-.booking-form input:focus,
-.booking-form select:focus {
+.bookg-form input:focus,
+.bookg-form select:focus {
   outline: none;
   background-color: #f5f6ff;
   border-color: #6d75ff;
   box-shadow: 0 0 0 3px rgba(109,117,255,0.15);
 }
 
-/* ปุ่ม */
-.Buttoning {
+/* ---------- Time row ---------- */
+.bookg-time-row {
+  display: grid;
+  grid-template-columns: 130px minmax(0,1fr);
+  column-gap: 12px;
+  align-items: center;
+}
+
+.bookg-time-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;         /* กันไม่ให้ block นี้ดันคอลัมน์ล้น */
+  flex-wrap: nowrap;
+}
+
+.bookg-time-range input[type="time"] {
+  width: 100px;         /* จำกัดเพื่อไม่ให้ล้น */
+  flex: 0 0 auto;
+}
+
+.bookg-time-sep {
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: #5e4c2e;
+}
+
+/* ---------- Buttons ---------- */
+.bookg-buttons {
   display: flex;
   justify-content: space-between;
   gap: 14px;
   margin-top: 50px;
 }
-.btn-primary, .btn-ghost {
+.bookg-btn-primary, .bookg-btn-ghost {
   margin-top: 8px;
   padding: 10px 16px;
   border: none;
@@ -114,58 +143,22 @@ body {
   width: 48%;
   font-weight: 600;
   letter-spacing: .3px;
-  transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
 }
-.btn-primary {
+.bookg-btn-primary {
   color: #fff;
   background: linear-gradient(135deg, #6d75ff, #bfa67a);
-  box-shadow: 0 6px 14px rgba(0,0,0,0.18);
 }
-.btn-primary:hover { transform: translateY(-1px) scale(1.02); }
-.btn-ghost {
+.bookg-btn-ghost {
   background: #e6e6e6;
   color: #2b2b2b;
 }
-.btn-ghost:hover { opacity: .9; }
 
-/* ---------- TIME ROW FIX ---------- */
-.time-row {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
-}
-.time-row .time-range {
-  display: flex;
-  align-items: center;
-  gap: 25px;
-  flex-wrap: nowrap;
-  margin-left: 10px;
-}
-.time-row .time-range input[type="time"] {
-  box-sizing: border-box;
-  width: 120px;
-  max-width: 120px;
-  flex: 0 0 120px;
-  padding: 4px 8px;
-  margin-left: 0;
-}
-.time-row .time-sep {
-  font-size: 1.35rem;
-  font-weight: 500;
-  color: #5e4c2e;
-  margin: 0 4px;
-}
-
-/* Responsive */
+/* ---------- Responsive ---------- */
 @media (max-width: 1100px) {
-  .content { grid-template-columns: 1fr; }
-  .image-section { min-height: 420px; }
-  .form-section { max-width: 680px; margin: 0 auto; }
+  .bookg-content { grid-template-columns: 1fr; }
+  .bookg-image { min-height: 420px; }
+  .bookg-form-card { width: 100%; max-width: 680px; margin: 0 auto; }
 }
 @media (max-width: 480px) {
-  .time-row .time-range input[type="time"] {
-    width: 100px; max-width: 100px; flex-basis: 100px;
-  }
+  .bookg-time-range input[type="time"] { width: 90px; }
 }

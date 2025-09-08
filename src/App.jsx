@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import Layout from "./Layout";
 import Home from "./Home";
@@ -8,18 +8,20 @@ import Change_password from "./page/Change_password";
 import Forgot from "./page/Forgot";
 import Starf from "./page/Starf";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { useState } from "react";
 import PublicRoute from "./components/PublicRoute";
 import Booking from "./page/Booking";
-import Profile_user from './page/Profile_user';
+import Profile_user from "./page/Profile_user";
+import FeedbackForm from "./page/Feedback";
+import History from "./page/History";
+import BookingTable from "./page/Admin_booking";
 
 const App = () => {
   const [isAuthenticated, setAuth] = useState(!!localStorage.getItem("token"));
 
   return (
     <Routes>
-      {/* Route ครอบ Layout */}
-      <Route element={<Layout  isAuthenticated={isAuthenticated} setAuth={setAuth}/>}>
+      {/* กลุ่มที่ใช้ Layout */}
+      <Route element={<Layout isAuthenticated={isAuthenticated} setAuth={setAuth} />}>
         <Route
           path="/"
           element={
@@ -28,6 +30,8 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+
+        {/* คงตามเดิม: Booking เป็น PublicRoute */}
         <Route
           path="/Booking"
           element={
@@ -36,17 +40,62 @@ const App = () => {
             </PublicRoute>
           }
         />
-        <Route path="/Profile_user" element={
-      <PublicRoute>
-          <Profile_user />
-        </PublicRoute>
-        } />
+
+        <Route
+          path="/feedback"
+          element={
+            <PublicRoute>
+              <FeedbackForm />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/Profile_user"
+          element={
+            <PublicRoute>
+              <Profile_user />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/history"
+          element={
+            <PublicRoute>
+              <History />
+            </PublicRoute>
+          }
+        />
+
+        {/* เลือกให้ /starf เข้าถึงได้เฉพาะคนล็อกอิน */}
+        <Route
+          path="/starf"
+          element={
+            <ProtectedRoute>
+              <Starf />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* admin page แสดงใน Layout ด้วย */}
+        <Route
+          path="/admin/booking"
+          element={
+            <PublicRoute>
+              <BookingTable />
+            </PublicRoute>
+          }
+        />
       </Route>
 
-      {/* Route ไม่ใช้ Layout */}
-      <Route path="/login" element={<Login setAuth={setAuth} />} />
-      <Route path="/starf" element={<Starf />} />
-      <Route path="/forgot-password" element={<Forgot />} />
+      {/* กลุ่มที่ไม่ใช้ Layout (เช่น หน้า Auth) */}
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <Login setAuth={setAuth} />
+          </PublicRoute>
+        }
+      />
       <Route
         path="/register"
         element={
@@ -55,15 +104,23 @@ const App = () => {
           </PublicRoute>
         }
       />
-      <Route path="/reset-password" element={
-        <PublicRoute>
-          <Change_password />
-        </PublicRoute>
-        } />
-        
-
-      <Route path="/create" element={<Create_acount />} />
-      <Route path="/change" element={<Change_password />} />
+      <Route
+        path="/forgot-password"
+        element={
+          <PublicRoute>
+            <Forgot />
+          </PublicRoute>
+        }
+      />
+      {/* reset-password ควรเป็น PublicRoute เพราะลิงก์อีเมล */}
+      <Route
+        path="/reset-password"
+        element={
+          <PublicRoute>
+            <Change_password />
+          </PublicRoute>
+        }
+      />
     </Routes>
   );
 };
