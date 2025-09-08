@@ -11,6 +11,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { useState } from "react";
 import PublicRoute from "./components/PublicRoute";
 import Booking from "./page/Booking";
+import Profile_user from './page/Profile_user';
 
 const App = () => {
   const [isAuthenticated, setAuth] = useState(!!localStorage.getItem("token"));
@@ -35,6 +36,11 @@ const App = () => {
             </PublicRoute>
           }
         />
+        <Route path="/Profile_user" element={
+      <PublicRoute>
+          <Profile_user />
+        </PublicRoute>
+        } />
       </Route>
 
       {/* Route ไม่ใช้ Layout */}
@@ -54,7 +60,10 @@ const App = () => {
           <Change_password />
         </PublicRoute>
         } />
+        
 
+      <Route path="/create" element={<Create_acount />} />
+      <Route path="/change" element={<Change_password />} />
     </Routes>
   );
 };
