@@ -50,7 +50,7 @@ const App = () => {
           }
         />
         <Route
-          path="/Profile_user"
+          path="/Profile"
           element={
             <PublicRoute>
               <Profile_user />

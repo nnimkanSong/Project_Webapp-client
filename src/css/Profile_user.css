@@ -1,7 +1,7 @@
 /* พื้นหลังและฟอนต์ */
 .profile-page {
   background-color: #0e1117;
-  min-height: 100vh;
+  min-height: 100vh;  
   padding: 40px;
   font-family: 'Times New Roman', serif;
   display: flex;

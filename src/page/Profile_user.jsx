@@ -1,5 +1,4 @@
 import React from "react";
-import "../page/Profile_user"
 import "../css/Profile_user.css"
 
 const Profile = () => {
