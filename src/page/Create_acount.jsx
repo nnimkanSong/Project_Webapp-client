@@ -23,7 +23,10 @@ function Create_acount() {
     e.preventDefault();
     setError("");
     try {
-      await axios.post("http://localhost:5000/api/auth/register", formData);
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/auth/register`,
+        formData
+      );
       alert("User registered successfully");
       navigate("/login");
     } catch (err) {
@@ -78,13 +81,13 @@ function Create_acount() {
 
             {error && <p style={{ color: "red", marginTop: 10 }}>{error}</p>}
           </div>
-              <div className="cr-btn-end">
-                <div className="cr-btn-done">
-                  <button className="cr-done" type="submit" onClick={handleSubmit}>
-                    Done
-                  </button>
-                </div>
-              </div>
+          <div className="cr-btn-end">
+            <div className="cr-btn-done">
+              <button className="cr-done" type="submit" onClick={handleSubmit}>
+                Done
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

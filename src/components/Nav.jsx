@@ -2,7 +2,7 @@ import React from 'react';
 const Nav = ( isAuthenticated, setAuth) => {
   return (
     <nav>
-      <div className="logo"><img src="/Logo_Home.png" alt="" /></div>
+      <div className="logo"><a href="/"><img src="/Logo_Home.png" alt="" /></a></div>
       <ul>
         {isAuthenticated ? (
           <><li><a href="/profile">Profile</a></li>
