@@ -1,5 +1,4 @@
 import React from "react";
-import "../page/Profile_user"
 import "../css/Profile_user.css"
 
 const Profile = () => {
@@ -8,7 +7,7 @@ const Profile = () => {
     studentId: "66200999",
     email: "lnwza007@kmitl.ac.th",
     password: "***************",
-    photo: "/path/to/photo.jpg", // เปลี่ยนเป็น path รูปจริง
+    photo: "../../public/favicon.ico", // เปลี่ยนเป็น path รูปจริง
   };
 
   return (

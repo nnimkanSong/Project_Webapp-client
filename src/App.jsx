@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import Layout from "./Layout";
 import Home from "./Home";
@@ -8,10 +8,10 @@ import Change_password from "./page/Change_password";
 import Forgot from "./page/Forgot";
 import Starf from "./page/Starf";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { useState } from "react";
 import PublicRoute from "./components/PublicRoute";
-import FeedbackForm from "./page/Feedback";
+import Booking from "./page/Booking";
 import Profile_user from "./page/Profile_user";
+import FeedbackForm from "./page/Feedback";
 import History from "./page/History";
 import BookingTable from "./page/Admin_booking";
 
@@ -20,10 +20,8 @@ const App = () => {
 
   return (
     <Routes>
-      {/* Route ครอบ Layout */}
-      <Route
-        element={<Layout isAuthenticated={isAuthenticated} setAuth={setAuth} />}
-      >
+      {/* กลุ่มที่ใช้ Layout */}
+      <Route element={<Layout isAuthenticated={isAuthenticated} setAuth={setAuth} />}>
         <Route
           path="/"
           element={
@@ -32,65 +30,77 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+
+        {/* คงตามเดิม: Booking เป็น PublicRoute */}
         <Route
-          path="/feedback"
+          path="/Booking"
           element={
-            <ProtectedRoute>
-              <FeedbackForm />
-            </ProtectedRoute>
+            <PublicRoute>
+              <Booking />
+            </PublicRoute>
           }
         />
 
         <Route
-          path="/profile"
+          path="/feedback"
           element={
-            <ProtectedRoute>
+            <PublicRoute>
+              <FeedbackForm />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/Profile"
+          element={
+            <PublicRoute>
               <Profile_user />
-            </ProtectedRoute>
+            </PublicRoute>
           }
         />
         <Route
           path="/history"
           element={
-            <ProtectedRoute>
+            <PublicRoute>
               <History />
+            </PublicRoute>
+          }
+        />
+
+        {/* เลือกให้ /starf เข้าถึงได้เฉพาะคนล็อกอิน */}
+        <Route
+          path="/starf"
+          element={
+            <ProtectedRoute>
+              <Starf />
             </ProtectedRoute>
           }
         />
-      
 
-      <Route
-        path="/starf"
-        element={
-          <ProtectedRoute>
-            <Starf />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/reset-password"
-        element={
-          <ProtectedRoute>
-            <Change_password />
-          </ProtectedRoute>
-        }
-      />
+        {/* admin page แสดงใน Layout ด้วย */}
+        <Route
+          path="/admin/booking"
+          element={
+            <PublicRoute>
+              <BookingTable />
+            </PublicRoute>
+          }
+        />
       </Route>
 
-      {/* Route ไม่ใช้ Layout */}
-      <Route
-        path="/register"
-        element={
-          <PublicRoute>
-            <Create_acount />
-          </PublicRoute>
-        }
-      />
+      {/* กลุ่มที่ไม่ใช้ Layout (เช่น หน้า Auth) */}
       <Route
         path="/login"
         element={
           <PublicRoute>
             <Login setAuth={setAuth} />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <PublicRoute>
+            <Create_acount />
           </PublicRoute>
         }
       />
@@ -102,15 +112,16 @@ const App = () => {
           </PublicRoute>
         }
       />
+      {/* reset-password ควรเป็น PublicRoute เพราะลิงก์อีเมล */}
       <Route
-        path="/admin/booking"
+        path="/reset-password"
         element={
-          <ProtectedRoute>
-            <BookingTable />
-          </ProtectedRoute>
+          <PublicRoute>
+            <Change_password />
+          </PublicRoute>
         }
       />
-</Routes>
+    </Routes>
   );
 };
 

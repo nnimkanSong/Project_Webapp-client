@@ -1,0 +1,164 @@
+/* reset เล็กน้อยให้คุมขนาดชัวร์ */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #0E141C;
+}
+
+/* กรอบจองห้อง */
+.bookg-page {
+  background-color: #D9D9D9;
+  padding: clamp(12px, 1.2vw, 20px);
+  border-radius: 12px;
+  margin: 10px auto 30px;
+  width: min(96vw, 1800px);
+}
+
+/* ---------- Layout ---------- */
+.bookg-content {
+  display: grid;
+  /* ซ้ายคงเดิม, ขวาล็อก ~520px ให้เท่ารูปแรก */
+  grid-template-columns: minmax(560px, 1fr) 520px;
+  gap: clamp(20px, 2vw, 32px);
+  padding: clamp(20px, 2vw, 40px);
+  align-items: stretch;
+  max-width: min(100%, 1560px);
+  margin: 0 auto;
+}
+
+/* ซ้าย: slider กินความสูง */
+.bookg-image {
+  display: flex;
+  align-items: stretch;
+  min-height: min(72vh, 820px);
+}
+.bookg-image > .slider-root,
+.bookg-image > .slider-root .slider-box,
+.bookg-image > .slider-root .swiper { height: 100%; }
+
+/* ขวา: การ์ดฟอร์ม */
+.bookg-form-card {
+  background-color: #fff;
+  border-radius: 14px;
+  padding: clamp(28px, 2vw, 40px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  /* ล็อกความกว้างให้ไม่ยืด */
+  width: 520px;
+  max-width: 520px;
+  margin-left: auto;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+.bookg-form-card h2 {
+  text-align: center;
+  font-size: 2rem;
+  color: #5e4c2e;
+  margin: 20px 0 28px;
+}
+
+/* ---------- Form ---------- */
+.bookg-form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin-top: 50px;
+}
+
+/* label เป็น grid 2 คอลัมน์: label | control
+   ใช้ minmax(0,1fr) เพื่อให้คอลัมน์ขวาหดได้และไม่ดันการ์ดล้น */
+.bookg-form label {
+  display: grid;
+  grid-template-columns: 100px minmax(0,1fr);
+  column-gap: 12px;
+  align-items: center;
+  color: #5e4c2e;
+  font-weight: 500;
+  font-size: 1.15rem;
+}
+
+/* คุมขนาดช่องกรอกให้เต็มคอลัมน์ขวาแบบไม่ล้น */
+.bookg-form input,
+.bookg-form select {
+  height: 40px;
+  width: 100%;
+  max-width: 100%;
+  background-color: #ddd;
+  border: 2px solid transparent;
+  padding: 5px 10px;
+  border-radius: 8px;
+  margin: 0; /* ตัด margin-left เดิม */
+  transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.bookg-form input:focus,
+.bookg-form select:focus {
+  outline: none;
+  background-color: #f5f6ff;
+  border-color: #6d75ff;
+  box-shadow: 0 0 0 3px rgba(109,117,255,0.15);
+}
+
+/* ---------- Time row ---------- */
+.bookg-time-row {
+  display: grid;
+  grid-template-columns: 130px minmax(0,1fr);
+  column-gap: 12px;
+  align-items: center;
+}
+
+.bookg-time-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;         /* กันไม่ให้ block นี้ดันคอลัมน์ล้น */
+  flex-wrap: nowrap;
+}
+
+.bookg-time-range input[type="time"] {
+  width: 100px;         /* จำกัดเพื่อไม่ให้ล้น */
+  flex: 0 0 auto;
+}
+
+.bookg-time-sep {
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: #5e4c2e;
+}
+
+/* ---------- Buttons ---------- */
+.bookg-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 50px;
+}
+.bookg-btn-primary, .bookg-btn-ghost {
+  margin-top: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  width: 48%;
+  font-weight: 600;
+  letter-spacing: .3px;
+}
+.bookg-btn-primary {
+  color: #fff;
+  background: linear-gradient(135deg, #6d75ff, #bfa67a);
+}
+.bookg-btn-ghost {
+  background: #e6e6e6;
+  color: #2b2b2b;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1100px) {
+  .bookg-content { grid-template-columns: 1fr; }
+  .bookg-image { min-height: 420px; }
+  .bookg-form-card { width: 100%; max-width: 680px; margin: 0 auto; }
+}
+@media (max-width: 480px) {
+  .bookg-time-range input[type="time"] { width: 90px; }
+}
