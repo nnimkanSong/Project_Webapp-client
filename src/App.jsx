@@ -44,25 +44,25 @@ const App = () => {
         <Route
           path="/feedback"
           element={
-            <PublicRoute>
+            <ProtectedRoute>
               <FeedbackForm />
-            </PublicRoute>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/Profile"
           element={
-            <PublicRoute>
+            <ProtectedRoute>
               <Profile_user />
-            </PublicRoute>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/history"
           element={
-            <PublicRoute>
+            <ProtectedRoute>
               <History />
-            </PublicRoute>
+            </ProtectedRoute>
           }
         />
 
@@ -99,9 +99,9 @@ const App = () => {
       <Route
         path="/register"
         element={
-          <PublicRoute>
+          <ProtectedRoute>
             <Create_acount />
-          </PublicRoute>
+          </ProtectedRoute>
         }
       />
       <Route
