@@ -37,6 +37,10 @@ Nav {
             font-size: 24px;
         }
     }
+    a{
+        text-decoration: none;
+        color: white;
+    }
 }
 .bg{
     background-color: #0E141C;

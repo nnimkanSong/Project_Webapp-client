@@ -9,7 +9,7 @@ const Profile = () => {
     studentId: "66200999",
     email: "lnwza007@kmitl.ac.th",
     password: "***************",
-    photo: "https://i.pinimg.com/736x/70/7c/70/707c708a9baa10430897b43fecaa4acb.jpg"
+    photo: "https://scontent.fbkk34-3.fna.fbcdn.net/v/t39.30808-6/304863289_559294862656453_1405459667628279729_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeEaSbcY4e16o1tgHgE2qBhbMbgyry5SemYxuDKvLlJ6ZupzVtr9D7LtdlUCbKghdD3976kNvuV1p02ScvSBi-T3&_nc_ohc=Fwt2R_7fW_gQ7kNvwG1UBCz&_nc_oc=Adn27su_sOw0fLNTRO_m-Ma20nzL_BIZ9zQwUcWOXz65gyJTAN-XacIYt4TnwLSJXt4&_nc_zt=23&_nc_ht=scontent.fbkk34-3.fna&_nc_gid=3RBarUpZM4GkCgtLm-Gncg&oh=00_AfaO_kZAFFATOLvpzYK8Et8PGtzUerTMMB5koXL6GIMKcw&oe=68C8525C"
   });
 
   const handleChange = (e) => {
