@@ -92,9 +92,9 @@ const App = () => {
       <Route
         path="/register"
         element={
-          <PublicRoute>
+          <ProtectedRoute>
             <Create_acount />
-          </PublicRoute>
+          </ProtectedRoute>
         }
       />
       <Route
