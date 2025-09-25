@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import "../css/create.css";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2"; // (ควรติดตั้งแล้ว)
 
 function Create_acount() {
   const [formData, setFormData] = useState({
@@ -9,28 +10,80 @@ function Create_acount() {
     email: "",
     password: "",
   });
+  const [showPwd, setShowPwd] = useState(false); // ✅ ADDED: state มองเห็นรหัสผ่าน
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // ✅ OPTIONAL: เช็คความแข็งแรงรหัสผ่านฝั่ง client ให้ feedback เร็ว
+  const isStrongPassword = (pwd) =>
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(pwd);
+
+  const promptOtpAndVerify = async (email) => {
+    const result = await Swal.fire({
+      title: "Enter OTP",
+      input: "text",
+      inputLabel: `OTP sent to ${email}`,
+      inputPlaceholder: "6-digit code",
+      inputAttributes: { maxlength: 6, autocapitalize: "off", autocorrect: "off" },
+      showCancelButton: true,
+      showDenyButton: true,                      // ✅ ปุ่ม Resend
+      confirmButtonText: "Verify",
+      cancelButtonText: "Cancel",
+      denyButtonText: "Resend OTP",
+      allowOutsideClick: false
     });
+
+    if (result.isConfirmed && result.value) {
+      try {
+        const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+        await axios.post(`${BASE_URL}/api/auth/verify-otp`, { email, otp: result.value });
+        await Swal.fire({ icon: "success", title: "Verified!", text: "Email verified successfully" });
+        navigate("/login");
+      } catch (err) {
+        await Swal.fire({ icon: "error", title: "Verification failed", text: err.response?.data?.error || "Server error" });
+        return promptOtpAndVerify(email); // ถามใหม่
+      }
+    } else if (result.isDenied) {
+      // ✅ กด Resend
+      const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+      await axios.post(`${BASE_URL}/api/auth/resend-otp`, { email });
+      await Swal.fire({ icon: "info", title: "Resent", text: "A new OTP has been sent." });
+      return promptOtpAndVerify(email);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    // ✅ OPTIONAL: กัน user ใส่รหัสผ่านอ่อน
+    if (!isStrongPassword(formData.password)) {
+      setError("Password ต้องมีอย่างน้อย 8 ตัว และมีตัวพิมพ์เล็ก/ใหญ่ ตัวเลข และอักขระพิเศษ");
+      return;
+    }
+
     try {
-      await axios.post("http://localhost:5000/api/auth/register", formData);
-      alert("User registered successfully");
-      navigate("/login");
+      const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+      const { data } = await axios.post(`${BASE_URL}/api/auth/register`, formData);
+
+      await Swal.fire({
+        icon: "info",
+        title: "Almost there",
+        text: "We sent an OTP to your email. Please verify.",
+        confirmButtonText: "OK"
+      });
+
+      await promptOtpAndVerify(data.email || formData.email);
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.error || "Server error");
     }
   };
+  
 
   return (
     <div className="create-bg">
@@ -50,7 +103,7 @@ function Create_acount() {
               <p>Password :</p>
             </div>
 
-            <div className="cr-box-input" onSubmit={handleSubmit}>
+            <div className="cr-box-input">
               <input
                 name="username"
                 type="text"
@@ -67,24 +120,48 @@ function Create_acount() {
                 onChange={handleChange}
               />
               <hr />
-              <input
-                name="password"
-                type="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-              />
+              {/* ✅ CHANGED: ครอบ input password + ปุ่ม toggle */}
+              <div className="input-wrap">
+                <input
+                  name="password"
+                  type={showPwd ? "text" : "password"}
+                  placeholder="Password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  aria-label="Password"
+                  autoComplete="new-password"
+                  className="pwd-input"
+                />
+
+                <button
+                  type="button"
+                  className="toggle-visibility"
+                  onClick={() => setShowPwd(v => !v)}
+                  aria-label={showPwd ? "Hide password" : "Show password"}
+                >
+                  <i className={showPwd ? "fa-solid fa-eye-slash" : "fa-solid fa-eye"} />
+                </button>
+              </div>
+              {/* ✅ OPTIONAL: แสดงคำแนะนำความแข็งแรงของรหัสผ่าน */}
+              {!isStrongPassword(formData.password) && formData.password.length > 0 && (
+                <small style={{ color: "#cc6600" }}>
+                  ต้องมี ≥8 ตัว, มี a-z, A-Z, 0-9 และอักขระพิเศษ
+                </small>
+              )}
             </div>
 
             {error && <p style={{ color: "red", marginTop: 10 }}>{error}</p>}
           </div>
-              <div className="cr-btn-end">
-                <div className="cr-btn-done">
-                  <button className="cr-done" type="submit" onClick={handleSubmit}>
-                    Done
-                  </button>
-                </div>
-              </div>
+
+          <div className="cr-btn-end">
+            <div className="cr-btn-done">
+              {/* ✅ CHANGED: type=button แล้วคุมด้วย handleSubmit */}
+              <button className="cr-done" type="button" onClick={handleSubmit}>
+                Done
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

@@ -149,3 +149,36 @@ body {
         }
     }
 }
+
+.input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+/* กันไอคอนทับข้อความ ด้วย padding ขวา */
+.pwd-input {
+  width: 100%;
+  padding-right: 2.5rem;        /* เว้นที่ให้ปุ่มด้านขวา */
+  border-radius: 12px;          /* ปรับตามสไตล์ของคุณ */
+  box-sizing: border-box;
+}
+
+/* ปุ่มไอคอนลอยอยู่ในกล่อง input */
+.toggle-visibility {
+  position: absolute;
+  right: 0.5rem;                /* ระยะห่างจากขอบขวา */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.75rem;               /* เพิ่ม hit area ให้คลิกง่าย */
+  height: 1.75rem;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #9aa3ae;               /* ปรับสีตามธีม */
+  cursor: pointer;
+}
+
+.toggle-visibility:hover { color: #cbd5e1; }  /* hover สีอ่อนขึ้น */

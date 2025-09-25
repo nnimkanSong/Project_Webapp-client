@@ -16,36 +16,38 @@ const Login = ({ setAuth }) => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
-  console.log("handleSubmit fired:", formData); // ✅ ดูว่าข้อมูลที่ส่งไปถูกมั้ย
+    const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-  try {
-    const res = await axios.post(
-      "http://localhost:5000/api/auth/login",
-      formData
-    );
+    e.preventDefault();
+    setError("");
+    console.log("handleSubmit fired:", formData); // ✅ ดูว่าข้อมูลที่ส่งไปถูกมั้ย
 
-    // ✅ ใส่ตรงนี้เพื่อตรวจ response ที่ได้จาก server
-    console.log("RES STATUS:", res.status);
-    console.log("RES DATA:", res.data);
+    try {
+      const res = await axios.post(
+        `${BASE_URL}/api/auth/login`,
+        formData
+      );
 
-    const token = res.data.token || res.data.accessToken;
-    if (!token) throw new Error("No token in response");
+      // ✅ ใส่ตรงนี้เพื่อตรวจ response ที่ได้จาก server
+      console.log("RES STATUS:", res.status);
+      console.log("RES DATA:", res.data);
 
-    localStorage.setItem("token", token);
-    setAuth?.(true);
-    navigate("/");
-  } catch (err) {
-    console.error(
-      "ERR:",
-      err.response?.status,
-      err.response?.data,
-      err.message
-    );
-    setError(err.response?.data?.error || "Login failed");
-  }
-};
+      const token = res.data.token || res.data.accessToken;
+      if (!token) throw new Error("No token in response");
+
+      localStorage.setItem("token", token);
+      setAuth?.(true);
+      navigate("/");
+    } catch (err) {
+      console.error(
+        "ERR:",
+        err.response?.status,
+        err.response?.data,
+        err.message
+      );
+      setError(err.response?.data?.error || "Login failed");
+    }
+  };
 
   return (
     <div className="login-bg">
