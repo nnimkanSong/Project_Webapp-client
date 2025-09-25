@@ -8,6 +8,7 @@ import Profile_user from './page/Profile_user';
 import Change_password from './page/Change_password';
 import Profile_admin from './page/Profile_admin';
 import History_admin from './page/History_admin';
+
 const App = () => {
   return (
     <Routes>
