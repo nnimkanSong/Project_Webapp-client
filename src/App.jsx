@@ -52,9 +52,9 @@ const App = () => {
         <Route
           path="/Profile"
           element={
-            <ProtectedRoute>
+            <PublicRoute>
               <Profile_user />
-            </ProtectedRoute>
+            </PublicRoute>
           }
         />
         <Route
