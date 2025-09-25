@@ -25,14 +25,15 @@ export default function Sidebar({
   };
 
   return (
-    <aside className={`sb ${collapsed ? "sb--collapsed" : ""}`}>
+    <>
+      <aside className={`sb ${collapsed ? "sb--collapsed" : ""}`}>
       {/* header */}
       <div className="sb__header">
         <div className="sb__brand">
           <div className="sb__logo">
             <LogoIcon />
           </div>
-          {!collapsed && <div className="sb__title">Oculis</div>}
+          {!collapsed && <div className="sb__title">Admin</div>}
         </div>
 
         <button
@@ -77,28 +78,9 @@ export default function Sidebar({
       </nav>
 
       {/* footer action + user card */}
-      <div className="sb__footer">
-        <button className="sb__cta">
-          <PlusIcon />
-          {!collapsed && <span>New Post</span>}
-        </button>
-
-        <div className="sb__user">
-          <img
-            src="https://i.pravatar.cc/64?img=15"
-            alt="avatar"
-            className="sb__avatar"
-          />
-          {!collapsed && (
-            <div className="sb__userInfo">
-              <div className="sb__userName">Jane Cooper</div>
-              <div className="sb__userRole">UX Designer</div>
-            </div>
-          )}
-          <MoreIcon />
-        </div>
-      </div>
     </aside>
+    </>
+    
   );
 }
 

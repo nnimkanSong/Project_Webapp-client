@@ -35,7 +35,7 @@ export default function BookingTable() {
   const booked = bookings[formatDate(selectedDate)] || {};
 
   return (
-    <div className="booking-container">
+      <div className="booking-container">
       <h2 className="title">DailyBooking</h2>
 
       {/* DatePicker */}
@@ -74,5 +74,6 @@ export default function BookingTable() {
         </tbody>
       </table>
     </div>
+    
   );
 }

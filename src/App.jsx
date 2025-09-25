@@ -14,6 +14,7 @@ import Profile_user from "./page/Profile_user";
 import FeedbackForm from "./page/Feedback";
 import History from "./page/History";
 import BookingTable from "./page/Admin_booking";
+import Layout_admin from "./Layout_admin";
 
 const App = () => {
   const [isAuthenticated, setAuth] = useState(!!localStorage.getItem("token"));
@@ -25,9 +26,9 @@ const App = () => {
         <Route
           path="/"
           element={
-            <PublicRoute>
+            <ProtectedRoute>
               <Home />
-            </PublicRoute>
+            </ProtectedRoute>
           }
         />
 
@@ -35,34 +36,34 @@ const App = () => {
         <Route
           path="/Booking"
           element={
-            <PublicRoute>
+            <ProtectedRoute>
               <Booking />
-            </PublicRoute>
+            </ProtectedRoute>
           }
         />
 
         <Route
           path="/feedback"
           element={
-            <PublicRoute>
+            <ProtectedRoute>
               <FeedbackForm />
-            </PublicRoute>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/Profile"
           element={
-            <PublicRoute>
+            <ProtectedRoute>
               <Profile_user />
-            </PublicRoute>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/history"
           element={
-            <PublicRoute>
+            <ProtectedRoute>
               <History />
-            </PublicRoute>
+            </ProtectedRoute>
           }
         />
 
@@ -76,15 +77,7 @@ const App = () => {
           }
         />
 
-        {/* admin page แสดงใน Layout ด้วย */}
-        <Route
-          path="/admin/booking"
-          element={
-            <PublicRoute>
-              <BookingTable />
-            </PublicRoute>
-          }
-        />
+        
       </Route>
 
       {/* กลุ่มที่ไม่ใช้ Layout (เช่น หน้า Auth) */}
@@ -121,6 +114,16 @@ const App = () => {
           </PublicRoute>
         }
       />
+      {/* admin page แสดงใน Layout ด้วย */}
+      <Route element={<Layout_admin isAuthenticated={isAuthenticated} setAuth={setAuth} />}>
+
+        <Route
+          path="/admin/booking"
+          element={
+              <BookingTable />
+          }
+        />
+      </Route>
     </Routes>
   );
 };
