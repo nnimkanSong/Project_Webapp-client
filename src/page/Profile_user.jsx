@@ -118,7 +118,7 @@ const Profile = () => {
             <button className="popup-close" onClick={() => setShowPopup(false)}>×</button>
             <div className="popup-icon">✔</div>
             <h2>Succeed</h2>
-            <p>ข้อมูลของคุณได้รับการอัปเดตเรียบร้อย<br/>คุณสามารถดำเนินการต่อหรือกลับไปยังหน้าหลักได้</p>         
+            <p>ข้อมูลของคุณได้รับการอัปเดตเรียบร้อย<br/>คุณสามารถดำเนินการต่อหรือกลับไปยังหน้าหลักได้</p>
           </div>
         </div>
       )}
