@@ -14,6 +14,7 @@ import Profile_user from "./page/Profile_user";
 import FeedbackForm from "./page/Feedback";
 import History from "./page/History";
 import BookingTable from "./page/Admin_booking";
+import Admin_usermanagement from "./page/admin/Admin_usermanagement";
 
 const App = () => {
   const [isAuthenticated, setAuth] = useState(!!localStorage.getItem("token"));
@@ -50,11 +51,11 @@ const App = () => {
           }
         />
         <Route
-          path="/Profile/user"
+          path="/Profile"
           element={
-            <PublicRoute>
+            <ProtectedRoute>
               <Profile_user />
-            </PublicRoute>
+            </ProtectedRoute>
           }
         />
         <Route
@@ -119,6 +120,12 @@ const App = () => {
           <PublicRoute>
             <Change_password />
           </PublicRoute>
+        }
+      />
+      <Route
+        path="/admin/users-management"
+        element={
+            <Admin_usermanagement />
         }
       />
     </Routes>

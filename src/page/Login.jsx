@@ -7,7 +7,7 @@ const Login = ({ setAuth }) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const navigate = useNavigate();
-
+  const [showPwd, setShowPwd] = useState(false);
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
@@ -80,19 +80,34 @@ const Login = ({ setAuth }) => {
               <div className="box-input">
                 <input
                   type="email"
+                  placeholder="Email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   required
                 />
                 <hr />
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                />
+                <div className="input-wrap">
+                  <input
+                    name="password"
+                    type={showPwd ? "text" : "password"}
+                    placeholder="Password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    aria-label="Password"
+                    autoComplete="new-password"
+                    className="pwd-input"
+                  />
+                  <button
+                    type="button"
+                    className="toggle-visibility"
+                    onClick={() => setShowPwd(v => !v)}
+                    aria-label={showPwd ? "Hide password" : "Show password"}
+                  >
+                    <i className={showPwd ? "fa-solid fa-eye-slash" : "fa-solid fa-eye"} />
+                  </button>
+                </div>
+
               </div>
 
               <br />

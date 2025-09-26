@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import "../css/create.css";
 import { useNavigate } from "react-router-dom";
-import Swal from "sweetalert2"; // (ควรติดตั้งแล้ว)
+import Swal from "sweetalert2";
 
 function Create_acount() {
   const [formData, setFormData] = useState({
@@ -10,7 +10,7 @@ function Create_acount() {
     email: "",
     password: "",
   });
-  const [showPwd, setShowPwd] = useState(false); // ✅ ADDED: state มองเห็นรหัสผ่าน
+  const [showPwd, setShowPwd] = useState(false); 
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -18,7 +18,6 @@ function Create_acount() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ✅ OPTIONAL: เช็คความแข็งแรงรหัสผ่านฝั่ง client ให้ feedback เร็ว
   const isStrongPassword = (pwd) =>
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(pwd);
 
@@ -30,7 +29,7 @@ function Create_acount() {
       inputPlaceholder: "6-digit code",
       inputAttributes: { maxlength: 6, autocapitalize: "off", autocorrect: "off" },
       showCancelButton: true,
-      showDenyButton: true,                      // ✅ ปุ่ม Resend
+      showDenyButton: true,
       confirmButtonText: "Verify",
       cancelButtonText: "Cancel",
       denyButtonText: "Resend OTP",
@@ -45,10 +44,9 @@ function Create_acount() {
         navigate("/login");
       } catch (err) {
         await Swal.fire({ icon: "error", title: "Verification failed", text: err.response?.data?.error || "Server error" });
-        return promptOtpAndVerify(email); // ถามใหม่
+        return promptOtpAndVerify(email);
       }
     } else if (result.isDenied) {
-      // ✅ กด Resend
       const BASE_URL = import.meta.env.VITE_API_BASE_URL;
       await axios.post(`${BASE_URL}/api/auth/resend-otp`, { email });
       await Swal.fire({ icon: "info", title: "Resent", text: "A new OTP has been sent." });
@@ -60,7 +58,6 @@ function Create_acount() {
     e.preventDefault();
     setError("");
 
-    // ✅ OPTIONAL: กัน user ใส่รหัสผ่านอ่อน
     if (!isStrongPassword(formData.password)) {
       setError("Password ต้องมีอย่างน้อย 8 ตัว และมีตัวพิมพ์เล็ก/ใหญ่ ตัวเลข และอักขระพิเศษ");
       return;
