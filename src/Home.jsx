@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import './Home.css'
+import sliderhome from './components/Sliderhome';
 const Home = () => {
   return (
     <div className='pg-home'>
@@ -27,8 +28,7 @@ const Home = () => {
         </div>
       </div>
       <div className='end'>
-        <img src="" alt="" />
-        <div className="list">รายละเอียด</div>
+        <sliderhome/>
       </div>
       <a href="/login"></a>
     </div>

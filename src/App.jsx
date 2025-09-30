@@ -15,6 +15,7 @@ import FeedbackForm from "./page/Feedback";
 import History from "./page/History";
 import BookingTable from "./page/Admin_booking";
 import Layout_admin from "./Layout_admin";
+import Admin_usermanagement from "./page/admin/Admin_usermanagement";
 
 const App = () => {
   const [isAuthenticated, setAuth] = useState(!!localStorage.getItem("token"));
@@ -36,9 +37,9 @@ const App = () => {
         <Route
           path="/Booking"
           element={
-            <PublicRoute>
+            <ProtectedRoute>
               <Booking />
-            </PublicRoute>
+            </ProtectedRoute>
           }
         />
 
@@ -124,6 +125,12 @@ const App = () => {
           }
         />
       </Route>
+      <Route
+        path="/admin/users-management"
+        element={
+            <Admin_usermanagement />
+        }
+      />
     </Routes>
   );
 };

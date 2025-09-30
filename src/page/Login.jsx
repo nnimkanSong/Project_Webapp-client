@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import "../css/Login.css";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { api } from "../api"; // ✅ ใช้ axios instance
 
 const Login = ({ setAuth }) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -16,35 +17,20 @@ const Login = ({ setAuth }) => {
   };
 
   const handleSubmit = async (e) => {
-    const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
     e.preventDefault();
     setError("");
-    console.log("handleSubmit fired:", formData); // ✅ ดูว่าข้อมูลที่ส่งไปถูกมั้ย
-
     try {
-      const res = await axios.post(
-        `${BASE_URL}/api/auth/login`,
-        formData
-      );
+      const res = await api.post("/api/auth/login", formData);
+      console.log("RES:", res.data);
 
-      // ✅ ใส่ตรงนี้เพื่อตรวจ response ที่ได้จาก server
-      console.log("RES STATUS:", res.status);
-      console.log("RES DATA:", res.data);
-
-      const token = res.data.token || res.data.accessToken;
+      const token = res.data.token;
       if (!token) throw new Error("No token in response");
 
       localStorage.setItem("token", token);
       setAuth?.(true);
-      navigate("/");
+      navigate("/booking"); // ✅ พอ login สำเร็จพาไป booking page
     } catch (err) {
-      console.error(
-        "ERR:",
-        err.response?.status,
-        err.response?.data,
-        err.message
-      );
+      console.error("Login error:", err.response?.data);
       setError(err.response?.data?.error || "Login failed");
     }
   };
@@ -54,11 +40,11 @@ const Login = ({ setAuth }) => {
       <div className="box">
         <div className="rgb">
           <div className="logo">
-            <img src="/Login.png" alt="" />
+            <img src="/Login.png" alt="Logo" />
           </div>
 
           <button className="btn-google" type="button">
-            <img src="/google_logo.png" alt="" />
+            <img src="/google_logo.png" alt="Google" />
             <p>Login with Google</p>
           </button>
 
@@ -68,7 +54,6 @@ const Login = ({ setAuth }) => {
             <hr />
           </div>
 
-          {/* ✅ ใช้ form ครอบ และใช้ type="submit" */}
           <form onSubmit={handleSubmit}>
             <div className="input">
               <div className="name">
@@ -80,19 +65,33 @@ const Login = ({ setAuth }) => {
               <div className="box-input">
                 <input
                   type="email"
+                  placeholder="Email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   required
                 />
                 <hr />
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                />
+                <div className="input-wrap">
+                  <input
+                    name="password"
+                    type={showPwd ? "text" : "password"}
+                    placeholder="Password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    aria-label="Password"
+                    autoComplete="new-password"
+                    className="pwd-input"
+                  />
+                  <button
+                    type="button"
+                    className="toggle-visibility"
+                    onClick={() => setShowPwd(v => !v)}
+                    aria-label={showPwd ? "Hide password" : "Show password"}
+                  >
+                    <i className={showPwd ? "fa-solid fa-eye-slash" : "fa-solid fa-eye"} />
+                  </button>
+                </div>
               </div>
 
               <br />

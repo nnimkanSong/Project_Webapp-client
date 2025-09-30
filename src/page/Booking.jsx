@@ -4,6 +4,7 @@ import React, { useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import Slider from "../components/Slider";
 import { useNavigate } from "react-router-dom";
+import { api } from "../api"; // ✅ ใช้ axios instance
 
 export default function Booking() {
   const navigate = useNavigate();
@@ -37,52 +38,32 @@ export default function Booking() {
     e.preventDefault();
     const { room, date, startTime, endTime, people, objective } = formData;
 
+    // ✅ Validation ฝั่ง client
     if (!room || !date || !startTime || !endTime || !people || !objective) {
-      Swal.fire({
-        title: "Failure",
-        text: "กรุณากรอกข้อมูลให้ครบทุกช่อง",
-        icon: "error",
-        confirmButtonText: "OK",
-      });
+      Swal.fire("Failure", "กรุณากรอกข้อมูลให้ครบทุกช่อง", "error");
       return;
     }
     if (endTime <= startTime) {
-      Swal.fire({
-        title: "เวลาไม่ถูกต้อง",
-        text: "กรุณาเลือกเวลาสิ้นสุดให้มากกว่าเวลาเริ่ม",
-        icon: "warning",
-        confirmButtonText: "OK",
-      });
+      Swal.fire("เวลาไม่ถูกต้อง", "กรุณาเลือกเวลาสิ้นสุดให้มากกว่าเวลาเริ่ม", "warning");
       return;
     }
 
     try {
-      // 👉 แก้ URL ให้ตรงกับ backend ของพี่
-      const res = await fetch("http://localhost:5000/api/book", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          room,
-          date, // yyyy-mm-dd
-          startTime, // HH:MM
-          endTime, // HH:MM
-          people,
-          objective,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data?.error || "Booking failed");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        Swal.fire("Unauthorized", "กรุณาเข้าสู่ระบบก่อนทำการจอง", "error");
+        navigate("/login");
+        return;
       }
 
-      Swal.fire({
-        title: "Succeed!",
-        text: "คุณได้ทำการจองสำเร็จแล้ว โปรดรอการยืนยันจากเจ้าหน้าที่",
-        icon: "success",
-        confirmButtonText: "OK",
-      });
+      // ✅ ยิงไปที่ backend พร้อมแนบ token
+      const res = await api.post(
+        "/api/booking",
+        { room, date, startTime, endTime, people, objective },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      Swal.fire("Succeed!", "คุณได้ทำการจองสำเร็จแล้ว โปรดรอการยืนยัน", "success");
 
       setFormData({
         room: "",
@@ -93,12 +74,7 @@ export default function Booking() {
         objective: "",
       });
     } catch (err) {
-      Swal.fire({
-        title: "Error",
-        text: err.message,
-        icon: "error",
-        confirmButtonText: "OK",
-      });
+      Swal.fire("Error", err.response?.data?.error || "Booking failed", "error");
     }
   };
 
