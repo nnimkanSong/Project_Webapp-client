@@ -1,6 +1,6 @@
 import "../css/Profile_user.css";
 import React, { useEffect, useRef, useState } from "react";
-import { api } from "../api";
+import { api } from "../api"; // ถ้า instance ของคุณเป็น default export ให้เปลี่ยนเป็น: import api from "../api";
 
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -8,20 +8,23 @@ const Profile = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(true);
   const fileRef = useRef(null);
+  const lastPreviewUrlRef = useRef(null);
 
   const [user, setUser] = useState({
     username: "",
     student_number: "",
     email: "",
     photoUrl: "https://placehold.co/200x200?text=Profile",
-    passwordLength: 12, // แค่ใช้แสดงจำนวนจุด ไม่ใช่รหัสจริง
+    passwordLength: 12, // ใช้แค่แสดงจุด ไม่ใช่รหัสจริง
   });
 
+  // ตั้ง Authorization header ครั้งเดียว
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) api.defaults.headers.common.Authorization = `Bearer ${token}`;
   }, []);
 
+  // โหลดโปรไฟล์
   useEffect(() => {
     (async () => {
       try {
@@ -32,6 +35,7 @@ const Profile = () => {
           username: d.username,
           student_number: d.student_number || "",
           email: d.email,
+          // server แปลงเป็น URL พร้อมใช้ให้แล้ว
           photoUrl: d.photoUrl || prev.photoUrl,
         }));
       } catch (e) {
@@ -40,13 +44,27 @@ const Profile = () => {
         setLoading(false);
       }
     })();
+
+    // cleanup preview URL
+    return () => {
+      if (lastPreviewUrlRef.current) {
+        URL.revokeObjectURL(lastPreviewUrlRef.current);
+      }
+    };
   }, []);
 
+  // อัปโหลดรูป
   const handleFile = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // ทำ preview ชั่วคราว
     const localUrl = URL.createObjectURL(file);
+    // cleanup preview ก่อนหน้า
+    if (lastPreviewUrlRef.current) {
+      URL.revokeObjectURL(lastPreviewUrlRef.current);
+    }
+    lastPreviewUrlRef.current = localUrl;
     setUser((prev) => ({ ...prev, photoUrl: localUrl }));
 
     try {
@@ -55,26 +73,34 @@ const Profile = () => {
       const res = await api.post("/api/profile/photo", form, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+      // ใช้ URL จริงจาก server (Google Drive)
       setUser((prev) => ({ ...prev, photoUrl: res.data.url }));
     } catch (err) {
       console.error("upload photo error:", err);
+      // ถ้าอัปโหลดพลาด ย้อนกลับรูปเดิม
+      setUser((prev) => ({
+        ...prev,
+        photoUrl:
+          prev.photoUrl?.startsWith("blob:") ? "https://placehold.co/200x200?text=Profile" : prev.photoUrl,
+      }));
     }
   };
 
+  // บันทึกข้อมูลพื้นฐาน (ไม่ส่ง photoUrl เพราะอัปเดตผ่าน /photo แล้ว)
   const handleSave = async () => {
     try {
       const payload = {
         username: user.username,
         student_number: user.student_number,
-        photoUrl: user.photoUrl,
+        // ❌ ไม่ส่ง photoUrl กันเคส blob ไปทับ DB
       };
       const res = await api.put("/api/profile", payload);
       setUser((prev) => ({
         ...prev,
         username: res.data.username,
         student_number: res.data.student_number || "",
-        photoUrl: res.data.photoUrl || prev.photoUrl,
         email: res.data.email,
+        // photoUrl คงค่าปัจจุบันที่แสดงอยู่
       }));
       setIsEditing(false);
       setShowPopup(true);
@@ -105,7 +131,7 @@ const Profile = () => {
             <img src={user.photoUrl} alt="Profile" className="profile-photo" />
             <input
               type="file"
-              accept="image/*"
+              accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
               ref={fileRef}
               onChange={handleFile}
               style={{ display: "none" }}
