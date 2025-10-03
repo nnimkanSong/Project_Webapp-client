@@ -1,6 +1,5 @@
 /* ===== Container กลางนิ่ง ๆ ===== */
 .profile-page {
-  background-color: #0E141C;
   min-height: 100vh;
   font-family: 'Ledger', serif;
   display: flex;
@@ -14,7 +13,7 @@
   border-radius: 10px;
   padding: 30px 40px;
   width: 1300px;
-  height: 700px;
+  height: 650px;
   max-width: 100%;
   color: #48331A;
   text-align: center;
