@@ -1,19 +1,22 @@
 import React, { useState } from "react";
 import "../css/Login.css";
 import { useNavigate } from "react-router-dom";
-import { api } from "../api"; // ✅ ใช้ axios instance
+import { api } from "../api";
+import GoogleVerifyEmail from "../components/GoogleVerifyEmail";
 
 const Login = ({ setAuth }) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [showPwd, setShowPwd] = useState(false);
+
+  // ✅ เพิ่ม state นี้
+  const [verified, setVerified] = useState(false);
+
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    if (e.target.name === "email") setVerified(false); // เปลี่ยนอีเมลเมื่อไหร่ให้ต้อง verify ใหม่
   };
 
   const handleSubmit = async (e) => {
@@ -21,16 +24,11 @@ const Login = ({ setAuth }) => {
     setError("");
     try {
       const res = await api.post("/api/auth/login", formData);
-      console.log("RES:", res.data);
-
       const token = res.data.token;
-      if (!token) throw new Error("No token in response");
-
       localStorage.setItem("token", token);
       setAuth?.(true);
-      navigate("/booking"); // ✅ พอ login สำเร็จพาไป booking page
+      navigate("/booking");
     } catch (err) {
-      console.error("Login error:", err.response?.data);
       setError(err.response?.data?.error || "Login failed");
     }
   };
@@ -43,10 +41,14 @@ const Login = ({ setAuth }) => {
             <img src="/Login.png" alt="Logo" />
           </div>
 
-          <button className="btn-google" type="button">
-            <img src="/google_logo.png" alt="Google" />
-            <p>Login with Google</p>
-          </button>
+          {/* ปุ่มยืนยันอีเมลด้วย Google (custom) */}
+          <div className="btn-google">
+            <GoogleVerifyEmail
+              expectedEmail={formData.email}
+              disabled={!formData.email}
+              onVerified={() => setVerified(true)}   // ✅ ได้ผลลัพธ์แล้วตั้งค่า
+            />
+          </div>
 
           <div className="line">
             <hr />
@@ -82,6 +84,7 @@ const Login = ({ setAuth }) => {
                     aria-label="Password"
                     autoComplete="new-password"
                     className="pwd-input"
+                    required
                   />
                   <button
                     type="button"
@@ -92,6 +95,17 @@ const Login = ({ setAuth }) => {
                     <i className={showPwd ? "fa-solid fa-eye-slash" : "fa-solid fa-eye"} />
                   </button>
                 </div>
+
+                {/* แสดงสถานะ verify */}
+                <div style={{ marginTop: 8, fontSize: 14 }}>
+                  {formData.email ? (
+                    verified ? (
+                      <span style={{ color: "#3adb76" }}>✓ Email verified</span>
+                    ) : (
+                      <span style={{ color: "#ff6b6b" }}>Please verify your email with Google</span>
+                    )
+                  ) : null}
+                </div>
               </div>
 
               <br />
@@ -101,11 +115,15 @@ const Login = ({ setAuth }) => {
             {error && <p style={{ color: "red" }}>{error}</p>}
 
             <div className="btn-end">
-              <a className="create" href="/register">
-                Create account
-              </a>
+              <a className="create" href="/register">Create account</a>
               <div className="btn-done">
-                <button className="done" type="submit">
+                {/* ✅ ป้องกันกดก่อน verify (ยังไง backend ก็กันอีกชั้น) */}
+                <button
+                  className="done"
+                  type="submit"
+                  disabled={!verified || !formData.password}
+                  title={!verified ? "Verify your email first" : ""}
+                >
                   Done
                 </button>
               </div>

@@ -5,7 +5,6 @@ import { api } from "../api"; // ถ้า instance ของคุณเป็�
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(true);
   const fileRef = useRef(null);
   const lastPreviewUrlRef = useRef(null);
@@ -14,8 +13,8 @@ const Profile = () => {
     username: "",
     student_number: "",
     email: "",
+    user_type: "user", // ✅ เพิ่ม user_type
     photoUrl: "https://placehold.co/200x200?text=Profile",
-    passwordLength: 12, // ใช้แค่แสดงจุด ไม่ใช่รหัสจริง
   });
 
   // ตั้ง Authorization header ครั้งเดียว
@@ -35,6 +34,7 @@ const Profile = () => {
           username: d.username,
           student_number: d.student_number || "",
           email: d.email,
+          user_type: d.user_type || "user", // ✅ รับค่าจาก API
           // server แปลงเป็น URL พร้อมใช้ให้แล้ว
           photoUrl: d.photoUrl || prev.photoUrl,
         }));
@@ -73,15 +73,16 @@ const Profile = () => {
       const res = await api.post("/api/profile/photo", form, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      // ใช้ URL จริงจาก server (Google Drive)
+      // ใช้ URL จริงจาก server (Cloudinary)
       setUser((prev) => ({ ...prev, photoUrl: res.data.url }));
     } catch (err) {
       console.error("upload photo error:", err);
       // ถ้าอัปโหลดพลาด ย้อนกลับรูปเดิม
       setUser((prev) => ({
         ...prev,
-        photoUrl:
-          prev.photoUrl?.startsWith("blob:") ? "https://placehold.co/200x200?text=Profile" : prev.photoUrl,
+        photoUrl: prev.photoUrl?.startsWith("blob:")
+          ? "https://placehold.co/200x200?text=Profile"
+          : prev.photoUrl,
       }));
     }
   };
@@ -92,7 +93,7 @@ const Profile = () => {
       const payload = {
         username: user.username,
         student_number: user.student_number,
-        // ❌ ไม่ส่ง photoUrl กันเคส blob ไปทับ DB
+        // ❌ ไม่ส่ง user_type (ห้ามแก้จากหน้าผู้ใช้) และไม่ส่ง photoUrl
       };
       const res = await api.put("/api/profile", payload);
       setUser((prev) => ({
@@ -100,6 +101,7 @@ const Profile = () => {
         username: res.data.username,
         student_number: res.data.student_number || "",
         email: res.data.email,
+        user_type: res.data.user_type || prev.user_type, // ✅ รับกลับมาเพื่อความชัดเจน
         // photoUrl คงค่าปัจจุบันที่แสดงอยู่
       }));
       setIsEditing(false);
@@ -120,6 +122,14 @@ const Profile = () => {
     );
   }
 
+  // helper: แต่ง badge ตาม role
+  const roleClass =
+    user.user_type === "admin"
+      ? "badge admin"
+      : user.user_type === "vip"
+      ? "badge vip"
+      : "badge user";
+
   return (
     <div className="page">
       <div className="profile-page">
@@ -137,7 +147,10 @@ const Profile = () => {
               style={{ display: "none" }}
             />
             {isEditing && (
-              <button className="btn small" onClick={() => fileRef.current?.click()}>
+              <button
+                className="btn small"
+                onClick={() => fileRef.current?.click()}
+              >
                 Change photo
               </button>
             )}
@@ -180,33 +193,15 @@ const Profile = () => {
               <b>{user.email}</b>
             </div>
 
-            {/* Password (แสดงเป็นจุด + ปุ่ม Show/Hide + Change password) */}
-            <div className="label">Password :</div>
+            {/* ✅ แทน Password ด้วย User type */}
+            <div className="label">User type :</div>
             <div className="value">
-              <b>
-                {showPassword
-                  ? "•".repeat(user.passwordLength)
-                  : "*".repeat(user.passwordLength)}
-              </b>
-              <button
-                className="btn tiny"
-                onClick={() => setShowPassword((v) => !v)}
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
-              {isEditing && (
-                <button
-                  className="btn tiny"
-                  onClick={() => (window.location.href = "/change-password")}
-                >
-                  Change password
-                </button>
-              )}
+              <span className={roleClass}>{user.user_type}</span>
             </div>
           </div>
 
           {/* ปุ่ม */}
-          <div className="button-group">
+          <div className="button-group" style={{ flexWrap: "wrap" }}>
             <button
               onClick={() => {
                 if (isEditing) setIsEditing(false);
@@ -215,6 +210,47 @@ const Profile = () => {
               className="btn back"
             >
               Back
+            </button>
+
+            {/* ปุ่ม Reset Password */}
+            <button
+              className="btn reset"
+              onClick={() => (window.location.href = "/Forgot")}
+              aria-label="Reset your password"
+              title="Reset your password"
+            >
+              <svg
+                className="btn-icon"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  d="M12 8V6a4 4 0 0 1 8 0v2"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+                <rect
+                  x="6"
+                  y="8"
+                  width="12"
+                  height="12"
+                  rx="2"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <path
+                  d="M12 13v4"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+              Reset password
             </button>
 
             {isEditing ? (

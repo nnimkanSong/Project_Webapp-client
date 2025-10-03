@@ -4,7 +4,13 @@
 }
 
 /* optional พื้นหลังรวม */
-.bg { background:#0E141C; min-height:100vh; }
+.bg {
+  background:
+    radial-gradient(1200px 800px at 10% 120%, rgba(147,51,234,0.25), transparent 70%),
+    radial-gradient(1000px 600px at 90% 120%, rgba(56,189,248,0.25), transparent 70%),
+    linear-gradient(180deg, #0f172a 0%, #111827 100%);
+}
+
 
 html, body, #root { height: 100%; }
 body { margin: 0; }
