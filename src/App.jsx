@@ -14,6 +14,8 @@ import Profile_user from "./page/Profile_user";
 import FeedbackForm from "./page/Feedback";
 import History from "./page/History";
 import BookingTable from "./page/Admin_booking";
+import Feedback_admin from "./page/Feedback_admin";
+
 
 const App = () => {
   const [isAuthenticated, setAuth] = useState(!!localStorage.getItem("token"));
@@ -49,6 +51,16 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        {/* admin feedback */}
+        <Route
+          path="/Feedback/admin"
+          element={
+            <PublicRoute>
+              <Feedback_admin />
+            </PublicRoute>
+          }
+        />
+
         <Route
           path="/Profile/user"
           element={
