@@ -9,7 +9,16 @@
   --sb-active:rgba(109,117,255,.18);
   --radius:16px;
 }
+.sb__item,
+.sb__item:link,
+.sb__item:visited {
+  text-decoration: none;
+}
 
+/* ถ้าอยากให้ตอน hover ก็ยังไม่ underline */
+.sb__item:hover {
+  text-decoration: none;
+}
 .sb{
   width: 280px;
   /* height: 100%;  <-- ลบ */

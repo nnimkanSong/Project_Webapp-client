@@ -175,7 +175,7 @@ const Profile = () => {
 
             <div className="label">Student ID :</div>
             <div className="value">
-              {isEditing ? (
+              {/* {isEditing ? (
                 <input
                   type="text"
                   value={user.student_number}
@@ -185,7 +185,8 @@ const Profile = () => {
                 />
               ) : (
                 <b>{user.student_number || "-"}</b>
-              )}
+              )} */}
+              <b>{user.student_number}</b>
             </div>
 
             <div className="label">Email :</div>

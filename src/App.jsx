@@ -16,6 +16,7 @@ import History from "./page/History";
 import BookingTable from "./page/Admin_booking";
 import Layout_admin from "./Layout_admin";
 import Admin_usermanagement from "./page/admin/Admin_usermanagement";
+import Admin_profile from "./page/admin/Profile_admin";
 
 const App = () => {
   const [isAuthenticated, setAuth] = useState(!!localStorage.getItem("token"));
@@ -23,7 +24,9 @@ const App = () => {
   return (
     <Routes>
       {/* กลุ่มที่ใช้ Layout */}
-      <Route element={<Layout isAuthenticated={isAuthenticated} setAuth={setAuth} />}>
+      <Route
+        element={<Layout isAuthenticated={isAuthenticated} setAuth={setAuth} />}
+      >
         <Route
           path="/"
           element={
@@ -77,8 +80,6 @@ const App = () => {
             </ProtectedRoute>
           }
         />
-
-        
       </Route>
 
       {/* กลุ่มที่ไม่ใช้ Layout (เช่น หน้า Auth) */}
@@ -116,21 +117,18 @@ const App = () => {
         }
       />
       {/* admin page แสดงใน Layout ด้วย */}
-      <Route element={<Layout_admin isAuthenticated={isAuthenticated} setAuth={setAuth} />}>
-
+      <Route
+        element={
+          <Layout_admin isAuthenticated={isAuthenticated} setAuth={setAuth} />
+        }
+      >
+        <Route path="/admin/booking" element={<BookingTable />} />
+        <Route path="/admin/profile" element={<Admin_profile />} />
         <Route
-          path="/admin/booking"
-          element={
-              <BookingTable />
-          }
+          path="/admin/users-management"
+          element={<Admin_usermanagement />}
         />
       </Route>
-      <Route
-        path="/admin/users-management"
-        element={
-            <Admin_usermanagement />
-        }
-      />
     </Routes>
   );
 };

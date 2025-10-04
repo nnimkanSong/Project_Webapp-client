@@ -1,8 +1,6 @@
 /* พื้นหลังและฟอนต์ */
 .profile-page {
-  background-color: #0E141C;
   min-height: 100vh;
-  padding: 100px;
   font-family: 'Ledger', serif;
   display: flex;
   flex-direction: column;
