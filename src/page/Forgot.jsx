@@ -6,7 +6,6 @@ function Forgot() {
   const [email, setEmail] = useState("");
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
-
   const submit = async (e) => {
     e.preventDefault();
     setMsg("");
