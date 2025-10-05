@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import "../css/Admin_booking.css";
+import "../../css/Admin_booking.css";
 
 export default function BookingTable() {
   const [selectedDate, setSelectedDate] = useState(new Date());

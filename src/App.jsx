@@ -13,10 +13,11 @@ import Booking from "./page/Booking";
 import Profile_user from "./page/Profile_user";
 import FeedbackForm from "./page/Feedback";
 import History from "./page/History";
-import BookingTable from "./page/Admin_booking";
+import BookingTable from "./page/admin/Admin_booking";
 import Layout_admin from "./Layout_admin";
 import Admin_usermanagement from "./page/admin/Admin_usermanagement";
 import Admin_profile from "./page/admin/Profile_admin";
+import Admin_history from "./page/admin/History_admin";
 
 const App = () => {
   const [isAuthenticated, setAuth] = useState(!!localStorage.getItem("token"));
@@ -127,6 +128,10 @@ const App = () => {
         <Route
           path="/admin/users-management"
           element={<Admin_usermanagement />}
+        />
+        <Route
+          path="/admin/history"
+          element={<Admin_history />}
         />
       </Route>
     </Routes>

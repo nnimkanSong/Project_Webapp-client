@@ -132,3 +132,24 @@
   border-radius: 8px;
   margin-bottom: 12px;
 }
+/* ล็อกปุ่มเมื่อสถานะ cancel/done */
+.btn-locked {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  filter: grayscale(15%);
+}
+
+/* ไอคอนแม่กุญแจ */
+.lock-icon {
+  display: inline-flex;
+  margin-right: 8px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* ปุ่ม disabled ไม่รับคลิก/ไม่มีเงา */
+.btn[disabled] {
+  pointer-events: none;
+  box-shadow: none;
+}
+

@@ -58,7 +58,7 @@ export default function Booking() {
 
       // ✅ ยิงไปที่ backend พร้อมแนบ token
       const res = await api.post(
-        "/api/booking",
+        "/api/bookings",
         { room, date, startTime, endTime, people, objective },
         { headers: { Authorization: `Bearer ${token}` } }
       );
