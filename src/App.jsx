@@ -1,14 +1,21 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import Layout from './Layout';
-import Home from './Home';
-import Login from './page/Login';
-import Create_acount from './page/Create_acount';
-import Profile_user from './page/Profile_user';
-import Change_password from './page/Change_password';
-import Admin_booking from './page/Admin_booking';
-import Admin_feedback from './page/Admin_feedback';
-import History from './page/History';
+import React, { useState } from "react";
+import { Routes, Route } from "react-router-dom";
+import Layout from "./Layout";
+import Home from "./Home";
+import Login from "./page/Login";
+import Create_acount from "./page/Create_acount";
+import Change_password from "./page/Change_password";
+import Forgot from "./page/Forgot";
+import Starf from "./page/Starf";
+import ProtectedRoute from "./components/ProtectedRoute";
+import PublicRoute from "./components/PublicRoute";
+import Booking from "./page/Booking";
+import Profile_user from "./page/Profile_user";
+import FeedbackForm from "./page/Feedback";
+import History from "./page/History";
+import BookingTable from "./page/Admin_booking";
+import Feedback_admin from "./page/Feedback_admin";
+
 
 const App = () => {
   const [isAuthenticated, setAuth] = useState(!!localStorage.getItem("token"));
@@ -44,6 +51,16 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        {/* admin feedback */}
+        <Route
+          path="/Feedback/admin"
+          element={
+            <PublicRoute>
+              <Feedback_admin />
+            </PublicRoute>
+          }
+        />
+
         <Route
           path="/Profile/user"
           element={
