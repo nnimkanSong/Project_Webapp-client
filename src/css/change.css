@@ -64,15 +64,17 @@ body {
 }
 
 img {
-    width: 300px;
+    width: 165px;
     height: auto;
 }
 
-
+.input-wrap-ch {
+  position: relative;
+}
 
 .ch-input {
     display: grid;
-    grid-template-columns: 1fr 65%;
+    grid-template-columns: 1fr 1fr;
     align-items: center;
     text-align: end;
     gap: 15px;
@@ -87,7 +89,7 @@ img {
         color: #ffff;
         font-family: "Ledger", serif;
         font-size: 28px;
-        width: max-content;
+        width: 100%;
         display: flex;
         flex-direction: column;
         gap: 30px;

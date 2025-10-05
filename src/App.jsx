@@ -20,6 +20,7 @@ const App = () => {
   const [isAuthenticated, setAuth] = useState(!!localStorage.getItem("token"));
 
   return (
+    
     <Routes>
       {/* กลุ่มที่ใช้ Layout */}
       <Route element={<Layout isAuthenticated={isAuthenticated} setAuth={setAuth} />}>

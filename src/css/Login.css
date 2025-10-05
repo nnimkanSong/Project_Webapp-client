@@ -149,11 +149,25 @@ body {
             height: 50px;
             border-radius: 20px;
         }
-
     }
-.input-wrap {
-  position: relative;
-  width: 100%;
+.btn-forgot {
+        display: flex;
+        border: 2px solid red;
+        }
+}
+.btn-forgot {
+    .forgot {
+        display: flex;
+        width: 100%;
+        justify-content: end;
+        align-items: end;
+        background-color: transparent;
+        border: none;
+        color: #8197AC;
+        font-family: "Ledger", serif;
+        font-size: 20px;
+        cursor: pointer;
+    }
 }
     a {
         text-decoration: none;
@@ -161,7 +175,7 @@ body {
         font-family: "Ledger", serif;
         font-size: 20px;
     }
-}
+
 
 .btn-end {
     display: grid;
@@ -191,4 +205,38 @@ body {
             cursor: pointer;
         }
     }
+}
+
+
+.input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.pwd-input {
+  width: 100%;
+  padding-right: 44px;            /* เว้นที่ให้ปุ่มตา */
+}
+
+/* ปุ่มตาลอยในช่องด้านขวา */
+.toggle-visibility-l {
+  position: absolute;
+  right: 10px;                    /* ระยะขอบขวา */
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;      /* พื้นที่กดง่าย */
+  border: 0;
+  background: transparent;
+  color: #9ca3af;                 /* เทาอ่อน */
+  cursor: pointer;
+}
+
+/* โฮเวอร์/โฟกัสให้ตาเข้มขึ้นนิดหน่อย */
+.toggle-visibility-l:hover { color: #6b7280; }
+.toggle-visibility-l:focus-visible {
+  outline: 2px solid #6366f1;     /* โฟกัสสีแบรนด์ */
+  outline-offset: 2px;
 }

@@ -65,7 +65,7 @@ body {
 
 .cr-logo {
     img {
-        width: 200px;
+        width: 160px;
         height: auto;
     }
 
@@ -93,7 +93,7 @@ body {
         width: max-content;
         display: flex;
         flex-direction: column;
-        gap: 9px;
+        gap: 6px;
     }
 
     .cr-box-input {
@@ -125,7 +125,7 @@ body {
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    margin: 15px 0 10px 0;
+    margin: 40px 0 10px 0;
     width: 470px;
 
     .create {
@@ -150,9 +150,8 @@ body {
     }
 }
 
-.input-wrap {
+.input-wrap-cr {
   position: relative;
-  width: 100%;
 }
 
 /* กันไอคอนทับข้อความ ด้วย padding ขวา */
@@ -163,13 +162,13 @@ body {
   box-sizing: border-box;
 }
 
-/* ปุ่มไอคอนลอยอยู่ในกล่อง input */
+
 .toggle-visibility {
   position: absolute;
-  right: 0.5rem;                /* ระยะห่างจากขอบขวา */
+  right: 0.5rem;                
   top: 50%;
   transform: translateY(-50%);
-  width: 1.75rem;               /* เพิ่ม hit area ให้คลิกง่าย */
+  width: 1.75rem;               
   height: 1.75rem;
   border: 0;
   background: transparent;
@@ -177,7 +176,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #9aa3ae;               /* ปรับสีตามธีม */
+  color: #9aa3ae;     
   cursor: pointer;
 }
 

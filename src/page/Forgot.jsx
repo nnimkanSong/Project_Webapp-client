@@ -1,28 +1,36 @@
 import React, { useState } from "react";
+import Swal from "sweetalert2";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function Forgot() {
   const [email, setEmail] = useState("");
-  const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
-    setMsg("");
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/auth/forgot-password`, {
+      const res = await fetch(`${API}/api/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      // บางกรณี server อาจไม่ส่ง JSON กลับ ให้กัน error ไว้
       const data = await res.json().catch(() => ({}));
-      // ตอบแบบ generic เสมอ (กัน user enumeration)
-      setMsg(data.message || "ถ้ามีบัญชี เราได้ส่งลิงก์รีเซ็ตรหัสผ่านไปแล้ว");
+
+      Swal.fire({
+        icon: "success",
+        title: "สำเร็จ",
+        text: data.message || "ถ้ามีบัญชี เราได้ส่งลิงก์รีเซ็ตรหัสผ่านไปแล้ว",
+        confirmButtonText: "ตกลง",
+      });
     } catch (err) {
-      setMsg("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้");
+      Swal.fire({
+        icon: "error",
+        title: "เกิดข้อผิดพลาด",
+        text: "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้",
+        confirmButtonText: "ลองอีกครั้ง",
+      });
     } finally {
       setLoading(false);
     }
@@ -45,7 +53,6 @@ function Forgot() {
           {loading ? "กำลังส่ง..." : "ส่งลิงก์รีเซ็ต"}
         </button>
       </form>
-      {msg && <p style={{ marginTop: 10 }}>{msg}</p>}
     </div>
   );
 }
