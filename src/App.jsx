@@ -1,19 +1,14 @@
-import React, { useState } from "react";
-import { Routes, Route } from "react-router-dom";
-import Layout from "./Layout";
-import Home from "./Home";
-import Login from "./page/Login";
-import Create_acount from "./page/Create_acount";
-import Change_password from "./page/Change_password";
-import Forgot from "./page/Forgot";
-import Starf from "./page/Starf";
-import ProtectedRoute from "./components/ProtectedRoute";
-import PublicRoute from "./components/PublicRoute";
-import Booking from "./page/Booking";
-import Profile_user from "./page/Profile_user";
-import FeedbackForm from "./page/Feedback";
-import History from "./page/History";
-import BookingTable from "./page/Admin_booking";
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import Layout from './Layout';
+import Home from './Home';
+import Login from './page/Login';
+import Create_acount from './page/Create_acount';
+import Profile_user from './page/Profile_user';
+import Change_password from './page/Change_password';
+import Admin_booking from './page/Admin_booking';
+import Admin_feedback from './page/Admin_feedback';
+import History from './page/History';
 
 const App = () => {
   const [isAuthenticated, setAuth] = useState(!!localStorage.getItem("token"));
@@ -87,40 +82,15 @@ const App = () => {
         />
       </Route>
 
-      {/* กลุ่มที่ไม่ใช้ Layout (เช่น หน้า Auth) */}
-      <Route
-        path="/login"
-        element={
-          <PublicRoute>
-            <Login setAuth={setAuth} />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path="/register"
-        element={
-          <PublicRoute>
-            <Create_acount />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path="/forgot-password"
-        element={
-          <PublicRoute>
-            <Forgot />
-          </PublicRoute>
-        }
-      />
-      {/* reset-password ควรเป็น PublicRoute เพราะลิงก์อีเมล */}
-      <Route
-        path="/reset-password"
-        element={
-          <PublicRoute>
-            <Change_password />
-          </PublicRoute>
-        }
-      />
+      {/* Route ไม่ใช้ Layout */}
+      <Route path="/home" element={<Home />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/Profile_user" element={<Profile_user />} />
+      <Route path="/create" element={<Create_acount />} />
+      <Route path="/change" element={<Change_password />} />
+      <Route path="/Admin_booking" element={<Admin_booking />} />
+      <Route path="/Admin_feedback" element={<Admin_feedback />} />
+      <Route path="/History" element={<History />} />
     </Routes>
   );
 };
