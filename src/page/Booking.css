@@ -14,6 +14,7 @@ body {
   border-radius: 12px;
   margin: 10px auto 30px;
   width: min(96vw, 1800px);
+  margin-top: 30px;
 }
 
 /* ---------- Layout ---------- */
