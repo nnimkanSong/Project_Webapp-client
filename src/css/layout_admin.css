@@ -1,0 +1,47 @@
+:root{
+  --sb-width: 260px;   /* ความกว้าง sidebar ของคุณ */
+  --pad: 24px;         /* padding ของ content */
+}
+
+/* optional พื้นหลังรวม */
+.bg {
+  background:
+    radial-gradient(1200px 800px at 10% 120%, rgba(147,51,234,0.25), transparent 70%),
+    radial-gradient(1000px 600px at 90% 120%, rgba(56,189,248,0.25), transparent 70%),
+    linear-gradient(180deg, #0f172a 0%, #111827 100%);
+}
+
+
+html, body, #root { height: 100%; }
+body { margin: 0; }
+
+.app-layout { min-height: 100vh; }
+
+/* ----- Sidebar ตรึงซ้าย ----- */
+.app-sidebar{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sb-width);
+  height: 100vh;
+  /* ถ้ามีสีพื้น sidebar ให้ที่นี่ */
+  /* background:#0f1419; */
+}
+
+/* ----- พื้นที่คอนเทนต์ ----- */
+.app-content{
+  margin-left: var(--sb-width); /* กันพื้นที่ให้ sidebar */
+  min-height: 100vh;
+  padding: var(--pad);
+  display: flex;
+  flex-direction: column;
+  align-items: center;       /* กึ่งกลางแนวนอนของกล่องภายใน */
+  justify-content: flex-start; /* ชิดบน */
+}
+
+/* ----- ฟุตเตอร์ให้ขนานกับคอนเทนต์ ----- */
+.app-footer{
+  margin-left: var(--sb-width);
+  padding: 12px var(--pad);
+  color:#9aa7b2;
+}

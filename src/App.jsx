@@ -13,8 +13,11 @@ import Booking from "./page/Booking";
 import Profile_user from "./page/Profile_user";
 import FeedbackForm from "./page/Feedback";
 import History from "./page/History";
-import BookingTable from "./page/Admin_booking";
+import BookingTable from "./page/admin/Admin_booking";
+import Layout_admin from "./Layout_admin";
 import Admin_usermanagement from "./page/admin/Admin_usermanagement";
+import Admin_profile from "./page/admin/Profile_admin";
+import Admin_history from "./page/admin/History_admin";
 
 const App = () => {
   const [isAuthenticated, setAuth] = useState(!!localStorage.getItem("token"));
@@ -23,7 +26,9 @@ const App = () => {
     
     <Routes>
       {/* กลุ่มที่ใช้ Layout */}
-      <Route element={<Layout isAuthenticated={isAuthenticated} setAuth={setAuth} />}>
+      <Route
+        element={<Layout isAuthenticated={isAuthenticated} setAuth={setAuth} />}
+      >
         <Route
           path="/"
           element={
@@ -77,16 +82,6 @@ const App = () => {
             </ProtectedRoute>
           }
         />
-
-        {/* admin page แสดงใน Layout ด้วย */}
-        <Route
-          path="/admin/booking"
-          element={
-            <PublicRoute>
-              <BookingTable />
-            </PublicRoute>
-          }
-        />
       </Route>
 
       {/* กลุ่มที่ไม่ใช้ Layout (เช่น หน้า Auth) */}
@@ -123,12 +118,23 @@ const App = () => {
           </PublicRoute>
         }
       />
+      {/* admin page แสดงใน Layout ด้วย */}
       <Route
-        path="/admin/users-management"
         element={
-            <Admin_usermanagement />
+          <Layout_admin isAuthenticated={isAuthenticated} setAuth={setAuth} />
         }
-      />
+      >
+        <Route path="/admin/booking" element={<BookingTable />} />
+        <Route path="/admin/profile" element={<Admin_profile />} />
+        <Route
+          path="/admin/users-management"
+          element={<Admin_usermanagement />}
+        />
+        <Route
+          path="/admin/history"
+          element={<Admin_history />}
+        />
+      </Route>
     </Routes>
   );
 };

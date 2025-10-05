@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import DatePicker from "react-datepicker";
-// import "./react-datepicker/dist/react-datepicker.css"; 
-import "../css/Admin_booking.css";
+import "react-datepicker/dist/react-datepicker.css";
+import "../../css/Admin_booking.css";
 
 export default function BookingTable() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -35,7 +35,7 @@ export default function BookingTable() {
   const booked = bookings[formatDate(selectedDate)] || {};
 
   return (
-    <div className="booking-container">
+      <div className="booking-container">
       <h2 className="title">DailyBooking</h2>
 
       {/* DatePicker */}
@@ -74,5 +74,6 @@ export default function BookingTable() {
         </tbody>
       </table>
     </div>
+    
   );
 }

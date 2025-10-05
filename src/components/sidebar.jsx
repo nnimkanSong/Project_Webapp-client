@@ -1,4 +1,6 @@
+// Sidebar.jsx
 import React, { useState } from "react";
+import { NavLink } from "react-router-dom";   // ✅ เพิ่ม
 import "../css/sidebar.css";
 
 const items = [
@@ -11,18 +13,22 @@ const items = [
   { key: "users", label: "Users Management", icon: UsersIcon },
 ];
 
+// ✅ ระบุ path ของแต่ละ key
+const PATH_BY_KEY = {
+  admin: "/admin/dashboard",
+  dashboard: "/admin/dashboard",
+  profile: "/admin/profile",
+  booking: "/admin/booking",
+  history: "/admin/history",
+  feedback: "/admin/feedback",
+  users: "/admin/users-management",
+};
+
 export default function Sidebar({
   initialCollapsed = false,
   onSelect,
-  defaultActive = "booking",
 }) {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
-  const [active, setActive] = useState(defaultActive);
-
-  const handleSelect = (key) => {
-    setActive(key);
-    onSelect?.(key);
-  };
 
   return (
     <aside className={`sb ${collapsed ? "sb--collapsed" : ""}`}>
@@ -32,7 +38,7 @@ export default function Sidebar({
           <div className="sb__logo">
             <LogoIcon />
           </div>
-          {!collapsed && <div className="sb__title">Oculis</div>}
+          {!collapsed && <div className="sb__title">Admin</div>}
         </div>
 
         <button
@@ -44,7 +50,7 @@ export default function Sidebar({
         </button>
       </div>
 
-      {/* search (สไตล์ให้คล้ายภาพซ้าย) */}
+      {/* search */}
       <div className="sb__search">
         <SearchIcon />
         {!collapsed && <input placeholder="Search" />}
@@ -53,54 +59,37 @@ export default function Sidebar({
       {/* menu */}
       <nav className="sb__menu">
         {items.map(({ key, label, icon: Icon }) => {
-          const isActive = key === active;
+          const to = PATH_BY_KEY[key] || "/admin/booking";
           return (
-            <button
+            <NavLink
               key={key}
-              className={`sb__item ${isActive ? "is-active" : ""}`}
-              onClick={() => handleSelect(key)}
+              to={to}
+              onClick={() => onSelect?.(key)} // ถ้าต้องการแจ้ง parent ด้วย
+              className={({ isActive }) =>
+                `sb__item ${isActive ? "is-active" : ""}`
+              }
               data-tooltip={collapsed ? label : undefined}
             >
               <span className="sb__icon">
-                <Icon active={isActive} />
+                <Icon /* active จะมาจาก isActive แทน ถ้าต้องใช้ ให้ย้าย logic เข้า className */ />
               </span>
               {!collapsed && <span className="sb__label">{label}</span>}
               {!collapsed && key === "booking" && (
                 <span className="sb__badge">New</span>
               )}
-              {(!collapsed && key === "dashboard") && (
+              {!collapsed && key === "dashboard" && (
                 <span className="sb__chev">›</span>
               )}
-            </button>
+            </NavLink>
           );
         })}
       </nav>
-
-      {/* footer action + user card */}
-      <div className="sb__footer">
-        <button className="sb__cta">
-          <PlusIcon />
-          {!collapsed && <span>New Post</span>}
-        </button>
-
-        <div className="sb__user">
-          <img
-            src="https://i.pravatar.cc/64?img=15"
-            alt="avatar"
-            className="sb__avatar"
-          />
-          {!collapsed && (
-            <div className="sb__userInfo">
-              <div className="sb__userName">Jane Cooper</div>
-              <div className="sb__userRole">UX Designer</div>
-            </div>
-          )}
-          <MoreIcon />
-        </div>
-      </div>
     </aside>
   );
 }
+
+/* ...ไอคอนเดิมคงไว้... */
+
 
 /* ---------------- Icons (inline SVG สไตล์มินิมอล) ---------------- */
 

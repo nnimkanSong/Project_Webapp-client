@@ -1,150 +1,226 @@
-/* กล่องหลัก */
 .ha-history-container {
-  max-width: 1000px;
+  max-width: 1100px;
   margin: 20px auto;
   background: #ffffff;
-  border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
-  font-family: 'Ledger', serif;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Inter",
+    "Noto Sans Thai", sans-serif;
 }
 
 .ha-history-title {
   text-align: center;
-  font-size: 22px;
-  font-weight: bold;
-  margin-bottom: 15px;
-  color: #48331A;
+  color: #2b2b2b;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  margin-bottom: 14px;
+}
+
+.ha-error {
+  color: #b71c1c;
+  background: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.ha-loader,
+.ha-empty {
+  text-align: center;
+  padding: 24px;
+  color: #6b7280;
 }
 
 .ha-history-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
-.ha-history-item {
+.ha-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fafafa;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+}
+
+.ha-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  border-color: #e2e8f0;
+}
+
+/* ROWs */
+.ha-row {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 2fr 1fr 1.2fr auto;
-  align-items: center;
-  background: #D9D9D9;
-  padding: 8px 12px;
-  border-radius: 8px;
-  box-shadow: 0px 1px 3px rgba(0,0,0,0.15);
-  font-size: 14px;
+  gap: 14px;
 }
 
-.ha-history-item span {
-  color: #48331A;
+/* กำหนดสัดส่วนคอลัมน์ให้ดูเป็นระเบียบ */
+.ha-row-top {
+  display: grid;
+  grid-template-columns: 1.2fr 1.2fr 1.2fr 1.2fr;
+  align-items: stretch;
+}
+
+.ha-row-bottom {
+  display: grid;
+  grid-template-columns: 1.2fr 1.2fr 1.2fr 1.2fr;
+  align-items: stretch;
+}
+.ha-col .ha-label {
+  color: #6b7280;
+  font-size: 12px;
+  margin-bottom: 4px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.ha-col .ha-value {
+  color: #1f2937;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+/* ตัดคำยาว ๆ ให้อยู่บรรทัดเดียวพร้อม ... */
+.ha-ellipsis {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.ha-edit-btn {
-  background: transparent;
-  border: none;
+.ha-status-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border: 1px solid transparent;
+}
+
+.badge.pending {
+  background: #fff7ed;
+  color: #9a3412;
+  border-color: #fed7aa;
+}
+.badge.active {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+.badge.done {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+.badge.cancel {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+/* Actions */
+.ha-actions-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;     /* ปุ่มอยู่ขวา */
+  justify-content: flex-end;
+}
+
+.ha-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.ha-btn {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-weight: 800;
   cursor: pointer;
-  font-size: 16px;
-  color: #48331A;
-  transition: 0.2s;
+  font-size: 13px;
+  transition: transform 100ms ease, box-shadow 120ms ease, filter 100ms ease, background 120ms ease, border-color 120ms ease;
+  outline: none;
 }
 
-/* ปรับ popup */
-.ha-swal-popup {
-  width: 700px;                 /* ✅ ปรับความกว้าง */
-  max-width: 90%;               /* ✅ ไม่ให้ล้นจอเล็ก */
-  background: #fff;             /* พื้นหลังสีขาว */
-  border-radius: 20px;          /* มุมโค้ง */
-  padding: 25px;                /* ระยะห่างด้านใน */
-  box-shadow: 0 6px 18px rgba(0,0,0,0.25); /* เงา */
-  font-family: 'Ledger', serif;
+.ha-btn:active {
+  transform: translateY(1px);
 }
 
-/* ปรับหัวข้อ */
-.ha-swal-title {
-  font-size: 20px;
-  font-weight: bold;
-  color: #48331A;
+.ha-approve {
+  background: #6fd195;
+  color: #0b3a27;
+  border-color: #52c27a;
+}
+.ha-approve:hover {
+  background: #58c786;
+  box-shadow: 0 6px 16px rgba(88, 199, 134, 0.35);
 }
 
-/* เนื้อหาใน popup */
-.ha-swal-content p {
-  font-size: 15px; /* ขนาดฟ้อน */
-  color: #48331A;     /* สีฟ้อน */
-  margin: 10px;   /* ระยะห่างแต่ละบรรทัด */
-  line-height: 1.5;
+.ha-cancel {
+  background: #ed6e6e;
+  color: #4a1c1c;
+  border-color: #e85b5b;
+}
+.ha-cancel:hover {
+  background: #d85b5b;
+  box-shadow: 0 6px 16px rgba(216, 91, 91, 0.35);
 }
 
-/* ปุ่ม Accept */
-.ha-swal-accept-btn {
-  background-color: #6FD195;
-  border-radius: 20px;
-  padding: 6px 20px;
-  font-size: 14px;
-  color: #48331A
+.ha-locked {
+  opacity: 0.58;
+  cursor: not-allowed;
+  filter: grayscale(15%);
 }
 
-/* ปุ่ม Reject */
-.ha-swal-reject-btn {
-  background-color: #ED6E6E;
-  border-radius: 20px;
-  padding: 6px 20px;
-  font-size: 14px;
-  color: #48331A
+.lock-icon {
+  margin-right: 6px;
+}
+/* Admin profile bar */
+.ha-profile-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin: 8px 0 14px;
+}
+.ha-profile-img {
+  width: 120px; height: 120px; object-fit: cover;
+   border-radius: 50%;
+  padding: 4px; /* ทำให้กรอบเห็นชัด */
+  background: conic-gradient(
+    red, orange, yellow, lime, cyan, blue, violet, red
+  );
+}
+.ha-profile-meta { display: flex; flex-direction: column; gap: 4px; }
+.ha-username { font-weight: 700; color: #48331A; font-size: 18px; }
+.ha-email { font-size: 14px; color: #666; }
+.ha-muted { font-size: 13px; color: #888; }
+
+/* ป้ายเวลา */
+.ha-time-chip {
+  display: inline-block;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: #f3f4f6;       /* เทาอ่อนอ่านง่าย */
+  border: 1px solid #e5e7eb;
+  font-weight: 800;
+  font-size: 13px;
+  color: #111827;            /* เข้มขึ้นอ่านชัด */
+  line-height: 1;
 }
 
-/* รูป Avatar */
-.ha-swal-avatar {
-  width: 150px;
-  height: 150px;
-  object-fit: cover;            /* ครอบรูปไม่ให้บี้ */
-  border-radius: 50%;           /* วงกลม */
-  border: 4px solid #D9D9D9;  /* กรอบ */
-  margin-bottom: 15px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);   /* เงา */
-}
-
-/* ทำพื้นหลัง popup เบลอ */
-.ha-swal2-container {
-  backdrop-filter: blur(6px);   /* ✅ ปรับระดับความเบลอ */
-  -webkit-backdrop-filter: blur(6px);
-}
-
-/* เปลี่ยนสีกำลังดำเนินการ */
-.ha-status-approved {
-  color: #3dbe6e!important;
-  font-weight: bold;
-}
-.ha-status-rejected {
-  color: #ED6E6E!important;
-  font-weight: bold;
-}
-
-/* กด Reject → แสดง popup ยืนยัน */
-.ha-swal-yes-btn {
-  font-family: 'Ledger', serif;
-  font-size: 16px;
-  background-color: #ED6E6E;
-  border-radius: 20px;
-  padding: 8px 20px;
-  margin-right: 30px;
-}
-
-.ha-swal-no-btn {
-  font-family: 'Ledger', serif;
-  font-size: 16px;
-  background-color: #D9D9D9;
-  color: #333;
-  border-radius: 20px;
-  padding: 8px 20px;
-  margin-right: 30px;
-}
-
-.ha-swal-popup {
-  font-family: 'Ledger', serif;
-  font-size: 15px;
-  line-height: 1.8; /* ระยะห่างบรรทัด */
-  border-radius: 20px;
-  padding: 24px; /* ระยะห่างข้อความด้านใน */
-}

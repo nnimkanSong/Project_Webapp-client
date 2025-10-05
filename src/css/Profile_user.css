@@ -1,121 +1,134 @@
-/* พื้นหลังและฟอนต์ */
+/* ===== Container กลางนิ่ง ๆ ===== */
 .profile-page {
-  background-color: #0E141C;
   min-height: 100vh;
-  padding: 100px;
   font-family: 'Ledger', serif;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  align-items: center;       /* กึ่งกลางแนวตั้ง */
+  justify-content: center;   /* กึ่งกลางแนวนอน */
+  margin-top: 40px;
 }
 
-/* กล่องข้อมูลโปรไฟล์ */
 .profile-card {
   background-color: #ffffff;
-  border-radius: 10px; /*โค้งมนของกรอบ*/
-  padding: 30px;
-  width: 900px;
+  border-radius: 10px;
+  padding: 30px 40px;
+  width: 1300px;
+  height: 650px;
+  max-width: 100%;
   color: #48331A;
   text-align: center;
   box-shadow:
-    0 0 0 20px #ffffff,  /* กรอบขาว */
-    0 0 0 60px #D9D9D9,  /* กรอบเทา */
-    0 8px 8px rgba(0,0,0,0.5); /* เงา */
+    0 0 0 20px #ffffff,
+    0 0 0 60px #D9D9D9,
+    0 8px 8px rgba(0,0,0,0.5);
+  margin: 0 auto;
 }
 
 .profile-title {
   margin-bottom: 10px;
   font-size: 40px;
+  margin-top: 30px;
 }
 
-.profile-image img {
+/* ===== รูปโปรไฟล์ + ปุ่มเปลี่ยนรูป (กึ่งกลางเป๊ะ) ===== */
+.profile-image {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+}
+.profile-photo {
   width: 250px;
   height: 250px;
   border-radius: 50%;
   object-fit: cover;
   border: 6px solid #D9D9D9;
-  margin-bottom: 25px;
+  margin-bottom: 18px;
 }
 
-/* ข้อมูลโปรไฟล์ */
-.profile-info {
-  text-align: center;
-  font-size: 16px;
-  margin-bottom: 25px;    /* เว้นระยะด้านล่างระหว่าง section */
-  line-height: 1.5;       /* เพิ่มความสูงบรรทัดให้อ่านง่าย */
+/* ===== GRID สำหรับข้อมูล (ตรงกลาง ไม่เอียง) ===== */
+.profile-info-grid {
+  padding-top : 20px;
+  width: 560px;                /* ความกว้างเนื้อหาข้อมูล */
+  max-width: 100%;
+  margin: 0 auto 25px;         /* กึ่งกลางแนวนอน + เว้นล่าง */
+  display: grid;
+  grid-template-columns: 260px 1fr;  /* label | value */
+  column-gap: 30px;
+  row-gap: 12px;
+  align-items: center;
+  text-align: left;
 }
-.profile-info div {
-  margin-bottom: 12px;
-}
-.profile-info span {
+
+.profile-info-grid .label {
+  text-align: right;
   font-weight: bold;
-  margin-right: 10px;
+  color: #48331A;
+}
+
+.profile-info-grid .value {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #48331A;
 }
 
 /* input ตอนแก้ไข */
-.profile-info input {
+.profile-info-grid input {
   padding: 6px 10px;
   border-radius: 10px;
   border: 1px solid #ccc;
   font-size: 14px;
   outline: none;
-  width: 250px;
-}
-.profile-info input:disabled {
-  background-color: #eee;
-  cursor: not-allowed;
+  width: 150px;
 }
 
-/* ปุ่ม */
+/* ปุ่มด้านล่าง */
 .button-group {
   display: flex;
   justify-content: center;
-  gap: 20px;               /* เว้นระยะห่างระหว่างปุ่ม */
+  gap: 20px;
 }
+
 .btn {
   padding: 10px 20px;
-  border-radius: 20px;     /* ขอบโค้งมน */
+  border-radius: 20px;
   border: none;
   cursor: pointer;
   font-size: 15px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
+
 .btn.back {
   background-color: #D9D9D9;
   color: #48331A;
   font-weight: bold;
 }
+
 .btn.edit {
   background-color: #BCB3A2;
   color: #48331A;
   font-weight: bold;
 }
-.profile-info div {
-  display: flex;              /* วาง label + input ในแนวนอน */
-  align-items: center;        /* จัดให้อยู่กึ่งกลางตามแนวตั้ง */
-  justify-content: center;    /* จัดกึ่งกลางตามแนวนอน */
-  margin-bottom: 12px;
+
+/* ปุ่มเล็ก */
+.btn.small {
+  margin-top: 6px;
+  background: #eee;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+.btn.tiny {
+  background: #eee;
+  padding: 4px 10px;
+  font-size: 12px;
 }
 
-/* label (span) */
-.profile-info span {
-  font-weight: bold;
-  margin-right: 10px;
-  width: 120px;               /* ความกว้างคงที่ให้ label */
-  text-align: right;          /* ตัวอักษรชิดขวา */
-}
-
-/* input */
-.profile-info input {
-  padding: 6px 10px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-  outline: none;
-  width: 250px;               /* ความกว้าง input เท่ากัน */
-}
-
-/* กล่อง popup */
+/* Popup */
 .popup-card {
   background: #fff;
   border-radius: 20px;
@@ -125,60 +138,107 @@
   position: relative;
   box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
+.popup-card h2 { color: #48331A; font-size: 28px; margin-bottom: 15px; }
+.popup-card p  { color: #48331A; font-size: 16px; line-height: 1.5; }
+.popup-close   { position: absolute; top: 5px; right: 15px; border: none; background: none; font-size: 30px; cursor: pointer; }
+.popup-icon    { width: 60px; height: 60px; border-radius: 50%; background: #71D0A6; color: white; font-size: 30px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
 
-/* หัวข้อ h2 ใน popup */
-.popup-card h2 {
-  color: #48331A;
-  font-size: 28px;
-  margin-bottom: 15px;
-}
-
-/* ย่อหน้า p ใน popup */
-.popup-card p {
-  color: #48331A;
-  font-size: 16px;
-  line-height: 1.5;
-}
-
-/* ปุ่มปิด */
-.popup-close {
-  position: absolute;
-  top: 5px;
-  right: 15px;
-  border: none;
-  background: none;
-  font-size: 30px;
-  cursor: pointer;
-}
-
-/* ไอคอนวงกลม */
-.popup-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: #71D0A6;
-  color: white;
-  font-size: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 20px;
-}
-
-/* พื้นหลัง popup เบลอ */
 .popup-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4); /* สีดำโปร่งแสง */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  /* เพิ่ม effect เบลอ */
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex; justify-content: center; align-items: center;
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px); /* สำหรับ Safari */
+  -webkit-backdrop-filter: blur(8px);
+}
+/* ========== Badge แสดง role ========== */
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: 1px solid #ddd;
+  background: #f7f7f7;
 }
 
+.badge.admin {
+  background: #ffeaea;
+  border-color: #f5b5b5;
+  color: #a11414;
+}
+
+.badge.vip {
+  background: #fff9e6;
+  border-color: #f1d48a;
+  color: #8a6a00;
+}
+
+.badge.user {
+  background: #eef6ff;
+  border-color: #b7d3f6;
+  color: #0b3e7a;
+}
+.btn.reset {
+  --glow: rgba(188, 179, 162, 0.55);
+  background: linear-gradient(135deg, #bcb3a2 0%, #d8d1c4 60%, #efeae4 100%);
+  color: #2b1e0e;
+  border: 1px solid rgba(72, 51, 26, 0.09);
+  box-shadow:
+    0 4px 14px rgba(0,0,0,0.15),
+    0 0 0 6px transparent;
+  position: relative;
+  overflow: hidden;
+  font-weight: 700;
+}
+.btn.reset:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 8px 20px rgba(0,0,0,0.18),
+    0 0 0 6px var(--glow);
+}
+.btn.reset:active {
+  transform: translateY(0);
+  box-shadow:
+    0 4px 12px rgba(0,0,0,0.2),
+    0 0 0 4px var(--glow);
+}
+
+/* แถบแสงวิ่งเบา ๆ ตอน hover */
+.btn.reset::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.25), transparent);
+  transform: translateX(-120%);
+  transition: transform 0.6s ease;
+}
+.btn.reset:hover::before { transform: translateX(120%); }
+
+/* โฟกัสสำหรับคีย์บอร์ด */
+.btn.reset:focus-visible {
+  outline: none;
+  box-shadow:
+    0 8px 20px rgba(0,0,0,0.18),
+    0 0 0 3px #ffffff,
+    0 0 0 6px #bcb3a2;
+}
+
+/* ไอคอนในปุ่ม */
+.btn-icon { display: inline-block; }
+
+/* ขนาดเล็กลงในจอแคบ */
+@media (max-width: 520px) {
+  .btn.reset { padding: 9px 16px; font-size: 14px; }
+  .btn-icon { width: 14px; height: 14px; }
+}
+
+/* ===== Responsive ให้คอลัมน์ซ้อนกันในจอเล็ก ===== */
+@media (max-width: 600px) {
+  .profile-info-grid {
+    grid-template-columns: 1fr;   /* label กับ value ซ้อนกัน */
+  }
+  .profile-info-grid .label {
+    text-align: left;
+  }
+}
