@@ -18,8 +18,7 @@ import Layout_admin from "./Layout_admin";
 import Admin_usermanagement from "./page/admin/Admin_usermanagement";
 import Admin_profile from "./page/admin/Profile_admin";
 import Admin_history from "./page/admin/History_admin";
-import BookingTable from "./page/Admin_booking";
-import Feedback_admin from "./page/Feedback_admin";
+import Admin_feedback from "./page/admin/Admin_feedback";
 
 
 const App = () => {
@@ -59,14 +58,6 @@ const App = () => {
           }
         />
         {/* admin feedback */}
-        <Route
-          path="/Feedback/admin"
-          element={
-            <PublicRoute>
-              <Feedback_admin />
-            </PublicRoute>
-          }
-        />
 
         <Route
           path="/Profile"
@@ -146,6 +137,10 @@ const App = () => {
           path="/admin/history"
           element={<Admin_history />}
         />
+        <Route
+          path="/admin/feedback"
+          element={<Admin_feedback />}
+          />
       </Route>
     </Routes>
   );
