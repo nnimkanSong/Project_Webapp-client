@@ -1,6 +1,6 @@
 import "../css/Profile_user.css";
 import React, { useEffect, useRef, useState } from "react";
-import { api } from "../api"; // ถ้า instance ของคุณเป็น default export ให้เปลี่ยนเป็น: import api from "../api";
+import { api } from "../api"; // axios instance withCredentials: true
 
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -11,32 +11,27 @@ const Profile = () => {
 
   const [user, setUser] = useState({
     username: "",
-    student_number: "",
+    studentNumber: "",
     email: "",
-    user_type: "user", // ✅ เพิ่ม user_type
+    userType: "user",
     photoUrl: "https://placehold.co/200x200?text=Profile",
   });
 
-  // ตั้ง Authorization header ครั้งเดียว
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) api.defaults.headers.common.Authorization = `Bearer ${token}`;
-  }, []);
+  // ✅ ไม่ต้องตั้ง Authorization header / ไม่ต้องอ่าน localStorage token แล้ว
+  // useEffect(() => {}, []);
 
   // โหลดโปรไฟล์
   useEffect(() => {
     (async () => {
       try {
-        const res = await api.get("/api/profile/me");
-        const d = res.data;
+        const { data } = await api.get("/api/profile/me");
         setUser((prev) => ({
           ...prev,
-          username: d.username,
-          student_number: d.student_number || "",
-          email: d.email,
-          user_type: d.user_type || "user", // ✅ รับค่าจาก API
-          // server แปลงเป็น URL พร้อมใช้ให้แล้ว
-          photoUrl: d.photoUrl || prev.photoUrl,
+          username: data.username || "",
+          studentNumber: data.studentNumber || "",
+          email: data.email || "",
+          userType: data.userType || "user",
+          photoUrl: data.photoUrl || prev.photoUrl,
         }));
       } catch (e) {
         console.error("load profile error:", e);
@@ -58,12 +53,9 @@ const Profile = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // ทำ preview ชั่วคราว
+    // preview ชั่วคราว
     const localUrl = URL.createObjectURL(file);
-    // cleanup preview ก่อนหน้า
-    if (lastPreviewUrlRef.current) {
-      URL.revokeObjectURL(lastPreviewUrlRef.current);
-    }
+    if (lastPreviewUrlRef.current) URL.revokeObjectURL(lastPreviewUrlRef.current);
     lastPreviewUrlRef.current = localUrl;
     setUser((prev) => ({ ...prev, photoUrl: localUrl }));
 
@@ -73,11 +65,10 @@ const Profile = () => {
       const res = await api.post("/api/profile/photo", form, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      // ใช้ URL จริงจาก server (Cloudinary)
       setUser((prev) => ({ ...prev, photoUrl: res.data.url }));
     } catch (err) {
       console.error("upload photo error:", err);
-      // ถ้าอัปโหลดพลาด ย้อนกลับรูปเดิม
+      // ย้อนกลับรูปเดิมถ้าอัปโหลดพลาด
       setUser((prev) => ({
         ...prev,
         photoUrl: prev.photoUrl?.startsWith("blob:")
@@ -87,22 +78,21 @@ const Profile = () => {
     }
   };
 
-  // บันทึกข้อมูลพื้นฐาน (ไม่ส่ง photoUrl เพราะอัปเดตผ่าน /photo แล้ว)
+  // บันทึกข้อมูลพื้นฐาน
   const handleSave = async () => {
     try {
       const payload = {
         username: user.username,
-        student_number: user.student_number,
-        // ❌ ไม่ส่ง user_type (ห้ามแก้จากหน้าผู้ใช้) และไม่ส่ง photoUrl
+        studentNumber: user.studentNumber, // ✅ ใช้ camelCase
       };
-      const res = await api.put("/api/profile", payload);
+      const { data } = await api.put("/api/profile", payload);
       setUser((prev) => ({
         ...prev,
-        username: res.data.username,
-        student_number: res.data.student_number || "",
-        email: res.data.email,
-        user_type: res.data.user_type || prev.user_type, // ✅ รับกลับมาเพื่อความชัดเจน
-        // photoUrl คงค่าปัจจุบันที่แสดงอยู่
+        username: data.username,
+        studentNumber: data.studentNumber || "",
+        email: data.email,
+        userType: data.userType || prev.userType,
+        // photoUrl คงค่าปัจจุบัน
       }));
       setIsEditing(false);
       setShowPopup(true);
@@ -122,11 +112,10 @@ const Profile = () => {
     );
   }
 
-  // helper: แต่ง badge ตาม role
   const roleClass =
-    user.user_type === "admin"
+    user.userType === "admin"
       ? "badge admin"
-      : user.user_type === "vip"
+      : user.userType === "vip"
       ? "badge vip"
       : "badge user";
 
@@ -147,10 +136,7 @@ const Profile = () => {
               style={{ display: "none" }}
             />
             {isEditing && (
-              <button
-                className="btn small"
-                onClick={() => fileRef.current?.click()}
-              >
+              <button className="btn small" onClick={() => fileRef.current?.click()}>
                 Change photo
               </button>
             )}
@@ -164,40 +150,26 @@ const Profile = () => {
                 <input
                   type="text"
                   value={user.username}
-                  onChange={(e) =>
-                    setUser((p) => ({ ...p, username: e.target.value }))
-                  }
+                  onChange={(e) => setUser((p) => ({ ...p, username: e.target.value }))}
                 />
               ) : (
-                <b>{user.username}</b>
+                <b>{user.username || "-"}</b>
               )}
             </div>
 
             <div className="label">Student ID :</div>
             <div className="value">
-              {/* {isEditing ? (
-                <input
-                  type="text"
-                  value={user.student_number}
-                  onChange={(e) =>
-                    setUser((p) => ({ ...p, student_number: e.target.value }))
-                  }
-                />
-              ) : (
-                <b>{user.student_number || "-"}</b>
-              )} */}
-              <b>{user.student_number}</b>
+                <b>{user.studentNumber || "-"}</b>
             </div>
 
             <div className="label">Email :</div>
             <div className="value">
-              <b>{user.email}</b>
+              <b>{user.email || "-"}</b>
             </div>
 
-            {/* ✅ แทน Password ด้วย User type */}
             <div className="label">User type :</div>
             <div className="value">
-              <span className={roleClass}>{user.user_type}</span>
+              <span className={roleClass}>{(user.userType || "user").toUpperCase()}</span>
             </div>
           </div>
 
@@ -213,44 +185,12 @@ const Profile = () => {
               Back
             </button>
 
-            {/* ปุ่ม Reset Password */}
             <button
               className="btn reset"
               onClick={() => (window.location.href = "/Forgot")}
               aria-label="Reset your password"
               title="Reset your password"
             >
-              <svg
-                className="btn-icon"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <path
-                  d="M12 8V6a4 4 0 0 1 8 0v2"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-                <rect
-                  x="6"
-                  y="8"
-                  width="12"
-                  height="12"
-                  rx="2"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
-                <path
-                  d="M12 13v4"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
               Reset password
             </button>
 

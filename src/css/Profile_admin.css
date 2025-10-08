@@ -1,181 +1,279 @@
-/* พื้นหลังและฟอนต์ */
-.profile-page {
+/* ================== Theme Vars ================== */
+:root{
+  --ink: #2b1f10;
+  --bg-1:#ffffff;
+  --bg-2:#faf7f1;
+
+  --gold-1:#f6e27a;
+  --gold-2:#e7c14f;
+  --gold-3:#d4af37;
+
+  --muted:#7b6a57;
+  --line:#e9e6df;
+
+  --radius: 22px;
+  --shadow-1: 0 30px 60px rgba(0,0,0,.18);
+  --shadow-2: 0 12px 24px rgba(0,0,0,.08);
+}
+
+/* ============ Layout / Page ============ */
+.ap-profile-page {
+  width: 100%;
   min-height: 100vh;
   font-family: 'Ledger', serif;
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 48px 20px;
+
+  color: var(--ink);
 }
 
-/* กล่องข้อมูลโปรไฟล์ */
-.profile-card {
-  background-color: #ffffff;
-  border-radius: 10px; /*โค้งมนของกรอบ*/
-  padding: 30px;
-  width: 900px;
-  color: #48331A;
+/* ============ Card (premium) ============ */
+.ap-profile-card {
+  position: relative;
+  width: 1200px;
+  max-width: 100%;
+  border-radius: var(--radius);
+  padding: 44px 52px;
   text-align: center;
-  box-shadow:
-    0 0 0 20px #ffffff,  /* กรอบขาว */
-    0 0 0 60px #D9D9D9,  /* กรอบเทา */
-    0 8px 8px rgba(0,0,0,0.5); /* เงา */
+  background: linear-gradient(180deg, var(--bg-1), var(--bg-2));
+  box-shadow: var(--shadow-1), var(--shadow-2), inset 0 1px 0 rgba(255,255,255,.6);
+  overflow: hidden;
 }
 
-.profile-title {
-  margin-bottom: 10px;
+/* ขอบทองแบบ gradient ด้วย mask */
+.ap-profile-card::before{
+  content:"";
+  position:absolute;
+  inset:-2px;              /* ปรับความหนากรอบได้ */
+  border-radius: inherit;
+  padding:2px;
+  background: linear-gradient(135deg,var(--gold-1),var(--gold-2) 40%,var(--gold-3) 75%,#a07a1c);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events:none;
+}
+/* โกลว์ทองนุ่ม ๆ */
+.ap-profile-card::after{
+  content:"";
+  position:absolute;
+  inset:-18px;
+  border-radius: inherit;
+  background: radial-gradient(1200px 400px at 50% -10%, rgba(245,221,130,.22), transparent 60%);
+  filter: blur(8px);
+  pointer-events:none;
+}
+
+.ap-profile-title {
+  margin-bottom: 18px;
   font-size: 40px;
+  letter-spacing:.4px;
 }
-
-.profile-image img {
+.ap-profile-image{
+  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;    
+  margin-bottom: 20px;          /* ลดช่องว่างภาพกับปุ่ม */
+}
+/* ============ Avatar ============ */
+.ap-profile-image img {
   width: 250px;
   height: 250px;
   border-radius: 50%;
   object-fit: cover;
-  border: 6px solid #D9D9D9;
-  margin-bottom: 25px;
+  padding: 8px;
+  background: linear-gradient(135deg,var(--gold-1),var(--gold-2) 40%,var(--gold-3));
+  margin-bottom: 26px;
 }
 
-/* ข้อมูลโปรไฟล์ */
-.profile-info {
+/* ============ Info ============ */
+.ap-profile-info {
   text-align: center;
   font-size: 16px;
-  margin-bottom: 25px;    /* เว้นระยะด้านล่างระหว่าง section */
-  line-height: 1.5;       /* เพิ่มความสูงบรรทัดให้อ่านง่าย */
+  margin-bottom: 28px;
+  line-height: 1.5;
+  color: var(--ink);
 }
-.profile-info div {
+.ap-profile-info div {
+  display: flex;              /* label + value ชิดแนวนอน */
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
   margin-bottom: 12px;
 }
-.profile-info span {
-  font-weight: bold;
-  margin-right: 10px;
+.ap-profile-info span {
+  font-weight: 700;
+  width: 140px;
+  text-align: right;
+  color: var(--muted);
 }
 
-/* input ตอนแก้ไข */
-.profile-info input {
-  padding: 6px 10px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-  outline: none;
-  width: 250px;
+/* grid เวอร์ชันใหม่ที่คอมโพเนนต์ใช้อยู่ */
+.ap-profile-info-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 24px;
+  max-width: 640px;
+  margin: 8px auto 28px;
+  text-align: left;
 }
-.profile-info input:disabled {
-  background-color: #eee;
+.ap-profile-info-grid .ap-label{
+  text-align: right;
+  opacity: .85;
+  font-weight: 700;
+}
+.ap-profile-info-grid .ap-value{
+  text-align: left;
+  font-weight: 600;
+}
+
+/* inputs */
+.ap-profile-info input {
+  padding: 10px 14px;
+  width: 280px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  font-size: 15px;
+  outline: none;
+  transition: box-shadow .15s ease, border-color .15s ease, background .15s;
+  background: #fff;
+}
+.ap-profile-info input:focus{
+  border-color: var(--gold-3);
+  box-shadow: 0 0 0 4px rgba(212,175,55,.18);
+}
+.ap-profile-info input:disabled {
+  background-color: #f3f2ee;
+  color:#8a7b68;
   cursor: not-allowed;
 }
 
-/* ปุ่ม */
-.button-group {
+/* ============ Buttons ============ */
+.ap-button-group {
   display: flex;
   justify-content: center;
-  gap: 20px;               /* เว้นระยะห่างระหว่างปุ่ม */
+  gap: 16px;
+  flex-wrap: wrap;
 }
-.btn {
-  padding: 10px 20px;
-  border-radius: 20px;     /* ขอบโค้งมน */
-  border: none;
+
+.ap-btn {
+  padding: 11px 22px;
+  border-radius: 14px;
+  border: 0;
   cursor: pointer;
   font-size: 15px;
-  transition: all 0.3s ease;
+  font-weight: 600;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease, opacity .15s;
+  background: #f3f2ee;
+  color: var(--ink);
+  box-shadow: 0 6px 16px rgba(0,0,0,.08);
 }
-.btn.back {
-  background-color: #D9D9D9;
-  color: #48331A;
-  font-weight: bold;
+.ap-btn:hover{ transform: translateY(-1px); box-shadow: 0 10px 22px rgba(0,0,0,.12); }
+.ap-btn:active{ transform: translateY(0); box-shadow: 0 6px 16px rgba(0,0,0,.08); }
+
+.ap-btn.ap-back{
+  background:#ece8df;
 }
-.btn.edit {
-  background-color: #BCB3A2;
-  color: #48331A;
-  font-weight: bold;
+.ap-btn.ap-edit{
+  background: linear-gradient(135deg,var(--gold-1),var(--gold-3));
+  color:#2b1f10;
+  box-shadow: 0 10px 24px rgba(212,175,55,.35), inset 0 1px 0 rgba(255,255,255,.7);
 }
-.profile-info div {
-  display: flex;              /* วาง label + input ในแนวนอน */
-  align-items: center;        /* จัดให้อยู่กึ่งกลางตามแนวตั้ง */
-  justify-content: center;    /* จัดกึ่งกลางตามแนวนอน */
-  margin-bottom: 12px;
+.ap-btn.ap-reset{
+  background:#e9ecf3;
+}
+.ap-btn.ap-small{ padding: 8px 14px; font-size: 14px; }
+
+/* ============ Popup (premium) ============ */
+.ap-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 50;
 }
 
-/* label (span) */
-.profile-info span {
-  font-weight: bold;
-  margin-right: 10px;
-  width: 120px;               /* ความกว้างคงที่ให้ label */
-  text-align: right;          /* ตัวอักษรชิดขวา */
-}
-
-/* input */
-.profile-info input {
-  padding: 6px 10px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-  outline: none;
-  width: 250px;               /* ความกว้าง input เท่ากัน */
-}
-
-/* กล่อง popup */
-.popup-card {
-  background: #fff;
-  border-radius: 20px;
-  padding: 45px;
-  width: 450px;
-  text-align: center;
+.ap-popup-card {
   position: relative;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  width: 480px;
+  max-width: 92%;
+  background: linear-gradient(180deg, var(--bg-1), var(--bg-2));
+  border-radius: 20px;
+  padding: 46px;
+  text-align: center;
+  box-shadow: var(--shadow-1), var(--shadow-2);
+  color: var(--ink);
+}
+.ap-popup-card::before{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  border-radius: inherit;
+  padding:2px;
+  background: linear-gradient(135deg,var(--gold-1),var(--gold-2) 40%,var(--gold-3));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events:none;
 }
 
-/* หัวข้อ h2 ใน popup */
-.popup-card h2 {
-  color: #48331A;
+.ap-popup-card h2 {
   font-size: 28px;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
-
-/* ย่อหน้า p ใน popup */
-.popup-card p {
-  color: #48331A;
+.ap-popup-card p {
   font-size: 16px;
-  line-height: 1.5;
+  color: var(--muted);
 }
 
-/* ปุ่มปิด */
-.popup-close {
+.ap-popup-close {
   position: absolute;
-  top: 5px;
-  right: 15px;
+  top: 6px;
+  right: 14px;
   border: none;
   background: none;
-  font-size: 30px;
+  font-size: 28px;
   cursor: pointer;
+  color:#7b6a57;
 }
 
-/* ไอคอนวงกลม */
-.popup-icon {
-  width: 60px;
-  height: 60px;
+.ap-popup-icon {
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  background: #71D0A6;
-  color: white;
+  margin: 0 auto 18px;
   font-size: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 20px;
+  color: #2b1f10;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg,var(--gold-1),var(--gold-3));
+  box-shadow: 0 8px 18px rgba(212,175,55,.35), inset 0 1px 0 rgba(255,255,255,.7);
 }
 
-/* พื้นหลัง popup เบลอ */
-.popup-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4); /* สีดำโปร่งแสง */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  /* เพิ่ม effect เบลอ */
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px); /* สำหรับ Safari */
+/* ============ Responsive ============ */
+@media (max-width: 768px){
+  .ap-profile-card{ padding: 30px 22px; }
+  .ap-profile-title{ font-size: 30px; }
+  .ap-profile-image img{ width: 180px; height: 180px; }
+  .ap-profile-info span{ width: 110px; }
+  .ap-profile-info input{ width: 220px; }
+  .ap-profile-info-grid{
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .ap-profile-info-grid .ap-label,
+  .ap-profile-info-grid .ap-value{ text-align: center; }
 }

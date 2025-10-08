@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../../css/History_admin.css";
 import Swal from "sweetalert2";
-import { api } from "../../his_api";
+import { api } from "../../api";
 
 const badgeClass = (s) =>
   s === "pending" ? "badge pending"
@@ -31,16 +31,12 @@ export default function HistoryAdmin() {
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const token = useMemo(() => localStorage.getItem("token") || "", []);
-
   useEffect(() => {
-    const load = async () => {
+    (async () => {
       try {
         setLoading(true);
-        if (token) api.defaults.headers.common.Authorization = `Bearer ${token}`;
 
-        // ✅ 1) โหลดโปรไฟล์แอดมิน
-        // ถ้าระบบคุณใช้ endpoint อื่น ให้แก้เป็นของคุณ เช่น "/api/profile"
+        // 1) โปรไฟล์แอดมิน
         const me = await api.get("/api/profile/me");
         setAdmin({
           username: me?.data?.username ?? "Admin",
@@ -48,45 +44,35 @@ export default function HistoryAdmin() {
           photoUrl: me?.data?.photoUrl ?? "https://placehold.co/80x80?text=Admin",
         });
 
-        // ✅ 2) โหลดรายการจองทั้งหมด
+        // 2) ดึง “ทุกคำขอ” จากแอดมิน API (อ่าน data.rows)
         const { data } = await api.get("/api/admin/history");
-        // ถ้า backend ส่ง { bookings: [...] } ให้ใช้ data.bookings แทน
-        setRows(Array.isArray(data) ? data : (data?.bookings || []));
+        setRows(data?.rows ?? []);                   // <<<<<<<<<<<<<< สำคัญ
       } catch (e) {
         const msg = e?.response?.data?.message || e?.message || "โหลดข้อมูลล้มเหลว";
         setErr(msg);
       } finally {
         setLoading(false);
       }
-    };
-    load();
-  }, [token]);
+    })();
+  }, []);
 
   const confirmAct = (title, text) =>
-    Swal.fire({
-      title, text, icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "ยืนยัน",
-      cancelButtonText: "ยกเลิก",
-    }).then((r) => r.isConfirmed);
+    Swal.fire({ title, text, icon: "question", showCancelButton: true, confirmButtonText: "ยืนยัน", cancelButtonText: "ยกเลิก" })
+      .then((r) => r.isConfirmed);
+
+  const refresh = async () => {
+    const { data } = await api.get("/api/admin/history");
+    setRows(data?.rows ?? []);
+  };
 
   const handleApprove = async (r) => {
     if (r.status === "cancel" || r.status === "done") return;
-    const ok = await confirmAct(
-      "อนุมัติการจอง?",
-      `ห้อง ${r.room} • ${fmtDate(r.date)} • ${r.startTime}-${r.endTime}`
-    );
+    const ok = await confirmAct("อนุมัติการจอง?", `ห้อง ${r.room} • ${fmtDate(r.date)} • ${r.startTime}-${r.endTime}`);
     if (!ok) return;
 
     try {
-      await api.patch(`/api/admin/history/${r._id}/approve`);
-      setRows((prev) =>
-        prev.map((x) =>
-          x._id === r._id
-            ? { ...x, status: "active", tracking: x.tracking || "อนุมัติแล้ว" }
-            : x
-        )
-      );
+      await api.patch(`/api/admin/history/${r.id}/approve`); // << ใช้ r.id
+      await refresh();
       Swal.fire("สำเร็จ", "อนุมัติเรียบร้อย", "success");
     } catch (e) {
       const msg = e?.response?.data?.message || e?.message || "อนุมัติไม่สำเร็จ";
@@ -96,21 +82,12 @@ export default function HistoryAdmin() {
 
   const handleCancel = async (r) => {
     if (r.status === "cancel" || r.status === "done") return;
-    const ok = await confirmAct(
-      "ยกเลิกการจอง?",
-      `ห้อง ${r.room} • ${fmtDate(r.date)} • ${r.startTime}-${r.endTime}`
-    );
+    const ok = await confirmAct("ยกเลิกการจอง?", `ห้อง ${r.room} • ${fmtDate(r.date)} • ${r.startTime}-${r.endTime}`);
     if (!ok) return;
 
     try {
-      await api.patch(`/api/admin/history/${r._id}/cancel`);
-      setRows((prev) =>
-        prev.map((x) =>
-          x._id === r._id
-            ? { ...x, status: "cancel", tracking: x.tracking || "ถูกยกเลิกโดยผู้ดูแล" }
-            : x
-        )
-      );
+      await api.patch(`/api/admin/history/${r.id}/cancel`); // << ใช้ r.id
+      await refresh();
       Swal.fire("สำเร็จ", "ยกเลิกเรียบร้อย", "success");
     } catch (e) {
       const msg = e?.response?.data?.message || e?.message || "ยกเลิกไม่สำเร็จ";
@@ -122,7 +99,7 @@ export default function HistoryAdmin() {
     <div className="ha-history-container">
       <h2 className="ha-history-title">History (Admin)</h2>
 
-      {/* ✅ แถบโปรไฟล์แอดมิน */}
+      {/* แถบโปรไฟล์แอดมิน */}
       <div className="ha-profile-row">
         <img src={admin.photoUrl} alt="admin" className="ha-profile-img" />
         <div className="ha-profile-meta">
@@ -143,18 +120,18 @@ export default function HistoryAdmin() {
           {rows.map((r) => {
             const locked = r.status === "cancel" || r.status === "done";
             return (
-              <div key={r._id} className="ha-card">
-                {/* แถวบน: User / Email / Room / Status */}
+              <div key={r.id} className="ha-card">
+                {/* แถวบน */}
                 <div className="ha-row ha-row-top">
                   <div className="ha-col">
                     <div className="ha-label">User</div>
                     <div className="ha-value">
-                      {r.student_name || "-"} ({r.student_number || "N/A"})
+                      {r.user?.username || "-"} ({r.user?.studentNumber || "N/A"})
                     </div>
                   </div>
                   <div className="ha-col">
                     <div className="ha-label">Email</div>
-                    <div className="ha-value">{r.student_email || "-"}</div>
+                    <div className="ha-value">{r.user?.email || "-"}</div>
                   </div>
                   <div className="ha-col">
                     <div className="ha-label">Room</div>
@@ -165,12 +142,12 @@ export default function HistoryAdmin() {
                   </div>
                 </div>
 
-                {/* แถวล่าง: Date/Time / People / Objective / Actions + Tracking */}
+                {/* แถวล่าง */}
                 <div className="ha-row ha-row-bottom">
                   <div className="ha-col">
                     <div className="ha-label">Date / Time</div>
                     <div className="ha-value">
-                      {fmtDate(r.date)} • {(r.startTime ?? r.start_time) || "-"} - {(r.endTime ?? r.end_time) || "-"}
+                      {fmtDate(r.date)} • {r.startTime} - {r.endTime}
                     </div>
                   </div>
                   <div className="ha-col">
@@ -183,13 +160,11 @@ export default function HistoryAdmin() {
                   </div>
 
                   <div className="ha-col ha-actions-cell">
-                  
                     <div className="ha-actions">
                       <button
                         className={`ha-btn ha-approve ${locked ? "ha-locked" : ""}`}
                         onClick={() => !locked && handleApprove(r)}
                         disabled={locked}
-                        title={locked ? "คำขอถูกยกเลิก/เสร็จสิ้นแล้ว" : "อนุมัติการจอง"}
                       >
                         {locked && <span className="lock-icon">🔒</span>} Approve
                       </button>
@@ -197,7 +172,6 @@ export default function HistoryAdmin() {
                         className={`ha-btn ha-cancel ${locked ? "ha-locked" : ""}`}
                         onClick={() => !locked && handleCancel(r)}
                         disabled={locked}
-                        title={locked ? "คำขอถูกยกเลิก/เสร็จสิ้นแล้ว" : "ยกเลิกการจอง"}
                       >
                         {locked && <span className="lock-icon">🔒</span>} Cancel
                       </button>

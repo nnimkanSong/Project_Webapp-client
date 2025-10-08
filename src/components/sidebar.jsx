@@ -4,7 +4,6 @@ import { NavLink } from "react-router-dom";   // ✅ เพิ่ม
 import "../css/sidebar.css";
 
 const items = [
-  { key: "admin", label: "Admin", icon: AdminIcon },
   { key: "profile", label: "Profile", icon: ProfileIcon },
   { key: "booking", label: "Booking", icon: HomeIcon },
   { key: "history", label: "History", icon: HistoryIcon },

@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import "../css/History.css";
 import Swal from "sweetalert2";
-import { api } from "../his_api"; // หรือ "../api" ถ้าคุณตั้งไว้ชื่อนี้
+import { api } from "../api";
 
 export default function History() {
   const [loading, setLoading] = useState(true);
@@ -12,14 +12,12 @@ export default function History() {
   });
   const [bookings, setBookings] = useState([]);
 
-  const token = useMemo(() => localStorage.getItem("token") || "", []);
-
   useEffect(() => {
-    const fetchMe = async () => {
+    (async () => {
       try {
         setLoading(true);
         setErr("");
-        if (token) api.defaults.headers.common.Authorization = `Bearer ${token}`;
+        // ✅ ไม่ต้องตั้ง Authorization header อีกแล้ว (ใช้คุกกี้)
         const { data } = await api.get("/api/bookings/me");
         setUser({
           username: data?.user?.username ?? "Unknown",
@@ -37,27 +35,13 @@ export default function History() {
       } finally {
         setLoading(false);
       }
-    };
-    fetchMe();
-  }, [token]);
-
+    })();
+  }, []);
+  
   const fmtDate = (d) => {
     try {
-      const dt = new Date(d);
-      return dt.toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" });
-    } catch {
-      return d;
-    }
-  };
-
-  const statusChipStyle = (s) => {
-    const map = {
-      pending: "background:#fff3cd;color:#856404;border:1px solid #f2d16b;",
-      active:  "background:#e1f5fe;color:#01579b;border:1px solid #9ad3f0;",
-      done:    "background:#e8f5e9;color:#2e7d32;border:1px solid #b7dfb8;",
-      cancel:  "background:#ffebee;color:#b71c1c;border:1px solid #f5b4b9;",
-    };
-    return map[s] || "background:#eee;color:#333;border:1px solid #ddd;";
+      return new Date(d).toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" });
+    } catch { return d; }
   };
 
   const handleCancel = async (id) => {
@@ -75,12 +59,9 @@ export default function History() {
 
     try {
       await api.patch(`/api/bookings/${id}/cancel`);
-      setBookings((prev) =>
-        prev.map((b) => (b._id === id ? { ...b, status: "cancel" } : b))
-      );
+      setBookings((prev) => prev.map((b) => (b._id === id ? { ...b, status: "cancel" } : b)));
       Swal.fire("ยกเลิกแล้ว!", "การจองถูกยกเลิกเรียบร้อย", "success");
     } catch (e) {
-      console.error("Cancel failed:", e?.response?.status, e?.response?.data);
       const msg =
         e?.response?.data?.message ||
         e?.response?.data?.error ||
@@ -93,6 +74,15 @@ export default function History() {
   const handleEdit = async (bk) => {
     if (bk.status === "cancel" || bk.status === "done") return;
 
+    // ใส่ฟอร์ม HTML ของคุณเองตรงนี้ (ตัวอย่าง placeholder ง่าย ๆ)
+    const html = `
+      <div style="text-align:left">
+        <label>People</label>
+        <input id="swal-people" type="number" min="1" value="${bk.people || 1}" class="swal2-input" />
+        <label>Objective</label>
+        <textarea id="swal-objective" class="swal2-textarea">${bk.objective || ""}</textarea>
+      </div>
+    `;
 
     const { value: formValues } = await Swal.fire({
       title: "แก้ไขการจอง",
@@ -116,17 +106,13 @@ export default function History() {
         return { people, objective };
       },
     });
-
     if (!formValues) return;
 
     try {
       await api.patch(`/api/bookings/${bk._id}`, formValues);
-      setBookings((prev) =>
-        prev.map((x) => (x._id === bk._id ? { ...x, ...formValues } : x))
-      );
+      setBookings((prev) => prev.map((x) => (x._id === bk._id ? { ...x, ...formValues } : x)));
       Swal.fire("สำเร็จ", "บันทึกการแก้ไขแล้ว", "success");
     } catch (e) {
-      console.error("Edit failed:", e?.response?.status, e?.response?.data);
       const msg =
         e?.response?.data?.message ||
         e?.response?.data?.error ||
