@@ -1,35 +1,43 @@
+// src/routes/ProtectedRoute.jsx
 import React, { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
-function ProtectedRoute({ children }) {
-  const [auth, setAuth] = useState(null); // null = กำลังเช็ค, true/false = ผลลัพธ์
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+
+export default function ProtectedRoute({ children }) {
+  const [auth, setAuth] = useState(null); // null = กำลังเช็ก
+  const location = useLocation();
 
   useEffect(() => {
-    const checkSession = async () => {
+    let alive = true;
+    const controller = new AbortController();
+
+    (async () => {
       try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/auth/me`,
-          { withCredentials: true } // ✅ ต้องมีเพื่อส่ง cookie sid ไป
-        );
-        if (res.data.ok) {
-          setAuth(true);
-        } else {
-          setAuth(false);
-        }
-      } catch (err) {
+        const res = await axios.get(`${BASE_URL}/api/auth/me`, {
+          withCredentials: true,
+          signal: controller.signal,
+          validateStatus: s => s < 500, // ให้ 401/403 ไม่โยน error มาที่ catch
+        });
+        if (!alive) return;
+        setAuth(Boolean(res.data?.ok));   // 200 + ok:true = มี session (มี sid ใช้งานได้)
+      } catch (e) {
+        if (!alive) return;
+        // network error / server down -> ถือว่าไม่ผ่าน
         setAuth(false);
       }
-    };
+    })();
 
-    checkSession();
+    return () => {
+      alive = false;
+      controller.abort();
+    };
   }, []);
 
-  if (auth === null) {
-    return <p>Loading...</p>; // หรือ spinner
-  }
+  if (auth === null) return <p>Loading...</p>;
 
-  return auth ? children : <Navigate to="/login" />;
+  return auth
+    ? children
+    : <Navigate to="/login" replace state={{ from: location }} />;
 }
-
-export default ProtectedRoute;

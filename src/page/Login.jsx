@@ -1,4 +1,3 @@
-// src/pages/Login.jsx
 import React, { useState } from "react";
 import "../css/Login.css";
 import { useNavigate } from "react-router-dom";
@@ -17,13 +16,13 @@ const Login = ({ setAuth }) => {
   const [error, setError] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [verified, setVerified] = useState(false); // สำหรับ Google verify (ออปชัน)
+  const [verified, setVerified] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     setError("");
-    if (e.target.name === "email") setVerified(false); // เปลี่ยนอีเมล -> ต้อง verify ใหม่
+    if (e.target.name === "email") setVerified(false);
   };
 
   const handleSubmit = async (e) => {
@@ -34,7 +33,7 @@ const Login = ({ setAuth }) => {
       await axios.post(
         `${BASE_URL}/api/auth/login`,
         { email: formData.email, password: formData.password },
-        { withCredentials: true } // <— สำคัญมากสำหรับ session cookie
+        { withCredentials: true }
       );
       if (typeof setAuth === "function") setAuth(true);
       navigate("/");
@@ -45,7 +44,6 @@ const Login = ({ setAuth }) => {
     }
   };
 
-  // ----- Forgot password flow (OTP -> reset token) -----
   async function flowEnterOtp(email) {
     while (true) {
       const otpModal = await Swal.fire({
@@ -101,7 +99,7 @@ const Login = ({ setAuth }) => {
             text: err.response?.data?.error || "Server error",
           });
         }
-        continue; // เปิดกรอก OTP อีกรอบ
+        continue;
       }
 
       if (otpModal.isConfirmed && otpModal.value) {
@@ -111,10 +109,9 @@ const Login = ({ setAuth }) => {
           timer: 1200,
           showConfirmButton: false,
         });
-        return { ok: true, token: otpModal.value?.resetToken }; // ใช้ token นี้หน้า reset-password
+        return { ok: true, token: otpModal.value?.resetToken };
       }
 
-      // ยกเลิก
       return { ok: false };
     }
   }
@@ -138,7 +135,7 @@ const Login = ({ setAuth }) => {
         }
         try {
           await axios.post(`${BASE_URL}/api/auth/forgot-password`, { email });
-          return email; // ส่ง email ไปใช้ในขั้นตอน OTP
+          return email;
         } catch (err) {
           const msg =
             err.response?.status === 429
@@ -152,11 +149,9 @@ const Login = ({ setAuth }) => {
     if (!emailStep.isConfirmed) return;
     const email = emailStep.value;
 
-    // ต่อด้วยกรอก OTP
     const verified = await flowEnterOtp(email);
     if (!verified.ok) return;
 
-    // ไปหน้า reset-password (แนบ token หากแบ็กเอนด์ส่งมา)
     const params = new URLSearchParams({ email });
     if (verified.token) params.set("token", verified.token);
     navigate(`/reset-password?${params.toString()}`);

@@ -1,32 +1,29 @@
 * { box-sizing: border-box; margin:0; padding:0; }
 
 :root {
-  --nav-height: 50px;                 /* จะถูกอัปเดตจาก JS */
-  --nav-bg: rgba(18,22,28,0.35);       /* โปร่งใส */
-  --nav-bg-solid: rgba(18,22,28,0.65); /* ทึบขึ้นเวลาเลื่อน */
+  --nav-height: 50px;
+  --nav-bg: rgba(18,22,28,0.35);
+  --nav-bg-solid: rgba(18,22,28,0.65);
   --nav-border: rgba(255,255,255,.15);
   --fg: #e9eef6;
 }
 
-/* ทำให้ navbar ลอยติดบนสุดและอยู่บนสุดของ z-index */
 .nav-shell {
   position: fixed;
   inset: 0 0 auto 0;
-  width: 100%;                   /* top:0; left:0; right:0 */
+  width: 100%;
   z-index: 1000;
-  padding: 14px 20px;                  /* เว้นรอบ pill */
-  pointer-events: none;                /* ให้คลิกเฉพาะ nav-inner */
+  padding: 14px 20px;
+  pointer-events: none;
 }
 
-/* เว้นที่ด้านบน content เท่าความสูง navbar จริง */
 .nav-spacer { height: var(--nav-height); }
 
-/* ตัว pill ข้างใน (รับอีเวนต์แทน shell) */
 .nav-inner {
   pointer-events: auto;
   width: min(1120px, 96vw);
   margin: 0 auto;
-  height: var(--nav-height);          /* ✅ ความสูงคงที่ */
+  height: max-content;
   border-radius: 999px;
   padding: 10px 18px;
   background: var(--nav-bg);
@@ -41,7 +38,6 @@
   transition: background .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
 
-/* เมื่อเลื่อนลง: หดเล็ก + ทึบขึ้น + เงา */
 .nav-inner.is-scrolled {
   background: var(--nav-bg-solid);
   border-color: rgba(255,255,255,.18);
@@ -49,10 +45,8 @@
 }
 
 
-/* โลโก้ */
 .nav-logo img { width: 48px; height: auto; display:block; }
 
-/* เมนู */
 .nav-menu {
   list-style: none;
   display: flex;
@@ -61,7 +55,6 @@
   gap: 16px;
 }
 
-/* ลิงก์ */
 .nav-link {
   color: var(--fg);
   text-decoration: none;
@@ -76,7 +69,6 @@
   transform: translateY(-1px);
 }
 
-/* CTA ขอบไล่สี */
 .nav-cta {
   display: inline-flex;
   align-items: center;
@@ -94,12 +86,12 @@
   background-clip: padding-box, border-box;
   border: 2px solid transparent;
   transition: all .25s ease;
+  cursor: pointer;
 }
 .nav-cta:hover {
   background-image: linear-gradient(90deg, #21d4fd, #3a7dff, #8b46ff, #ff4ecd, #ff7a59, #ffcf4d);
 }
 
-/* Responsive */
 @media (max-width: 720px) {
   .nav-inner {
     grid-template-columns: 1fr;

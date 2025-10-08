@@ -18,6 +18,7 @@ import Layout_admin from "./Layout_admin";
 import Admin_usermanagement from "./page/admin/Admin_usermanagement";
 import Admin_profile from "./page/admin/Profile_admin";
 import Admin_history from "./page/admin/History_admin";
+import Admin_dashboard from "./page/admin/Admin_dashboard";
 
 const App = () => {
   const [isAuthenticated, setAuth] = useState(!!localStorage.getItem("token"));
@@ -133,6 +134,10 @@ const App = () => {
         <Route
           path="/admin/history"
           element={<Admin_history />}
+        />
+        <Route
+          path="/admin/dashboard"
+          element={<Admin_dashboard />}
         />
       </Route>
     </Routes>
