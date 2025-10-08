@@ -23,7 +23,7 @@ body { margin: 0; }
   top: 0;
   left: 0;
   width: var(--sb-width);
-  height: 100vh;
+  height: 100vh;  /* ตรึงตลอด */
   /* ถ้ามีสีพื้น sidebar ให้ที่นี่ */
   /* background:#0f1419; */
 }
