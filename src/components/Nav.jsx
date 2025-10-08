@@ -10,17 +10,17 @@ const Nav = ({ isAuthenticated, setAuth }) => {
   const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
 
-  // ปรับตัวแปรความสูง nav (ออปชัน)
-  useEffect(() => {
-    const updateHeight = () => {
-      if (!shellRef.current) return;
-      const h = shellRef.current.getBoundingClientRect().height;
-      document.documentElement.style.setProperty("--nav-height", `${h}px`);
-    };
-    updateHeight();
-    window.addEventListener("resize", updateHeight);
-    return () => window.removeEventListener("resize", updateHeight);
-  }, []);
+  // อัปเดตความสูง nav เป็น CSS var (ออปชัน)
+  // useEffect(() => {
+  //   const updateHeight = () => {
+  //     if (!shellRef.current) return;
+  //     const h = shellRef.current.getBoundingClientRect().height;
+  //     document.documentElement.style.setProperty("--nav-height", `${h}px`);
+  //   };
+  //   updateHeight();
+  //   window.addEventListener("resize", updateHeight);
+  //   return () => window.removeEventListener("resize", updateHeight);
+  // }, []);
 
   // เปลี่ยนพื้นหลังตอน scroll
   useEffect(() => {
@@ -30,17 +30,16 @@ const Nav = ({ isAuthenticated, setAuth }) => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const handleLogout = async () => {
+  async function handleLogout() {
     try {
       await axios.post(`${BASE_URL}/api/auth/logout`, {}, { withCredentials: true });
-    } catch (err) {
-      console.error("Logout failed:", err);
-      // ต่อให้ error ก็พาออก เพื่อเคลียร์ state ฝั่ง client
+    } catch (e) {
+      console.error("Logout error", e);
     } finally {
-      if (typeof setAuth === "function") setAuth(false);
+      setAuth?.(false);
       navigate("/login", { replace: true });
     }
-  };
+  }
 
   return (
     <>
@@ -56,17 +55,15 @@ const Nav = ({ isAuthenticated, setAuth }) => {
             <li><Link className="nav-link" to="/history">History</Link></li>
             <li><Link className="nav-link" to="/feedback">Feedback</Link></li>
 
-            {isAuthenticated ? (
+            {!isAuthenticated ? (
               <li>
-                <button className="nav-cta" onClick={handleLogout}>
+                <button className="nav-cta" type="button" onClick={handleLogout}>
                   Logout
                 </button>
               </li>
             ) : (
               <li>
-                <Link className="nav-cta" to="/login">
-                  Login
-                </Link>
+                <Link className="nav-cta" to="/login">Login</Link>
               </li>
             )}
           </ul>
