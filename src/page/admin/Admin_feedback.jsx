@@ -153,9 +153,9 @@ export default function Feedback() {
   
   useEffect(() => {
     const mock = [
-      { userId: "66200033", room: "B317", date: "11/08/68", rating: 4.8, comment: "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg", equipment: "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh" },
-      { userId: "66200033", room: "E113", date: "11/08/68", rating: 4.99, comment: "ห้องสะอาด", equipment: "โต๊ะสะอาด" },
-      { userId: "66200033", room: "E107", date: "11/08/68", rating: 4.7, comment: "เครื่องดี", equipment: "พัดลม" },
+      { userId: "66200033", room: "B317", date: "11/08/68", rating: 4, comment: "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg", equipment: "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh" },
+      { userId: "66200033", room: "E113", date: "11/08/68", rating: 4, comment: "ห้องสะอาด", equipment: "โต๊ะสะอาด" },
+      { userId: "66200033", room: "E107", date: "11/08/68", rating: 4, comment: "เครื่องดี", equipment: "พัดลม" },
       { userId: "66200033", room: "E111", date: "11/08/68", rating: 4.9, comment: "เงียบสงบ", equipment: "ไฟสว่าง" },
       { userId: "66200033", room: "B317", date: "11/08/68", rating: 4.6, comment: "อากาศดี", equipment: "พัดลม" },
       { userId: "66200033", room: "B317", date: "11/08/68", rating: 4.7, comment: "พัดลมดี", equipment: "พัดลม" },
