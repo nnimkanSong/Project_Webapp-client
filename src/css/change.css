@@ -75,7 +75,7 @@ img {
 .ch-input {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    align-items: center;
+    align-items: start;
     text-align: end;
     gap: 15px;
 
