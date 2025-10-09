@@ -152,27 +152,20 @@ export default function Feedback() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   
   useEffect(() => {
-    const mock = [
-      { userId: "66200033", room: "B317", date: "11/08/68", rating: 4, comment: "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg", equipment: "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh" },
-      { userId: "66200033", room: "E113", date: "11/08/68", rating: 4, comment: "ห้องสะอาด", equipment: "โต๊ะสะอาด" },
-      { userId: "66200033", room: "E107", date: "11/08/68", rating: 4, comment: "เครื่องดี", equipment: "พัดลม" },
-      { userId: "66200033", room: "E111", date: "11/08/68", rating: 4.9, comment: "เงียบสงบ", equipment: "ไฟสว่าง" },
-      { userId: "66200033", room: "B317", date: "11/08/68", rating: 4.6, comment: "อากาศดี", equipment: "พัดลม" },
-      { userId: "66200033", room: "B317", date: "11/08/68", rating: 4.7, comment: "พัดลมดี", equipment: "พัดลม" },
-      { userId: "66200033", room: "B317", date: "11/08/68", rating: 4.8, comment: "ห้องเย็นมาก เย็นดี", equipment: "แอร์ไม่เย็น" },
-      { userId: "66200033", room: "E113", date: "11/08/68", rating: 4.99, comment: "ห้องสะอาด", equipment: "โต๊ะสะอาด" },
-      { userId: "66200033", room: "E107", date: "11/08/68", rating: 4.7, comment: "เครื่องดี", equipment: "พัดลม" },
-      { userId: "66200033", room: "E111", date: "11/08/68", rating: 4.9, comment: "เงียบสงบ", equipment: "ไฟสว่าง" },
-      { userId: "66200033", room: "B317", date: "11/08/68", rating: 4.6, comment: "อากาศดี", equipment: "พัดลม" },
-      { userId: "66200033", room: "B317", date: "11/08/68", rating: 4.7, comment: "พัดลมดี", equipment: "พัดลม" },
-      { userId: "66200033", room: "B317", date: "11/08/68", rating: 4.8, comment: "ห้องเย็นมาก เย็นดี", equipment: "แอร์ไม่เย็น" },
-      { userId: "66200033", room: "E113", date: "11/08/68", rating: 4.99, comment: "ห้องสะอาด", equipment: "โต๊ะสะอาด" },
-      { userId: "66200033", room: "E107", date: "11/08/68", rating: 4.7, comment: "เครื่องดี", equipment: "พัดลม" },
-      { userId: "66200033", room: "E111", date: "11/08/68", rating: 4.9, comment: "เงียบสงบ", equipment: "ไฟสว่าง" },
-      { userId: "66200033", room: "B317", date: "11/08/68", rating: 4.6, comment: "อากาศดี", equipment: "พัดลม" },
-      { userId: "66200033", room: "B317", date: "11/08/68", rating: 4.7, comment: "พัดลมดี", equipment: "พัดลม" },
-    ];
-    setFeedbacks(mock);
+    fetch("http://localhost:5000/api/admin/feedbacks")
+      .then(res => res.json())
+      .then(data => {
+        const mapped = data.map(f => ({
+          userId: f.student_number,
+          room: f.room,
+          date: new Date(f.createdAt).toLocaleDateString("th-TH"),
+          rating: f.rating,
+          comment: f.comment,
+          equipment: f.equipment,
+        }));
+        setFeedbacks(mapped);
+      })
+      .catch(err => console.error("Error fetching feedbacks:", err));
   }, []);
 
   useEffect(() => {
