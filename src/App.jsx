@@ -19,6 +19,8 @@ import Admin_usermanagement from "./page/admin/Admin_usermanagement";
 import Admin_profile from "./page/admin/Profile_admin";
 import Admin_history from "./page/admin/History_admin";
 import Admin_dashboard from "./page/admin/Admin_dashboard";
+import Admin_feedback from "./page/admin/Admin_feedback";
+
 
 const App = () => {
   const [isAuthenticated, setAuth] = useState(!!localStorage.getItem("token"));
@@ -57,6 +59,8 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        {/* admin feedback */}
+
         <Route
           path="/Profile"
           element={
@@ -139,6 +143,10 @@ const App = () => {
           path="/admin/dashboard"
           element={<Admin_dashboard />}
         />
+        <Route
+          path="/admin/feedback"
+          element={<Admin_feedback />}
+          />
       </Route>
     </Routes>
   );

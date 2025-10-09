@@ -119,3 +119,6 @@
   transition:opacity .12s ease;
 }
 .sb--collapsed .sb__item:hover::after{ opacity:1; }
+.logout {
+  background-color: red;
+}

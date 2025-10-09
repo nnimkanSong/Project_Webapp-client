@@ -14,7 +14,7 @@ export default function Booking() {
     d.setHours(0, 0, 0, 0);
     return d.toISOString().split("T")[0];
   }, []);
-
+  
   const [formData, setFormData] = useState({
     room: "",
     date: "",

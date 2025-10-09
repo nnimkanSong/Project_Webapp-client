@@ -6,7 +6,6 @@ const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 function Forgot() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-
   const submit = async (e) => {
     e.preventDefault();
     setLoading(true);

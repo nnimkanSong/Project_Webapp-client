@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import Swal from "sweetalert2";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
@@ -31,9 +32,28 @@ const Nav = ({ isAuthenticated, setAuth }) => {
   }, []);
 
   async function handleLogout() {
+    const result = await Swal.fire({
+      title: "ออกจากระบบ?",
+      text: "คุณแน่ใจหรือไม่ว่าต้องการออกจากระบบ",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "ออกจากระบบ",
+      cancelButtonText: "ยกเลิก",
+      confirmButtonColor: "#d33",
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       await axios.post(`${BASE_URL}/api/auth/logout`, {}, { withCredentials: true });
+      Swal.fire({
+        icon: "success",
+        title: "ออกจากระบบสำเร็จ",
+        showConfirmButton: false,
+        timer: 1500,
+      });
     } catch (e) {
+      Swal.fire("เกิดข้อผิดพลาด!", "ไม่สามารถออกจากระบบได้", "error");
       console.error("Logout error", e);
     } finally {
       setAuth?.(false);

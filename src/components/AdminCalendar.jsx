@@ -36,6 +36,21 @@ function combine(dateOnly, hhmm) {
   return d;
 }
 
+/* ✅ ช่วยเช็คช่วงปัจจุบัน สำหรับหัวข้อ/ปุ่มกระโดด */
+const isSameDay = (a, b) =>
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate();
+
+const isSameMonth = (a, b) =>
+  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+
+const isSameWeek = (a, b) => {
+  const sa = startOfWeek(a, { weekStartsOn: 0 });
+  const sb = startOfWeek(b, { weekStartsOn: 0 });
+  return isSameDay(sa, sb);
+};
+
 // สีเรียบ ใช้งานในองค์กร
 function eventStyleGetter(event) {
   const colorMap = {
@@ -67,7 +82,7 @@ function eventStyleGetter(event) {
 export default function AdminCalendar() {
   const [rows, setRows] = useState([]);
   const [date, setDate] = useState(new Date());
-  const [view, setView] = useState(Views.DAY); // ✅ ใช้ Day/Week/Agenda ได้
+  const [view, setView] = useState(Views.DAY); // ✅ ใช้ Day/Week/Month/Agenda ได้
 
   // โหลดข้อมูล (คุณมี api ของจริงอยู่แล้ว)
   useEffect(() => {
@@ -81,22 +96,6 @@ export default function AdminCalendar() {
         if (mounted) setRows(Array.isArray(list) ? list : []);
       } catch (e) {
         console.error("Load admin history failed:", e?.response?.data || e);
-        // ถ้าอยากลองแสดง dummy data:
-        /*
-        setRows([
-          {
-            id: "demo1",
-            date: new Date(),
-            startTime: "09:00",
-            endTime: "11:00",
-            room: "E111",
-            status: "active",
-            people: 3,
-            user: { username: "Demo User", email: "demo@example.com" },
-            objective: "ทดสอบระบบ",
-          },
-        ]);
-        */
       }
     })();
     return () => (mounted = false);
@@ -247,21 +246,76 @@ export default function AdminCalendar() {
     }
   };
 
+  /* ✅ ปรับให้ปุ่มก่อนหน้า/ถัดไป เลื่อนตามมุมมองปัจจุบัน */
   const go = (delta) =>
-    setDate(
-      (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + delta)
-    );
+    setDate((d) => {
+      const nd = new Date(d);
+      if (view === Views.WEEK) {
+        nd.setDate(nd.getDate() + delta * 7);   // เลื่อนเป็น “สัปดาห์”
+        return nd;
+      }
+      if (view === Views.MONTH) {
+        nd.setMonth(nd.getMonth() + delta);     // เลื่อนเป็น “เดือน”
+        return nd;
+      }
+      // DAY / AGENDA => เลื่อนเป็น “วัน”
+      nd.setDate(nd.getDate() + delta);
+      return nd;
+    });
 
-  const fmtHeader = useMemo(
-    () =>
-      new Intl.DateTimeFormat("th-TH", {
-        weekday: "long",
-        day: "2-digit",
-        month: "short",
+  /* ✅ ป้ายบนปุ่มกระโดด และพฤติกรรมกระโดดตามช่วง */
+  const jumpLabel = useMemo(() => {
+    if (view === Views.MONTH) return "เดือนนี้";
+    if (view === Views.WEEK) return "สัปดาห์นี้";
+    return "วันนี้"; // DAY / AGENDA
+  }, [view]);
+
+  const jumpToCurrentPeriod = () => {
+    const now = new Date();
+    if (view === Views.MONTH) {
+      setDate(new Date(now.getFullYear(), now.getMonth(), 1));
+    } else if (view === Views.WEEK) {
+      setDate(startOfWeek(now, { weekStartsOn: 0 }));
+    } else {
+      setDate(now);
+    }
+  };
+
+  /* ✅ แสดงหัววันที่ให้เป็น “วันนี้/สัปดาห์นี้/เดือนนี้” เมื่ออยู่ช่วงปัจจุบัน */
+  const fmtHeader = useMemo(() => {
+    const now = new Date();
+
+    if (view === Views.MONTH) {
+      if (isSameMonth(date, now)) return "เดือนนี้";
+      return new Intl.DateTimeFormat("th-TH", {
+        month: "long",
         year: "numeric",
-      }).format(date),
-    [date]
-  );
+      }).format(date);
+    }
+
+    if (view === Views.WEEK) {
+      if (isSameWeek(date, now)) return "สัปดาห์นี้";
+      const start = startOfWeek(date, { weekStartsOn: 0 });
+      const end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      const fmt = (d) =>
+        new Intl.DateTimeFormat("th-TH", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }).format(d);
+      return `${fmt(start)} – ${fmt(end)}`;
+    }
+
+    // DAY / AGENDA
+    if (isSameDay(date, now)) return "วันนี้";
+    return new Intl.DateTimeFormat("th-TH", {
+      weekday: "long",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }).format(date);
+  }, [date, view]);
 
   return (
     <div className="ab-cal">
@@ -293,11 +347,8 @@ export default function AdminCalendar() {
           <button className="ab-btn" onClick={() => go(-1)}>
             ก่อนหน้า
           </button>
-          <button
-            className="ab-btn ab-btn--pri"
-            onClick={() => setDate(new Date())}
-          >
-            วันนี้
+          <button className="ab-btn ab-btn--pri" onClick={jumpToCurrentPeriod}>
+            {jumpLabel}
           </button>
           <button className="ab-btn" onClick={() => go(1)}>
             ถัดไป

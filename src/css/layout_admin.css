@@ -45,3 +45,16 @@ body { margin: 0; }
   padding: 12px var(--pad);
   color:#9aa7b2;
 }
+.sb__item--logout {
+  margin-top: auto; /* ดันไปล่างสุด */
+  color: #e53935;
+  font-weight: 600;
+  transition: background 0.2s, color 0.2s;
+  margin-bottom: 10px;
+}
+
+.sb__item--logout:hover {
+  background: rgba(229, 57, 53, 0.1);
+  color: #ff6f60;
+}
+

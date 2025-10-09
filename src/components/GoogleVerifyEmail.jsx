@@ -113,7 +113,7 @@ export default function GoogleVerifyEmail({ expectedEmail, onVerified, disabled 
       }
 
       Swal.close();
-      Toast.fire({ icon: "success", title: `ยืนยันอีเมลแล้ว: ${data.email}` });
+      Swal.fire({ icon: "success", title: `ยืนยันอีเมลแล้ว: ${data.email}` });
       onVerified?.(data);
     } catch (e) {
       Swal.close();

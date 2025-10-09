@@ -1,0 +1,659 @@
+:root {
+  --card: #d9d9d9;
+  --chip: #c9c4ba;
+  --text: #48331a;
+  --muted: #48331a;
+
+  --c1: #6fd195; /* B317 */
+  --c2: #537ff1; /* E111 */
+  --c3: #ffa5a5; /* E107 */
+  --c4: #8ac4c0; /* E113 */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Ledger", serif;
+}
+
+/* ---------------- Layout ---------------- */
+.fbPage {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: clamp(18px, 2vw, 26px);
+  background: #f8f7f5;
+}
+
+.fbShell {
+  width: min(95%, 1140px);
+  background: #fff;
+  border-radius: 18px;
+  padding: clamp(18px, 2vw, 26px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+  margin-inline: auto;
+}
+
+.fbTitle {
+  color: var(--text);
+  font-size: clamp(24px, 3vw, 35px);
+  margin: 0 0 14px;
+  text-align: center;
+}
+
+/* ---------------- Top Cards ---------------- */
+.fbTop {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr; /* ✅ 3 คอลัมน์แบบเดิม */
+  gap: 30px;
+  align-items: stretch; /* ✅ ให้ความสูงทุก card เท่ากัน */
+}
+
+/* ✅ ให้ card ปรับขนาดอัตโนมัติเต็มความสูงแถว */
+.fbCard {
+  background: var(--card);
+  border-radius: 20px;
+  padding: 20px;
+  min-height: 140px;
+  height: 100%;          /* ✅ ทำให้เท่ากันทุกช่อง */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+}
+
+
+/* donut */
+.fbDonut {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 12px 0;
+}
+
+.fbCenter,
+.fbRight {
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ---------------- Filter ---------------- */
+.fbFilters {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin: 18px 0 8px;
+  flex-wrap: wrap;
+}
+
+.filter small {
+  color: var(--text);
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.customDropdown {
+  position: relative;
+  width: 200px;
+  background: #e0dfdc;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  transition: background 0.25s ease;
+}
+
+.customDropdown:hover {
+  background: #d7d4ce;
+}
+
+.dropdownSelected {
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #3b2a14;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.dropdownArrow {
+  color: #3b2a14;
+  font-size: 12px;
+  transition: transform 0.25s ease;
+}
+
+.customDropdown.open .dropdownArrow {
+  transform: rotate(180deg);
+}
+
+.dropdownList {
+  position: absolute;
+  top: 105%;
+  left: 0;
+  right: 0;
+  background: #e0dfdc;
+  border-radius: 10px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  max-height: 180px;
+  overflow-y: auto;
+  animation: fadeIn 0.2s ease;
+  z-index: 10;
+}
+
+.dropdownList li {
+  padding: 9px 14px;
+  color: #3b2a14;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.dropdownList li:hover,
+.dropdownList li.selected {
+  background: #c8beb0;
+  font-weight: 700;
+}
+
+/* ---------------- Feedback List ---------------- */
+.fbListWrapper {
+  width: 100%;
+  max-height: 360px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--chip) #f0f0f0;
+  scroll-behavior: smooth;
+  border-radius: 12px;
+}
+
+.fbList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border-radius: 999px;
+  padding: 12px 14px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  min-width: 0;
+}
+
+.row:hover {
+  background: #b8b2a5;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+
+.cell {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.comment,
+.equip {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+p {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.info {
+  border: none;
+  background: var(--chip);
+  color: var(--text);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-weight: 600;
+  display: grid;
+  place-items: center;
+}
+
+/* ---------------- Modal ---------------- */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.modalContent {
+  background: #fffdf8;
+  color: #3b2a14;
+  border-radius: 20px;
+  padding: clamp(24px, 4vw, 40px);
+  max-width: 520px;
+  width: 90%;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  animation: scaleIn 0.25s ease-in-out;
+}
+
+.modalContent h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: clamp(20px, 2.4vw, 26px);
+  text-align: center;
+  color: #3b2a14;
+}
+
+.modalContent p {
+  margin: 8px 0;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.closeBtn {
+  display: block;
+  margin: 24px auto 0;
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 22px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.25s, transform 0.15s;
+}
+
+.closeBtn:hover {
+  background: #c0392b;
+  transform: scale(1.05);
+}
+
+/* ---------------- Donut Chart ---------------- */
+.donutWrapper {
+  position: relative;
+  width: min(90%, 400px);
+  flex: 1;
+  min-height: 160px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+}
+
+.chartArea {
+  position: relative;
+  width: 100%;
+  height: auto;
+  margin: 0 auto;
+  pointer-events: auto;
+  background: transparent;
+  border: none;
+}
+
+.donutLegend {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--text);
+  flex-wrap: wrap;
+}
+
+.legendDot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.chartArea {
+  position: relative;
+  width: 70%;       /* เดิมอาจเป็น 100% → ลดเหลือประมาณ 60–80% ตามต้องการ */
+  height: 235px;    /* ถ้าวงอยู่กลาง ให้น้อยกว่าของเดิมเล็กน้อย */
+  margin: 0 auto;   /* จัดให้อยู่กลาง */
+  pointer-events: auto;
+  background: transparent;  /* ✅ ลบสีพื้นหลังออก */
+  border: none;             /* ✅ ลบเส้นกรอบออก */
+}
+
+/* ---------------- Tooltip ---------------- */
+.cursorTooltip {
+  position: fixed;
+  pointer-events: none;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+  padding: 10px 14px;
+  text-align: center;
+  animation: fadeIn 0.25s ease-in-out;
+  transition: transform 0.1s ease, opacity 0.2s ease;
+  transform: translateY(-3px);
+  color: #3b2a14;
+  z-index: 999;
+}
+
+.tipPercent {
+  font-size: 15px;
+  font-weight: 700;
+  margin-top: 2px;
+  color: #4a3820;
+}
+
+/* ---------- Feedback Summary Card ---------- */
+.boxTitle {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+  white-space: nowrap;
+}
+
+.roomList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.roomItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ececec;
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 15px;
+  font-weight: 500;
+  transition: background 0.25s ease;
+}
+
+.roomItem:hover {
+  background: #e0e0e0;
+}
+
+.roomName {
+  flex: 1;
+  font-weight: 700;
+  color: var(--text);
+  text-align: left;
+}
+
+.roomCount,
+.roomAvg {
+  font-weight: 700;
+  width: 40px;
+  text-align: right;
+}
+
+.roomLabel {
+  width: 70px;
+  text-align: right;
+  opacity: 0.8;
+  font-size: 14px;
+}
+
+.star {
+  font-size: 18px;
+  margin: 0 6px;
+  color: #f7c948;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* ---------------- Animations ---------------- */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 992px) {
+  .fbShell {
+    width: 96%;
+  }
+
+  .fbTitle {
+    font-size: 28px;
+  }
+
+  .row {
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    font-size: 13px;
+  }
+
+  .customDropdown {
+    width: 160px;
+  }
+}
+
+@media (max-width: 720px) {
+  .fbTop {
+    grid-template-columns: 1fr;
+  }
+
+  .fbFilters {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .row {
+    grid-template-columns: 1fr 1fr;
+    font-size: 13px;
+    padding: 10px;
+  }
+
+  .equip {
+    display: none;
+  }
+
+  .modalContent {
+    padding: 26px 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+
+  .fbTitle {
+    font-size: 22px;
+  }
+
+  .customDropdown {
+    width: 100%;
+  }
+
+  .closeBtn {
+    width: 100%;
+  }
+}
+
+/* ✅ Tablet (เหลือ 2 ช่อง) */
+@media (max-width: 992px) {
+  .fbTop {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .fbRight {
+    grid-column: span 2;
+  }
+}
+
+/* ✅ มือถือ (เหลือ 1 ช่องแนวตั้ง) */
+@media (max-width: 720px) {
+  .fbTop {
+    grid-template-columns: 1fr;
+  }
+
+  .fbRight {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 1286px) {
+  .fbTop {
+    grid-template-columns: 1fr 1fr; /* แถวล่าง 2 ช่อง */
+    grid-template-areas:
+      "donut donut"
+      "total avg";
+    gap: 20px;
+  }
+
+  /* ระบุว่าอันไหนคือโดนัท อันไหนคือการ์ด */
+  .fbCard:nth-child(1) {
+    grid-area: donut; /* โดนัทอยู่แถวบน กินเต็ม */
+  }
+  .fbCard:nth-child(2) {
+    grid-area: total; /* Total Feedback อยู่ซ้ายล่าง */
+  }
+  .fbCard:nth-child(3) {
+    grid-area: avg;   /* Average Rating อยู่ขวาล่าง */
+  }
+
+  /* ✅ ให้ทุกการ์ดสูงเท่ากัน และเว้นช่องล่างพอดี */
+  .fbCard {
+    height: auto;
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ✅ จำกัดขนาด donut ไม่ให้ใหญ่เกินเมื่ออยู่บนสุด */
+  .chartArea {
+    max-width: 320px;
+    aspect-ratio: 1 / 1;
+  }
+  
+.row {
+    display: grid;
+    grid-template-columns:
+      0.8fr   /* รหัส */
+      0.6fr   /* ห้อง */
+      0.8fr   /* วันที่ */
+      0.6fr   /* คะแนน */
+      2fr     /* คอมเมนต์ */
+      1.2fr   /* อุปกรณ์หรือข้อความท้าย */
+      0.3fr;  /* ปุ่ม i */
+    align-items: center;
+    gap: clamp(6px, 0.8vw, 14px);
+    padding: clamp(10px, 1.3vw, 14px) clamp(12px, 1.6vw, 18px);
+    min-width: 0;
+    width: 100%;
+  }
+
+  .cell {
+    font-size: clamp(13px, 1vw, 14px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  .comment,
+  .equip {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    flex-shrink: 1; /* ✅ ให้ข้อความย่อได้ก่อน i จะตก */
+  }
+
+  .info {
+    justify-self: end; /* ✅ ชิดขวาเสมอ */
+    flex-shrink: 0;    /* ✅ ห้ามย่อ */
+    width: clamp(28px, 2vw, 34px);
+    height: clamp(28px, 2vw, 34px);
+  }
+}
+
+@media (max-width: 1180px) {
+  .fbTop {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "donut"
+      "total"
+      "avg";
+    gap: 18px;
+  }
+
+  .fbCard:nth-child(1) {
+    grid-area: donut;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+  }
+
+  .chartArea {
+    max-width: 220px;
+    width: 60%;
+    aspect-ratio: 1 / 1;
+  }
+}
+
+*:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
