@@ -348,15 +348,18 @@ const Login = ({ setAuth }) => {
             <br />
 
             <div className="btn-forgot">
-              <button
-                type="button"
-                className="forgot"
-                onClick={handleForgot}
-                disabled={fpCooldown > 0}
-                title={fpCooldown > 0 ? `รอ ${fpCooldown}s` : "ขอรหัสรีเซ็ต"}
-              >
-                {fpCooldown > 0 ? `Forgot password? (รอ ${fpCooldown}s)` : "Forgot password?"}
-              </button>
+              <div className="forgotwrap">
+
+                <button
+                  type="button"
+                  className="forgot"
+                  onClick={handleForgot}
+                  disabled={fpCooldown > 0}
+                  title={fpCooldown > 0 ? `รอ ${fpCooldown}s` : "ขอรหัสรีเซ็ต"}
+                >
+                  {fpCooldown > 0 ? `Forgot password? (รอ ${fpCooldown}s)` : "Forgot password?"}
+                </button>
+              </div>
             </div>
 
 
