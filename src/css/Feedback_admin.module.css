@@ -238,9 +238,10 @@ p {
   height: 32px;
   border-radius: 50%;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 650;
   display: grid;
   place-items: center;
+  justify-self: end;
 }
 
 /* ---------------- Modal ---------------- */
