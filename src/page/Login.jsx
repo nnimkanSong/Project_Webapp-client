@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../css/Login.css";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -18,6 +18,7 @@ const Login = ({ setAuth }) => {
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState(false);
   const navigate = useNavigate();
+  const [fpCooldown, setFpCooldown] = useState(0);
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -27,24 +28,72 @@ const Login = ({ setAuth }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
+    if (loading) return;
+
+    // เช็กโดเมนอีเมล
+    if (!isKMITLEmail(formData.email)) {
+      await Swal.fire({
+        icon: "warning",
+        title: "Invalid email",
+        text: "กรุณาใช้อีเมล @kmitl.ac.th",
+      });
+      return;
+    }
+
+    if (!verified) {
+      await Swal.fire({
+        icon: "info",
+        title: "Verify required",
+        text: "กรุณายืนยันอีเมลด้วย Google ก่อนเข้าสู่ระบบ",
+      });
+      return;
+    }
+
+    if (!formData.password) {
+      await Swal.fire({
+        icon: "warning",
+        title: "Missing password",
+        text: "กรุณากรอกรหัสผ่าน",
+      });
+      return;
+    }
+
     try {
+      setLoading(true);
+
       await axios.post(
         `${BASE_URL}/api/auth/login`,
         { email: formData.email, password: formData.password },
         { withCredentials: true }
       );
+
       if (typeof setAuth === "function") setAuth(true);
+
+      await Swal.fire({
+        icon: "success",
+        title: "Login success",
+        timer: 1200,
+        showConfirmButton: false,
+      });
+
       navigate("/");
     } catch (err) {
-      setError(err.response?.data?.error || "Login failed");
+      const msg = err?.response?.data?.error || "Login failed";
+      await Swal.fire({
+        icon: "error",
+        title: "Login failed",
+        text: msg,
+      });
     } finally {
       setLoading(false);
     }
   };
 
+
+
   async function flowEnterOtp(email) {
+    let canResend = true;
+
     while (true) {
       const otpModal = await Swal.fire({
         title: "กรอกรหัส OTP",
@@ -61,8 +110,28 @@ const Login = ({ setAuth }) => {
         showDenyButton: true,
         confirmButtonText: "ยืนยันโค้ด",
         cancelButtonText: "ยกเลิก",
-        denyButtonText: "ส่งรหัสใหม่",
+        denyButtonText: canResend ? "ส่งรหัสใหม่" : "รอ 30s",
         allowOutsideClick: () => !Swal.isLoading(),
+        didOpen: () => {
+          if (!canResend) {
+            let timeLeft = 30;
+            const denyBtn = Swal.getDenyButton();
+            denyBtn.disabled = true;
+            denyBtn.textContent = `รอ ${timeLeft}s`;
+
+            const timer = setInterval(() => {
+              timeLeft--;
+              if (timeLeft > 0) {
+                denyBtn.textContent = `รอ ${timeLeft}s`;
+              } else {
+                clearInterval(timer);
+                denyBtn.disabled = false;
+                denyBtn.textContent = "ส่งรหัสใหม่";
+                canResend = true;
+              }
+            }, 1000);
+          }
+        },
         preConfirm: async (otp) => {
           const code = String(otp || "").trim();
           if (!/^\d{6}$/.test(code)) {
@@ -71,20 +140,30 @@ const Login = ({ setAuth }) => {
           try {
             const { data } = await axios.post(
               `${BASE_URL}/api/auth/verify-reset-otp`,
-              { email, otp: code }
+              { email, otp: code },
+              { withCredentials: true } // ✅ cookie จะถูกเซ็ต
             );
             return data || true;
           } catch (err) {
-            const msg =
-              err.response?.data?.error || "โค้ดไม่ถูกต้อง/หมดอายุ";
+            const msg = err.response?.data?.error || "โค้ดไม่ถูกต้อง/หมดอายุ";
             Swal.showValidationMessage(msg);
           }
         },
       });
 
+      // ====== กด resend ======
       if (otpModal.isDenied) {
+        if (!canResend) {
+          // กัน user กดตอน disable (ปกติ denyBtn ถูก disable แล้ว)
+          continue;
+        }
+
         try {
-          await axios.post(`${BASE_URL}/api/auth/resend-reset-otp`, { email });
+          await axios.post(
+            `${BASE_URL}/api/auth/resend-reset-otp`,
+            { email },
+            { withCredentials: true }
+          );
           await Swal.fire({
             icon: "info",
             title: "ส่งรหัสใหม่แล้ว",
@@ -92,6 +171,9 @@ const Login = ({ setAuth }) => {
             timer: 1500,
             showConfirmButton: false,
           });
+
+          // ✅ หลังจาก resend สำเร็จ → lock 30s
+          canResend = false;
         } catch (err) {
           await Swal.fire({
             icon: "error",
@@ -99,9 +181,10 @@ const Login = ({ setAuth }) => {
             text: err.response?.data?.error || "Server error",
           });
         }
-        continue;
+        continue; // เปิด popup ใหม่
       }
 
+      // ====== กดยืนยัน OTP ======
       if (otpModal.isConfirmed && otpModal.value) {
         await Swal.fire({
           icon: "success",
@@ -109,14 +192,22 @@ const Login = ({ setAuth }) => {
           timer: 1200,
           showConfirmButton: false,
         });
-        return { ok: true, token: otpModal.value?.resetToken };
+        return { ok: true };
       }
 
       return { ok: false };
     }
   }
+  useEffect(() => {
+    if (fpCooldown <= 0) return;
+    const t = setInterval(() => setFpCooldown((s) => (s > 0 ? s - 1 : 0)), 1000);
+    return () => clearInterval(t);
+  }, [fpCooldown]);
 
+  // แทนที่ handleForgot เดิม
   const handleForgot = async () => {
+    if (fpCooldown > 0) return; // กันเผื่อ user ดับเบิลคลิกปุ่มด้านนอก
+
     const emailStep = await Swal.fire({
       title: "ลืมรหัสผ่าน",
       input: "email",
@@ -126,7 +217,9 @@ const Login = ({ setAuth }) => {
       showCancelButton: true,
       cancelButtonText: "ยกเลิก",
       inputAttributes: { autocapitalize: "off", autocorrect: "off" },
-      allowOutsideClick: () => !Swal.isLoading(),
+      showLoaderOnConfirm: true,                    // ✅ กันกดย้ำตอนส่ง
+      allowOutsideClick: () => !Swal.isLoading(),   // ✅ ส่งอยู่ ห้ามปิด
+      allowEnterKey: () => !Swal.isLoading(),       // ✅ กัน Enter รัว
       preConfirm: async (val) => {
         const email = String(val || "").trim().toLowerCase();
         if (!email) return Swal.showValidationMessage("กรุณากรอกอีเมล");
@@ -134,21 +227,30 @@ const Login = ({ setAuth }) => {
           return Swal.showValidationMessage("กรุณาใช้อีเมลโดเมน @kmitl.ac.th");
         }
         try {
-          await axios.post(`${BASE_URL}/api/auth/forgot-password`, { email });
+          await axios.post(
+            `${BASE_URL}/api/auth/forgot-password`,
+            { email },
+            { withCredentials: true } // แนะนำให้ใส่ไว้ให้สม่ำเสมอ
+          );
           return email;
         } catch (err) {
           const msg =
-            err.response?.status === 429
+            err?.response?.status === 429
               ? "ส่งคำขอบ่อยเกินไป กรุณาลองใหม่ภายหลัง"
-              : err.response?.data?.error || "ส่งคำขอล้มเหลว";
+              : err?.response?.data?.error || "ส่งคำขอล้มเหลว";
           Swal.showValidationMessage(msg);
         }
       },
     });
 
     if (!emailStep.isConfirmed) return;
+
+    // ✅ ตั้ง cooldown 30s ให้ “ปุ่ม Forgot password?” ด้านนอก
+    setFpCooldown(30);
+
     const email = emailStep.value;
 
+    // เข้า flow ใส่ OTP (มี resend cooldown 30s ที่ผมให้ไปก่อนหน้า)
     const verified = await flowEnterOtp(email);
     if (!verified.ok) return;
 
@@ -156,6 +258,7 @@ const Login = ({ setAuth }) => {
     if (verified.token) params.set("token", verified.token);
     navigate(`/reset-password?${params.toString()}`);
   };
+
 
   return (
     <div className="login-bg">
@@ -176,7 +279,7 @@ const Login = ({ setAuth }) => {
 
           <div className="line">
             <hr />
-            <p>or</p>
+            <p>and</p>
             <hr />
           </div>
 
@@ -197,7 +300,18 @@ const Login = ({ setAuth }) => {
                   onChange={handleChange}
                   required
                 />
-                <hr />
+                {/* สถานะ verify (ออปชัน) */}
+                <div style={{ marginTop: 8, fontSize: 14 }}>
+                  {formData.email ? (
+                    verified ? (
+                      <span style={{ color: "#16a34a" }}>✓ Email verified</span>
+                    ) : (
+                      <span style={{ color: "#ef4444" }}>
+
+                      </span>
+                    )
+                  ) : null}
+                </div>
 
                 <div className="input-wrap">
                   <input
@@ -226,18 +340,7 @@ const Login = ({ setAuth }) => {
                   </button>
                 </div>
 
-                {/* สถานะ verify (ออปชัน) */}
-                <div style={{ marginTop: 8, fontSize: 14 }}>
-                  {formData.email ? (
-                    verified ? (
-                      <span style={{ color: "#16a34a" }}>✓ Email verified</span>
-                    ) : (
-                      <span style={{ color: "#ef4444" }}>
-                        Please verify your email with Google
-                      </span>
-                    )
-                  ) : null}
-                </div>
+
               </div>
             </div>
 
@@ -245,10 +348,20 @@ const Login = ({ setAuth }) => {
             <br />
 
             <div className="btn-forgot">
-              <button type="button" className="forgot" onClick={handleForgot}>
-                Forgot password?
-              </button>
+              <div className="forgotwrap">
+
+                <button
+                  type="button"
+                  className="forgot"
+                  onClick={handleForgot}
+                  disabled={fpCooldown > 0}
+                  title={fpCooldown > 0 ? `รอ ${fpCooldown}s` : "ขอรหัสรีเซ็ต"}
+                >
+                  {fpCooldown > 0 ? `Forgot password? (รอ ${fpCooldown}s)` : "Forgot password?"}
+                </button>
+              </div>
             </div>
+
 
             <div className="btn-end">
               <a className="create" href="/register">

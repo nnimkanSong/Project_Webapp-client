@@ -13,10 +13,8 @@
       z-index: 0;
     }
   }
-
   .midle {
     z-index: 1;
-    background-color: #B2C8DD;
     color: #000;
     display: flex;
     flex-direction: row;
@@ -27,7 +25,6 @@
     align-items: center;
     justify-content: space-around;
     position: relative;
-    top: -65px;
     border-radius: 20px;
 
     p {

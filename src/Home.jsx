@@ -2,12 +2,14 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import './Home.css'
 import Sliderhome from './components/Sliderhome';
+import LiquidGlass from 'liquid-glass-react'
 const Home = () => {
   return (
     <div className='pg-home'>
       <div className='top'>
         <img src="./home_top.png" alt="" />
       </div>
+      
       <div className='midle'>
         <div>Status Now</div>
         <div>

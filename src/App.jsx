@@ -4,7 +4,7 @@ import Layout from "./Layout";
 import Home from "./Home";
 import Login from "./page/Login";
 import Create_acount from "./page/Create_acount";
-import Change_password from "./page/Change_password";
+import ResetPassword from "./page/Change_password";
 import Forgot from "./page/Forgot";
 import Starf from "./page/Starf";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -119,7 +119,7 @@ const App = () => {
         path="/reset-password"
         element={
           <PublicRoute>
-            <Change_password />
+            <ResetPassword  />
           </PublicRoute>
         }
       />

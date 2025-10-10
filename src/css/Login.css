@@ -134,7 +134,7 @@ body {
 .btn-forgot {
     .forgot {
         display: flex;
-        width: 100%;
+        width: max-content;
         justify-content: end;
         align-items: end;
         background-color: transparent;
@@ -143,6 +143,7 @@ body {
         font-family: "Ledger", serif;
         font-size: 20px;
         cursor: pointer;
+        margin-bottom: 5px;
     }
 }
     a {
@@ -215,4 +216,10 @@ body {
 .toggle-visibility-l:focus-visible {
   outline: 2px solid #6366f1;     /* โฟกัสสีแบรนด์ */
   outline-offset: 2px;
+}
+.forgotwrap{
+    display: flex;
+    align-items: center;
+    justify-content: end;
+    gap: 15px;
 }

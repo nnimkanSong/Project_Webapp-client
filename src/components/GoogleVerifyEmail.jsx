@@ -1,22 +1,19 @@
 // src/components/GoogleVerifyEmail.jsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import Swal from "sweetalert2";
+import axios from "axios";
 
-const Toast = Swal.mixin({
-  toast: true,
-  position: "top-end",
-  showConfirmButton: false,
-  timer: 2200,
-  timerProgressBar: true,
-});
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+function isKMITLEmail(email) {
+  return /^[a-zA-Z0-9._%+-]+@kmitl\.ac\.th$/.test(String(email).trim());
+}
 
 export default function GoogleVerifyEmail({ expectedEmail, onVerified, disabled }) {
   const btnRef = useRef(null);
   const inited = useRef(false);
   const emailRef = useRef("");
-  const [busy, setBusy] = useState(false);
-
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   useEffect(() => {
     emailRef.current = (expectedEmail || "").trim();
@@ -27,24 +24,16 @@ export default function GoogleVerifyEmail({ expectedEmail, onVerified, disabled 
 
     const timer = setInterval(() => {
       if (!btnRef.current) return;
+      if (window.google && CLIENT_ID) {
+        clearInterval(timer);
+        inited.current = true;
 
-      if (!window.google) {
-        // ถ้าเลย 1.5s แล้วยังไม่มี window.google ให้เตือนผู้ใช้
-        // (กันเคสลืม <script src="https://accounts.google.com/gsi/client" async defer></script>)
-        return;
-      }
-
-      clearInterval(timer);
-      inited.current = true;
-
-      try {
         window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          client_id: CLIENT_ID,
           callback: handleCredentialResponse,
           ux_mode: "popup",
         });
 
-        // render ปุ่มจริง แต่ซ่อนไว้
         window.google.accounts.id.renderButton(btnRef.current, {
           theme: "outline",
           size: "large",
@@ -52,122 +41,133 @@ export default function GoogleVerifyEmail({ expectedEmail, onVerified, disabled 
           shape: "pill",
           width: 320,
         });
-        btnRef.current.style.display = "none";
-      } catch (err) {
-        Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถเริ่ม Google Sign-In ได้", "error");
+
+        btnRef.current.style.display = "none"; // ซ่อนปุ่มจริงของ GIS
       }
     }, 100);
 
-    // ตั้ง timeout แจ้งเตือนถ้า GSI ไม่มา
-    const warnTimer = setTimeout(() => {
-      if (!inited.current && !window.google) {
-        Swal.fire(
-          "ยังโหลด Google ไม่เสร็จ",
-          "กรุณารีเฟรชหน้า หรือเช็คสคริปต์ GSI:\nhttps://accounts.google.com/gsi/client",
-          "warning"
-        );
-      }
-    }, 1500);
-
-    return () => {
-      clearInterval(timer);
-      clearTimeout(warnTimer);
-    };
+    return () => clearInterval(timer);
   }, []);
 
   async function handleCredentialResponse(response) {
     const fromRef = emailRef.current;
     const fromDom = (document.querySelector('input[name="email"]')?.value || "").trim();
-    const currentEmail = fromRef || fromDom;
+    const currentEmail = (fromRef || fromDom).toLowerCase();
 
     if (!response?.credential) {
-      Swal.fire("ไม่พบข้อมูลยืนยัน", "ระบบไม่ได้รับ credential จาก Google", "error");
+      await Swal.fire({ icon: "error", title: "Verify failed", text: "ไม่พบ credential จาก Google" });
       return;
     }
     if (!currentEmail) {
-      Swal.fire("กรุณากรอกอีเมล", "กรอกอีเมลของคุณก่อนกด Verify", "warning");
+      await Swal.fire({ icon: "info", title: "กรอกอีเมลก่อน", text: "โปรดกรอกอีเมล @kmitl.ac.th ก่อนกดยืนยัน" });
+      return;
+    }
+    if (!isKMITLEmail(currentEmail)) {
+      await Swal.fire({ icon: "warning", title: "อีเมลไม่ถูกต้อง", text: "รองรับเฉพาะโดเมน @kmitl.ac.th" });
       return;
     }
 
-    setBusy(true);
-    Swal.fire({
-      title: "กำลังตรวจสอบ...",
-      html: "โปรดรอสักครู่",
-      allowOutsideClick: false,
-      didOpen: () => Swal.showLoading(),
-    });
-
     try {
-      const res = await fetch(`${API_BASE}/api/auth/verify-google-email`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          credential: response.credential,
-          expectedEmail: currentEmail,
-        }),
+      Swal.fire({
+        title: "กำลังยืนยันอีเมล...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data?.error || data?.message || "Verify failed");
-      }
 
-      Swal.close();
-      Swal.fire({ icon: "success", title: `ยืนยันอีเมลแล้ว: ${data.email}` });
-      onVerified?.(data);
+      const { data } = await axios.post(
+        `${BASE_URL}/api/auth/verify-google-email`,
+        { credential: response.credential, expectedEmail: currentEmail },
+        { withCredentials: true }
+      );
+
+      if (data?.verified) {
+        await Swal.fire({ icon: "success", title: "ยืนยันอีเมลสำเร็จ", timer: 1200, showConfirmButton: false });
+        onVerified?.(data);
+      } else {
+        await Swal.fire({ icon: "error", title: "ยืนยันไม่สำเร็จ", text: "ไม่สามารถยืนยันอีเมลได้" });
+      }
     } catch (e) {
-      Swal.close();
-      Swal.fire("เกิดข้อผิดพลาด", String(e.message || e), "error");
-    } finally {
-      setBusy(false);
+      const msg =
+        e?.response?.data?.error ||
+        (e?.response?.status === 401 ? "Google token ไม่ถูกต้อง" : "เซิร์ฟเวอร์ผิดพลาด");
+      await Swal.fire({ icon: "error", title: "ยืนยันไม่สำเร็จ", text: msg });
     }
   }
 
-  const triggerGoogle = () => {
-    if (busy || disabled) return;
-    if (!btnRef.current) {
-      Swal.fire("ระบบยังไม่พร้อม", "กำลังเตรียมปุ่ม Verify โปรดลองใหม่อีกครั้ง", "info");
+  // ✅ ใหม่: เช็คก่อน ถ้า verified แล้ว ข้าม Google ได้เลย
+  const precheckAndTrigger = async () => {
+    if (disabled) return;
+
+    const email = (emailRef.current || "").toLowerCase().trim();
+    if (!email) {
+      await Swal.fire({ icon: "info", title: "กรอกอีเมลก่อน", text: "โปรดกรอกอีเมล @kmitl.ac.th" });
       return;
     }
-    const realBtn = btnRef.current.querySelector("div[role=button]");
+    if (!isKMITLEmail(email)) {
+      await Swal.fire({ icon: "warning", title: "อีเมลไม่ถูกต้อง", text: "รองรับเฉพาะโดเมน @kmitl.ac.th" });
+      return;
+    }
+
+    try {
+      const { data } = await axios.post(`${BASE_URL}/api/auth/is-email-verified`, { email });
+      if (data?.verified) {
+        await Swal.fire({
+          icon: "success",
+          title: "อีเมลนี้ยืนยันไว้แล้ว",
+          text: "คุณสามารถเข้าสู่ระบบได้เลย",
+          timer: 1200,
+          showConfirmButton: false,
+        });
+        onVerified?.(data);
+        return; // ข้าม popup Google
+      }
+    } catch (e) {
+      // เงียบไว้ก็ได้ (ไม่ critical) หรือจะแจ้งเตือนก็ได้
+    }
+
+    // ยังไม่ verified → เรียกปุ่ม GIS จริง
+    const realBtn = btnRef.current?.querySelector("div[role=button]");
     if (realBtn) realBtn.click();
-    else Swal.fire("ไม่พบปุ่ม Google", "ปุ่มจริงยังไม่ถูก render ครับ", "error");
+    else {
+      await Swal.fire({ icon: "error", title: "Google not ready", text: "กำลังโหลด Google… กรุณาลองใหม่อีกครั้ง" });
+    }
   };
 
   return (
     <div style={{ textAlign: "center", width: "100%" }}>
-      {/* ปุ่มจริง (ซ่อน) */}
+      {/* ปุ่มจริงของ GIS (ซ่อน) */}
       <div ref={btnRef} />
 
-      {/* ปุ่ม custom */}
+      {/* ปุ่ม custom UI เดิม */}
       <button
         type="button"
-        onClick={triggerGoogle}
-        disabled={disabled || busy}
+        onClick={precheckAndTrigger}
+        disabled={disabled}
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           gap: "10px",
-          backgroundColor: disabled || busy ? "#8197AC" : "#4285F4",
+          backgroundColor: disabled ? "#8197AC" : "#4285F4",
           color: "#fff",
           fontWeight: 600,
           fontSize: "18px",
           padding: "12px 20px",
           borderRadius: "12px",
           border: "none",
-          cursor: disabled || busy ? "not-allowed" : "pointer",
+          cursor: disabled ? "not-allowed" : "pointer",
           width: "400px",
           transition: "0.2s",
-          opacity: busy ? 0.85 : 1,
+          margin: "0 auto",
         }}
+        title={disabled ? "กรอกอีเมลก่อน" : undefined}
       >
         <img
           src="/google_logo.png"
           alt="Google"
           style={{ width: 24, height: 24, background: "white", borderRadius: "50%" }}
         />
-        {busy ? "Verifying..." : "Verify with Google"}
+        Verify with Google
       </button>
     </div>
   );
