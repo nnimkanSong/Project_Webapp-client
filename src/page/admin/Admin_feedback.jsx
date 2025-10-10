@@ -156,7 +156,7 @@ export default function Feedback() {
       .then(res => res.json())
       .then(data => {
         const mapped = data.map(f => ({
-          userId: f.student_number,
+          userId: f.studentNumber,
           room: f.room,
           date: new Date(f.createdAt).toLocaleDateString("th-TH"),
           rating: f.rating,
