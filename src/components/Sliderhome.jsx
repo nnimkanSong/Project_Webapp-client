@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import styles from "../css/sliderhome.module.css";
 
+
 const Sliderhome = ({
   images = ["./E113_1.jpg", "./E113_2.jpg", "./E113_3.jpg", "./E113_4.jpg"],
   details = [], // [{title, description, extra}, ...] ยาวเท่ากับ images (ถ้าไม่มีจะโชว์ค่า default)

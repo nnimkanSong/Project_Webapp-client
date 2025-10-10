@@ -165,3 +165,10 @@
 }
 .swal-grid span { color: #666; margin-right: 6px; }
 .swal-grid b { color: #222; }
+
+@media (max-width: 1600px) {
+  .um-page { width: 1000px; height: 720px;}
+  .um-card { width: 900px; height: 500px; }
+  .um-card-title, .um-row { grid-template-columns: 2fr 1.5fr 2fr 1.5fr; }
+  
+}

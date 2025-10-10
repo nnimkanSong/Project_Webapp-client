@@ -240,3 +240,10 @@
     text-align: left;
   }
 }
+@media (max-width: 1420px) {
+  .profile-card {
+    width: 900px;
+    height: 550px;
+    max-width: 70%;
+  }
+}
