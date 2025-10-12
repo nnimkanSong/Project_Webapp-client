@@ -1,12 +1,12 @@
 // src/pages/Booking.jsx
 import "../page/Booking.css";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import Slider from "../components/Slider";
 import { useNavigate } from "react-router-dom";
-import { api } from "../api"; // ✅ ใช้ axios instance
+import { api } from "../api"; // axios instance withCredentials: true
 
-export default function Booking() {
+function Booking() {
   const navigate = useNavigate();
 
   const today = useMemo(() => {
@@ -15,8 +15,14 @@ export default function Booking() {
     return d.toISOString().split("T")[0];
   }, []);
   
+
+  const [rooms, setRooms] = useState([]);
+  const [loadingRooms, setLoadingRooms] = useState(true);
+  const [err, setErr] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
   const [formData, setFormData] = useState({
-    room: "",
+    roomId: "",
     date: "",
     startTime: "",
     endTime: "",
@@ -24,57 +30,100 @@ export default function Booking() {
     objective: "",
   });
 
+  // โหลดรายชื่อห้องจาก BE
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoadingRooms(true);
+        setErr("");
+        const r = await api.get("/api/rooms");
+        setRooms(Array.isArray(r.data?.rooms) ? r.data.rooms : []);
+      } catch (e) {
+        console.error("Fetch /api/rooms error:", e?.response?.status, e?.response?.data);
+        const msg =
+          e?.response?.data?.message ||
+          e?.response?.data?.error ||
+          e?.message ||
+          "ไม่สามารถโหลดรายการห้องได้";
+        setErr(msg);
+        Swal.fire("Error", msg, "error");
+      } finally {
+        setLoadingRooms(false);
+      }
+    })();
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "people") {
       const v = value === "" ? "" : Math.max(1, Number(value));
-      setFormData({ ...formData, [name]: v });
+      setFormData((s) => ({ ...s, [name]: v }));
       return;
     }
-    setFormData({ ...formData, [name]: value });
+    setFormData((s) => ({ ...s, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { room, date, startTime, endTime, people, objective } = formData;
+    if (submitting) return;
 
-    // ✅ Validation ฝั่ง client
-    if (!room || !date || !startTime || !endTime || !people || !objective) {
+    const { roomId, date, startTime, endTime, people, objective } = formData;
+
+    // ตรวจความครบถ้วน
+    if (!roomId || !date || !startTime || !endTime || !people || !objective.trim()) {
       Swal.fire("Failure", "กรุณากรอกข้อมูลให้ครบทุกช่อง", "error");
       return;
     }
+    // เวลาเริ่ม-สิ้นสุด
     if (endTime <= startTime) {
       Swal.fire("เวลาไม่ถูกต้อง", "กรุณาเลือกเวลาสิ้นสุดให้มากกว่าเวลาเริ่ม", "warning");
       return;
     }
 
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        Swal.fire("Unauthorized", "กรุณาเข้าสู่ระบบก่อนทำการจอง", "error");
-        navigate("/login");
+    // ตรวจเวลาเปิด/ปิดจาก room (ถ้ามี)
+    const room = rooms.find((r) => r._id === roomId);
+    if (room?.openAt && room?.closeAt) {
+      if (!(room.openAt <= startTime && endTime <= room.closeAt)) {
+        Swal.fire(
+          "นอกเวลาเปิดให้จอง",
+          `เวลาจองต้องอยู่ระหว่าง ${room.openAt} - ${room.closeAt}`,
+          "warning"
+        );
         return;
       }
+    }
 
-      // ✅ ยิงไปที่ backend พร้อมแนบ token
-      const res = await api.post(
-        "/api/bookings",
-        { room, date, startTime, endTime, people, objective },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+    try {
+      setSubmitting(true);
+      await api.post("/api/bookings", {
+        roomId,
+        date,
+        startTime,
+        endTime,
+        people,
+        objective: String(objective).trim(),
+      });
 
-      Swal.fire("Succeed!", "คุณได้ทำการจองสำเร็จแล้ว โปรดรอการยืนยัน", "success");
+      await Swal.fire("Succeed!", "จองสำเร็จแล้ว โปรดรอการยืนยัน", "success");
 
       setFormData({
-        room: "",
+        roomId: "",
         date: "",
         startTime: "",
         endTime: "",
         people: "",
         objective: "",
       });
+      navigate("/history");
     } catch (err) {
-      Swal.fire("Error", err.response?.data?.error || "Booking failed", "error");
+      console.error("POST /api/bookings error:", err);
+      const msg =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        "Booking failed";
+      Swal.fire("Error", msg, "error");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -86,15 +135,25 @@ export default function Booking() {
         </div>
         <div className="bookg-form-card">
           <h2>Booking</h2>
+
+          {err && <div className="error">{err}</div>}
+          {loadingRooms && <div className="loader">กำลังโหลดรายชื่อห้อง…</div>}
+
           <form className="bookg-form" onSubmit={handleSubmit}>
             <label>
               Room :
-              <select name="room" value={formData.room} onChange={handleChange}>
+              <select
+                name="roomId"
+                value={formData.roomId}
+                onChange={handleChange}
+                disabled={loadingRooms || rooms.length === 0}
+              >
                 <option value="">-- เลือกห้อง --</option>
-                <option value="E107">E107</option>
-                <option value="E111">E111</option>
-                <option value="E113">E113</option>
-                <option value="B317">B317</option>
+                {rooms.map((r) => (
+                  <option key={r._id} value={r._id}>
+                    {r.code} {r.capacity ? `(≤ ${r.capacity} คน)` : ""}
+                  </option>
+                ))}
               </select>
             </label>
 
@@ -156,11 +215,12 @@ export default function Booking() {
                 type="button"
                 className="bookg-btn-ghost"
                 onClick={() => navigate(-1)}
+                disabled={submitting}
               >
                 Back
               </button>
-              <button type="submit" className="bookg-btn-primary">
-                Book
+              <button type="submit" className="bookg-btn-primary" disabled={submitting}>
+                {submitting ? "Booking..." : "Book"}
               </button>
             </div>
           </form>
@@ -169,3 +229,6 @@ export default function Booking() {
     </div>
   );
 }
+
+
+export default Booking;

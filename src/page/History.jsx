@@ -37,7 +37,7 @@ export default function History() {
       }
     })();
   }, []);
-  
+
   const fmtDate = (d) => {
     try {
       return new Date(d).toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" });
@@ -149,7 +149,12 @@ export default function History() {
                   return (
                     <div key={bk._id} className="booking-item">
                       <div className="booking-top">
-                        <div><strong>Room:</strong> {bk.room}</div>
+                        <div>
+                          <strong>Room:</strong>{" "}
+                          {typeof bk.room === "string"
+                            ? bk.room
+                            : (bk.room?.code || bk.roomCode || "—")}
+                        </div>
                         <span className={`badge ${bk.status}`}>{bk.status}</span>
                       </div>
 
