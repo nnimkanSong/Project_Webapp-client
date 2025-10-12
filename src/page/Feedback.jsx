@@ -1,38 +1,38 @@
-import React, { useState, useRef, useEffect } from 'react';
-import Swal from 'sweetalert2';
-import styles from '../css/FeedbackForm.module.css';
+import React, { useState, useRef, useEffect } from "react";
+import Swal from "sweetalert2";
+import styles from "../css/FeedbackForm.module.css";
 import { api } from "../feedback_api";
 
-const roomOptions = ['B317', 'E107', 'E111', 'E113'];
+const roomOptions = ["B317", "E107", "E111", "E113"];
 
 const FeedbackForm = () => {
-  const [studentNumber, setStudentNumber] = useState('');
-  const [selectedRoom, setSelectedRoom] = useState('');
+  const [studentNumber, setStudentNumber] = useState("");
+  const [selectedRoom, setSelectedRoom] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
-  const [comment, setComment] = useState('');
-  const [equipment, setEquipment] = useState('');
+  const [comment, setComment] = useState("");
+  const [equipment, setEquipment] = useState("");
   const dropdownRef = useRef(null);
 
-  // ปิด dropdown เมื่อคลิกข้างนอก
+  // 🔹 ปิด dropdown เมื่อคลิกข้างนอก
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setDropdownOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ ดึง student_number + room ล่าสุดจาก backend
+  // ✅ ดึงข้อมูล student_number + room จาก backend โดยใช้ token ใน cookie
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await api.get("/api/bookings/latest");
+        const res = await api.get("/api/bookings/latest"); // ✅ token อยู่ใน cookie แล้ว
         console.log("Fetched data:", res.data);
-        setStudentNumber(res.data.student_number || "");
+        setStudentNumber(res.data.studentNumber || "");
         setSelectedRoom(res.data.room || "");
       } catch (err) {
         console.error("Error fetching:", err.response?.data || err.message);
@@ -60,8 +60,8 @@ const FeedbackForm = () => {
       });
       Swal.fire("ส่ง Feedback สำเร็จ!", "ขอบคุณสำหรับข้อมูล", "success");
       setRating(0);
-      setComment('');
-      setEquipment('');
+      setComment("");
+      setEquipment("");
     } catch (err) {
       Swal.fire("เกิดข้อผิดพลาด", err.message, "error");
     }
@@ -83,20 +83,24 @@ const FeedbackForm = () => {
           <div className={styles.formGroup}>
             <label>Room :</label>
             <div
-              className={`${styles.customDropdown} ${dropdownOpen ? styles.open : ''}`}
+              className={`${styles.customDropdown} ${dropdownOpen ? styles.open : ""}`}
               onClick={() => setDropdownOpen(!dropdownOpen)}
               ref={dropdownRef}
             >
               <div className={styles.dropdownSelected}>
-                {selectedRoom || 'Select a room'}
-                <i className={`fa-solid ${dropdownOpen ? 'fa-angle-up' : 'fa-angle-down'} ${styles.dropdownArrow}`}></i>
+                {selectedRoom || "Select a room"}
+                <i
+                  className={`fa-solid ${
+                    dropdownOpen ? "fa-angle-up" : "fa-angle-down"
+                  } ${styles.dropdownArrow}`}
+                ></i>
               </div>
               {dropdownOpen && (
                 <ul className={styles.dropdownList}>
                   {roomOptions.map((room) => (
                     <li
                       key={room}
-                      className={room === selectedRoom ? styles.selected : ''}
+                      className={room === selectedRoom ? styles.selected : ""}
                       onClick={() => handleSelectRoom(room)}
                     >
                       {room}
@@ -127,7 +131,9 @@ const FeedbackForm = () => {
                 return (
                   <span
                     key={starValue}
-                    className={`${styles.star} ${starValue <= (hover || rating) ? styles.filled : ''}`}
+                    className={`${styles.star} ${
+                      starValue <= (hover || rating) ? styles.filled : ""
+                    }`}
                     onClick={() => setRating(starValue)}
                     onMouseEnter={() => setHover(starValue)}
                     onMouseLeave={() => setHover(0)}
