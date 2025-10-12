@@ -1,6 +1,6 @@
 :root {
-  --card: #d9d9d9;
-  --chip: #c9c4ba;
+  --card: #fafafa;
+  --chip: #fafafa;
   --text: #48331a;
   --muted: #48331a;
 
@@ -63,6 +63,7 @@ body {
   align-items: center;
   justify-content: center;
   color: var(--text);
+  border: 1px solid #e5e7eb;  
 }
 
 

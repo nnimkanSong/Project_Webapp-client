@@ -9,75 +9,65 @@
   --sb-active:rgba(109,117,255,.18);
   --radius:16px;
 }
-.sb__item,
-.sb__item:link,
-.sb__item:visited {
-  text-decoration: none;
-}
 
-/* ถ้าอยากให้ตอน hover ก็ยังไม่ underline */
-.sb__item:hover {
-  text-decoration: none;
-}
+/* ---------- Sidebar Wrapper ---------- */
 .sb{
-  width: 280px;
-  /* height: 100%;  <-- ลบ */
-  min-height: 100vh;   /* สูงเต็มจอ */
-  height: auto;        /* ให้ยืดตามคอนเทนต์ */
-  background: linear-gradient(180deg,var(--sb-panel),#0e1319 60%);
-  color: var(--sb-text);
-  padding: 14px;
-  border-radius: 20px;
-  display:flex;
+  width:280px;
+  min-height:100vh;                     /* สูงเต็มจอ */
+  background:linear-gradient(180deg,var(--sb-panel),#0e1319 60%);
+  color:var(--sb-text);
+  padding:14px;
+  border-radius:20px;
+  display:flex;                          /* คอลัมน์หลัก */
   flex-direction:column;
   gap:14px;
-  box-shadow: 0 8px 28px rgba(0,0,0,.45);
+  box-shadow:0 8px 28px rgba(0,0,0,.45);
 }
-
 .sb--collapsed{ width:84px; }
 
-.sb__header{
-  display:flex; align-items:center; justify-content:space-between;
-}
-.sb__brand{display:flex; align-items:center; gap:10px;}
+/* ---------- Header ---------- */
+.sb__header{ display:flex; align-items:center; justify-content:space-between; }
+.sb__brand{ display:flex; align-items:center; gap:10px; }
 .sb__logo{
-  width:32px;height:32px;border-radius:10px;display:grid;place-items:center;
-  background: radial-gradient(80% 80% at 50% 20%, #8d93ff, #5b5fff);
-  box-shadow: 0 8px 18px rgba(105,105,255,.35);
+  width:32px; height:32px; border-radius:10px; display:grid; place-items:center;
+  background:radial-gradient(80% 80% at 50% 20%, #8d93ff, #5b5fff);
+  box-shadow:0 8px 18px rgba(105,105,255,.35);
 }
-.sb__title{font-weight:600; font-size:18px; letter-spacing:.3px;}
+.sb__title{ font-weight:600; font-size:18px; letter-spacing:.3px; }
 .sb__collapse{
   background:var(--sb-surface); border:none; color:var(--sb-muted);
-  width:32px;height:32px;border-radius:10px; cursor:pointer;
+  width:32px; height:32px; border-radius:10px; cursor:pointer;
 }
 .sb__collapse:hover{ background:var(--sb-hover); color:var(--sb-text); }
 
+/* ---------- Search (ถ้ามี) ---------- */
 .sb__search{
   display:flex; align-items:center; gap:10px;
   background:var(--sb-surface); border-radius:12px; padding:10px 12px;
   color:var(--sb-muted);
 }
 .sb__search input{
-  background:transparent; border:none; outline:none; color:var(--sb-text);
-  width:100%;
+  background:transparent; border:none; outline:none; color:var(--sb-text); width:100%;
 }
 
-/* เมนู: ไม่ให้มีสกรอลบาร์ และให้ยืดตัวกินพื้นที่ที่เหลือ */
+/* ---------- Menu (ยืดกินพื้นที่ที่เหลือ) ---------- */
 .sb__menu{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  /* overflow:auto;  <-- ลบ */
-  overflow:hidden;      /* กันแถบสกรอล */
-  flex: 1 1 auto;       /* ยืดได้ตามพื้นที่แนวตั้ง */
+  flex:1 1 auto;
+  display:flex; flex-direction:column; gap:6px;
+  overflow:hidden;                        /* กันแถบสกรอล */
 }
+
+/* ลิงก์/ปุ่มของรายการเมนู */
+.sb__item,
+.sb__item:link,
+.sb__item:visited{ text-decoration:none; }
+.sb__item:hover{ text-decoration:none; }
 
 .sb__item{
   position:relative;
   display:flex; align-items:center; gap:12px;
   width:100%; padding:12px 12px; border:none; background:transparent;
-  color:var(--sb-text); border-radius:12px; cursor:pointer;
-  text-align:left;
+  color:var(--sb-text); border-radius:12px; cursor:pointer; text-align:left;
 }
 .sb__item:hover{ background:var(--sb-hover); }
 .sb__item.is-active{
@@ -92,6 +82,7 @@
 }
 .sb__chev{ color:var(--sb-muted); }
 
+/* CTA ตัวอย่าง */
 .sb__cta{
   display:flex; align-items:center; gap:10px; justify-content:center;
   background:#1c212b; color:#eaeef7; border:none; border-radius:12px;
@@ -103,22 +94,65 @@
 .sb__userName{ font-size:14px; font-weight:600; }
 .sb__userRole{ font-size:12px; color:var(--sb-muted); }
 
-/* ซ่อนสกรอลบาร์เผื่อบางเบราว์เซอร์ยังแสดง */
-.sb, .sb * { scrollbar-width: none; }           /* Firefox */
+/* ซ่อนสกรอลบาร์ */
+.sb, .sb *{ scrollbar-width:none; }
 .sb::-webkit-scrollbar,
-.sb *::-webkit-scrollbar{ display: none; }      /* Chrome/Edge */
+.sb *::-webkit-scrollbar{ display:none; }
 
-/* collapsed tooltips */
+/* ---------- Tooltips ตอนย่อ ---------- */
 .sb--collapsed .sb__item[data-tooltip]{ position:relative; }
 .sb--collapsed .sb__item[data-tooltip]::after{
-  content: attr(data-tooltip);
+  content:attr(data-tooltip);
   position:absolute; left:72px; top:50%; transform:translateY(-50%);
-  background:#5865ff; color:white; font-size:12.5px; padding:6px 10px;
+  background:#5865ff; color:#fff; font-size:12.5px; padding:6px 10px;
   border-radius:9px; opacity:0; pointer-events:none; white-space:nowrap;
   box-shadow:0 10px 20px rgba(88,101,255,.35);
   transition:opacity .12s ease;
 }
 .sb--collapsed .sb__item:hover::after{ opacity:1; }
-.logout {
-  background-color: red;
+
+/* ---------- Footer (ตรึงล่าง) ---------- */
+.sb__footer{
+  margin-top:auto;                 /* ดันลงล่าง */
+  padding-top:12px;
+  border-top:1px solid rgba(255,255,255,.06);
+}
+
+/* ---------- Logout Pill (Gradient Border) ---------- */
+.logout{
+  --grad-1:#F17D32;
+  --grad-2:#4472C8;
+  --bg-dim:rgba(18,22,30,.65);
+  align-items: center;
+  display:inline-flex;
+  width:50%;
+  border:0;
+  padding:0;
+  background:linear-gradient(90deg,var(--grad-1),var(--grad-2));  /* เส้นขอบไล่สี */
+  border-radius:999px;
+  cursor:pointer;
+  position:relative;
+  transition:transform .15s ease, filter .2s ease, box-shadow .2s ease;
+  box-shadow:0 10px 24px rgba(33,212,253,.12), 0 8px 28px rgba(255,58,196,.12);
+}
+.logout__inner{
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  width:100%; padding:14px 22px; border-radius:inherit;
+  background:linear-gradient(var(--bg-dim), var(--bg-dim));     /* ทำให้เกิดขอบเรืองแสง */
+  color:#fff;
+  font:700 16px/1.1 Inter, system-ui, -apple-system, "Noto Sans Thai";
+}
+.logout__icon{ display:grid; place-items:center; line-height:0; filter:drop-shadow(0 2px 8px rgba(0,0,0,.35)); }
+
+/* ขนาดปกติ/ย่อ */
+.logout--full{ margin-top:6px; }
+.logout--icon{ width:56px; height:56px; margin:6px auto 0; border-radius:999px; }
+.logout--icon .logout__inner{ padding:0; width:100%; height:100%; }
+
+/* States */
+.logout:hover{ transform:translateY(-1px); filter:brightness(1.05); }
+.logout:active{ transform:translateY(0); filter:brightness(.98); }
+.logout:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 3px rgba(33,212,253,.35), 0 0 0 6px rgba(255,58,196,.25);
 }

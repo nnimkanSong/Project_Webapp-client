@@ -1,6 +1,5 @@
 .pg-home {
-  margin: 60px 62px 62px 62px;  
-
+  margin: 60px 62px 62px 62px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -9,36 +8,150 @@
   .top {
     img {
       background-repeat: repeat;
-      width: 100% ;
+      width: 1170px;
+      height: 100%;
       z-index: 0;
+      border-radius: 25px;
     }
   }
-  .midle {
-    z-index: 1;
-    color: #000;
-    display: flex;
-    flex-direction: row;
-    font-size: 24px ;
-    width: 1180px; 
-    height: 120px; 
-    padding: 20px;
-    align-items: center;
-    justify-content: space-around;
-    position: relative;
-    border-radius: 20px;
+}
 
-    p {
-      text-align: center;
-      color: #000;
-      font-family: "Ledger", serif;
-      font-size: calc(24px +0.5vw);
+/* ---- Glass Status Bar ---- */
+:root {
+  --glass-dark-1: #122246; /* ด้านบน */
+  --glass-dark-2: #0c1733; /* ด้านล่าง */
+}
 
-    }
+.midle {
+  position: relative;
+  isolation: isolate;
+  z-index: 2;
+  width: 1080px;
+  height: 150px; /* ลดลงเล็กน้อยเพื่อให้ดูแน่นขึ้น */
+  top: -85px;
+  margin: 0 auto;
+  padding: 16px 24px; /* ลด padding เพื่อให้แน่น */
+  border-radius: 26px;
+  
 
-  }
-  .end{
-    margin-top: -80px;
-    width: 100%;
-    z-index: 0;
-  }
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
+  backdrop-filter: blur(6px) saturate(100%);
+  -webkit-backdrop-filter: blur(16px) saturate(50%);
+  box-shadow: 0 20px 40px rgba(27, 44, 117, 0.28);
+
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr 1fr 1fr;
+  align-items: center;
+  justify-content: center;
+  gap: 18px; /* จาก 30px → 18px */
+  color: #e6edf7;
+  text-align: center;
+}
+
+.midle::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(120% 140% at 20% -10%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 40%),
+    linear-gradient(180deg, var(--glass-dark-1), var(--glass-dark-2)),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.348), rgba(255, 255, 255, 0) 70%);
+  opacity: 0.96;
+}
+
+/* ---------- ช่องข้อความ ---------- */
+.midle .field {
+  display: grid;
+  gap: 2px; /* จาก 4px → 2px ให้แน่นขึ้น */
+  min-width: 0;
+  justify-items: center; /* จัดให้ตรงกลางแนวนอน */
+}
+
+.midle .label {
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.midle .sub {
+  font-size: 20px;
+  color: rgba(230, 237, 247, 0.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+}
+
+/* ---------- เส้นแบ่งระหว่างช่อง ---------- */
+.midle .field + .field {
+  position: relative;
+}
+.midle .field + .field::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.5px;
+  height: 44px;
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.15), transparent);
+}
+
+/* ---------- ส่วนล่าง ---------- */
+.end {
+  padding-bottom: 100px;
+  width: 1300px;  
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-top: -20px;
+  z-index: 0;
+}
+.able {
+  color: #e6edf7;
+  font-size: 30px;
+  margin-bottom: 50px;
+  margin-top: -25px;
+}
+.sub {
+  font-size: 30px;
+  font-weight: bold;
+}
+.sub0 {
+  color: #3b82f6;
+  text-shadow:
+    0 0 6px rgba(16, 96, 255, 0.6),
+    0 0 16px rgba(18, 111, 205, 0.45);
+}
+.sub1 {
+  color: #1ec765;
+  text-shadow:
+    0 0 6px rgba(12, 211, 82, 0.6),
+    0 0 16px rgba(0, 250, 96, 0.45);
+}
+.sub2 {
+  color: #ef4444;
+  text-shadow:
+    0 0 6px rgba(249, 34, 34, 0.6),
+    0 0 16px rgba(225, 5, 5, 0.45);
+}
+.sub3 {
+  color: #f59e0b;
+  text-shadow:
+    0 0 6px rgba(255, 208, 0, 0.6),
+    0 0 16px rgba(250, 210, 8, 0.45);
+}
+.field {
+  font-size: 25px;
+}
+.label {
+  font-size: 25px;
+  font-weight: bold;
+  text-shadow:
+    0 0 6px rgba(228, 230, 234, 0.6),
+    0 0 16px rgba(236, 238, 240, 0.45);
 }

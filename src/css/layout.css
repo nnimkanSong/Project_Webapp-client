@@ -81,7 +81,7 @@
 
   background-image:
     linear-gradient(rgba(26,31,39,0.6), rgba(26,31,39,0.6)),
-    linear-gradient(90deg, #21d4fd, #3a7dff, #8b46ff, #ff4ecd, #ff7a59, #ffcf4d);
+    linear-gradient(90deg, #F17D32,#4472C8);  
   background-origin: border-box;
   background-clip: padding-box, border-box;
   border: 2px solid transparent;
@@ -89,7 +89,7 @@
   cursor: pointer;
 }
 .nav-cta:hover {
-  background-image: linear-gradient(90deg, #21d4fd, #3a7dff, #8b46ff, #ff4ecd, #ff7a59, #ffcf4d);
+  background-image: linear-gradient(90deg, #F17D32,#4472C8);
 }
 
 @media (max-width: 720px) {

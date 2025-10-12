@@ -2,20 +2,22 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import "../css/sidebar.css";
-import { Power } from "lucide-react";
+import { Power , CalendarCheck} from "lucide-react";
 import Swal from "sweetalert2";
 import axios from "axios";
+import { VscArchive } from "react-icons/vsc";
+import { Shield, ShieldCheck, ShieldUser, UserCog, Crown } from "lucide-react";
+<CalendarCheck size={14} />
 
 const items = [
   { key: "profile", label: "Profile", icon: ProfileIcon },
-  { key: "booking", label: "Booking", icon: HomeIcon },
+  { key: "booking", label: "Booking", icon: VscArchive },
   { key: "history", label: "History", icon: HistoryIcon },
   { key: "feedback", label: "Feedback", icon: DocIcon },
   { key: "dashboard", label: "Dashboard", icon: ChartIcon },
   { key: "users", label: "Users Management", icon: UsersIcon },
-  { key: "logout", label: "Logout", icon: Power },
+  { key: "logout", label: "Logout", icon: Power }, // จะไม่เรนเดอร์ในเมนู เราจะไปวางที่ footer
 ];
-
 const PATH_BY_KEY = {
   admin: "/admin/dashboard",
   dashboard: "/admin/dashboard",
@@ -31,7 +33,7 @@ export default function Sidebar({ initialCollapsed = false, onSelect, setAuth })
   const navigate = useNavigate();
   const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
-  // ✅ ฟังก์ชัน Logout พร้อม SweetAlert2
+  // ✅ Logout + SweetAlert2
   function handleLogout() {
     return async () => {
       const result = await Swal.fire({
@@ -43,17 +45,11 @@ export default function Sidebar({ initialCollapsed = false, onSelect, setAuth })
         cancelButtonText: "ยกเลิก",
         confirmButtonColor: "#d33",
       });
-
       if (!result.isConfirmed) return;
 
       try {
         await axios.post(`${BASE_URL}/api/auth/logout`, {}, { withCredentials: true });
-        Swal.fire({
-          icon: "success",
-          title: "ออกจากระบบสำเร็จ",
-          showConfirmButton: false,
-          timer: 1500,
-        });
+        Swal.fire({ icon: "success", title: "ออกจากระบบสำเร็จ", showConfirmButton: false, timer: 1500 });
       } catch (e) {
         Swal.fire("เกิดข้อผิดพลาด!", "ไม่สามารถออกจากระบบได้", "error");
       } finally {
@@ -68,7 +64,7 @@ export default function Sidebar({ initialCollapsed = false, onSelect, setAuth })
       {/* Header */}
       <div className="sb__header">
         <div className="sb__brand">
-          <div className="sb__logo"><LogoIcon /></div>
+          <div className="sb__logo"><ShieldUser /></div>
           {!collapsed && <div className="sb__title">Admin</div>}
         </div>
         <button
@@ -80,56 +76,48 @@ export default function Sidebar({ initialCollapsed = false, onSelect, setAuth })
         </button>
       </div>
 
-      {/* Menu */}
+      {/* Menu (ไม่รวม Logout) */}
       <nav className="sb__menu">
-        {items.map(({ key, label, icon: Icon }) => {
-          if (key === "logout") {
+        {items
+          .filter(i => i.key !== "logout")
+          .map(({ key, label, icon: Icon }) => {
+            const to = PATH_BY_KEY[key] || "/admin/booking";
             return (
-              <button
+              <NavLink
                 key={key}
-                type="button"
-                onClick={handleLogout()} // ✅ กดแล้วยืนยันก่อนออก
-                className="sb__item sb__item--logout"
+                to={to}
+                onClick={() => onSelect?.(key)}
+                className={({ isActive }) => `sb__item ${isActive ? "is-active" : ""}`}
                 data-tooltip={collapsed ? label : undefined}
               >
                 <span className="sb__icon"><Icon /></span>
                 {!collapsed && <span className="sb__label">{label}</span>}
-              </button>
+                {!collapsed && key === "booking" && <span className="sb__badge">New</span>}
+                {!collapsed && key === "dashboard" && <span className="sb__chev">›</span>}
+              </NavLink>
             );
-          }
-
-          const to = PATH_BY_KEY[key] || "/admin/booking";
-          return (
-            <NavLink
-              key={key}
-              to={to}
-              onClick={() => onSelect?.(key)}
-              className={({ isActive }) =>
-                `sb__item ${isActive ? "is-active" : ""}`
-              }
-              data-tooltip={collapsed ? label : undefined}
-            >
-              <span className="sb__icon"><Icon /></span>
-              {!collapsed && <span className="sb__label">{label}</span>}
-              {!collapsed && key === "booking" && (
-                <span className="sb__badge">New</span>
-              )}
-              {!collapsed && key === "dashboard" && (
-                <span className="sb__chev">›</span>
-              )}
-            </NavLink>
-          );
-        })}
+          })}
       </nav>
+
+      {/* Footer: ปุ่ม Logout ตรึงล่าง */}
+      <div className="sb__footer">
+        <button
+          type="button"
+          onClick={handleLogout()}
+          className={`logout ${collapsed ? "logout--icon" : "logout--full"}`}
+          title="Logout"
+        >
+          <span className="logout__inner">
+            <span className="logout__icon"><Power size={18} /></span>
+            {!collapsed && <span className="logout__label">Logout</span>}
+          </span>
+        </button>
+      </div>
     </aside>
   );
 }
 
-
-/* ...ไอคอนเดิมคงไว้... */
-
-/* ---------------- Icons (inline SVG สไตล์มินิมอล) ---------------- */
-
+/* ---------------- Icons ---------------- */
 function LogoIcon() {
   return (
     <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
@@ -144,59 +132,10 @@ function LogoIcon() {
     </svg>
   );
 }
-
 function CollapseIcon({ collapsed }) {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-      {collapsed ? (
-        // ถ้า sidebar ปิด → ให้โชว์ลูกศรชี้ขวา (→)
-        <path d="M10 6l6 6-6 6V6z" fill="currentColor" />
-      ) : (
-        // ถ้า sidebar เปิด → ให้โชว์ลูกศรชี้ซ้าย (←)
-        <path d="M14 6l-6 6 6 6V6z" fill="currentColor" />
-      )}
-    </svg>
-  );
-}
-
-function SearchIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-      <path
-        d="M10.5 4a6.5 6.5 0 015.2 10.4l3.1 3.1-1.4 1.4-3.1-3.1A6.5 6.5 0 1110.5 4zm0 2a4.5 4.5 0 100 9 4.5 4.5 0 000-9z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-function PlusIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-      <path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z" fill="currentColor" />
-    </svg>
-  );
-}
-
-function MoreIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-      <circle cx="6" cy="12" r="1.5" fill="currentColor" />
-      <circle cx="12" cy="12" r="1.5" fill="currentColor" />
-      <circle cx="18" cy="12" r="1.5" fill="currentColor" />
-    </svg>
-  );
-}
-
-function AdminIcon({ active }) {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-      <path
-        d="M12 2l7 4v5c0 5-3 9-7 11-4-2-7-6-7-11V6l7-4z"
-        fill="currentColor"
-        opacity={active ? 1 : 0.9}
-      />
-      <circle cx="12" cy="11" r="2.2" fill="#0f1419" />
+      {collapsed ? <path d="M10 6l6 6-6 6V6z" fill="currentColor" /> : <path d="M14 6l-6 6 6 6V6z" fill="currentColor" />}
     </svg>
   );
 }
@@ -211,20 +150,14 @@ function ProfileIcon() {
 function HomeIcon() {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-      <path
-        d="M3 11l9-7 9 7v9a2 2 0 01-2 2h-4v-6H9v6H5a2 2 0 01-2-2v-9z"
-        fill="currentColor"
-      />
+      <path d="M3 11l9-7 9 7v9a2 2 0 01-2 2h-4v-6H9v6H5a2 2 0 01-2-2v-9z" fill="currentColor" />
     </svg>
   );
 }
 function HistoryIcon() {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-      <path
-        d="M13 3a9 9 0 100 18 9 9 0 000-18zm-1 5h2v5h4v2h-6V8z"
-        fill="currentColor"
-      />
+      <path d="M13 3a9 9 0 100 18 9 9 0 000-18zm-1 5h2v5h4v2h-6V8z" fill="currentColor" />
       <path d="M2 12h3l-1.5 2.5z" fill="currentColor" />
     </svg>
   );
@@ -232,10 +165,7 @@ function HistoryIcon() {
 function DocIcon() {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-      <path
-        d="M6 2h8l4 4v14a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2z"
-        fill="currentColor"
-      />
+      <path d="M6 2h8l4 4v14a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2z" fill="currentColor" />
       <path d="M14 2v6h6" fill="#0f1419" />
     </svg>
   );
@@ -243,10 +173,7 @@ function DocIcon() {
 function ChartIcon() {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-      <path
-        d="M4 19h16v2H4zM7 10h3v7H7zM11 6h3v11h-3zM15 12h3v5h-3z"
-        fill="currentColor"
-      />
+      <path d="M4 19h16v2H4zM7 10h3v7H7zM11 6h3v11h-3zM15 12h3v5h-3z" fill="currentColor" />
     </svg>
   );
 }
@@ -259,20 +186,4 @@ function UsersIcon() {
       <path d="M14.3 20h7.2a5.4 5.4 0 00-7.2-4.2z" fill="currentColor" />
     </svg>
   );
-}
-function handleLogout() {
-  return async () => {
-    try {
-      await axios.post(
-        `${BASE_URL}/api/auth/logout`,
-        {},
-        { withCredentials: true }
-      );
-    } catch (e) {
-      console.error("Logout error", e);
-    } finally {
-      setAuth?.(false);
-      navigate("/login", { replace: true });
-    }
-  };
 }
