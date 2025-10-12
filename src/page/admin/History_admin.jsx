@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "../../css/History_admin.css";
 import Swal from "sweetalert2";
 import { api } from "../../api";
+import { useNavigate } from "react-router-dom";
 
 const badgeClass = (s) =>
   s === "pending" ? "badge pending"
@@ -17,11 +18,40 @@ const fmtDate = (d) => {
       day: "numeric",
     });
   } catch {
-    return d;
+    return d ?? "-";
   }
 };
 
+// ทำให้ข้อมูลจาก API แน่นอนขึ้น (รองรับ field เก่า/ใหม่)
+function normalizeRow(b) {
+  const room =
+    b.room ||
+    b.roomLabel ||
+    b.roomCode ||
+    b.roomId?.code ||
+    "—";
+
+  return {
+    id: b.id || b._id,                           // ฝั่ง API เราส่ง id อยู่แล้ว
+    status: b.status || "pending",
+    room,
+    date: b.date ?? b.createdAt ?? null,
+    startTime: b.startTime ?? b.start_time ?? "–",
+    endTime:   b.endTime   ?? b.end_time   ?? "–",
+    people: b.people ?? 0,
+    objective: b.objective ?? "",
+    tracking: b.tracking || "",
+    user: {
+      username: b.user?.username ?? "-",
+      email: b.user?.email ?? "-",
+      studentNumber: b.user?.studentNumber ?? "N/A",
+    },
+  };
+}
+
 export default function HistoryAdmin() {
+  const navigate = useNavigate();
+
   const [rows, setRows] = useState([]);
   const [admin, setAdmin] = useState({
     username: "",
@@ -30,68 +60,114 @@ export default function HistoryAdmin() {
   });
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(true);
+  const [actingId, setActingId] = useState(null); // ป้องกันกดซ้ำระหว่างรอ API
+
+  const page = 1;   // ถ้าทำ pagination ค่อยผูก state
+  const limit = 50;
+
+  const fetchAll = async () => {
+    setErr("");
+    setLoading(true);
+    try {
+      // 1) โปรไฟล์แอดมิน (ใช้ /api/auth/me จะการันตีมี role)
+      const me = await api.get("/api/auth/me");
+      const role = me?.data?.user?.role || "user";
+      if (!["admin", "superadmin", "staff"].includes(String(role).toLowerCase())) {
+        throw new Error("ต้องเป็นผู้ดูแลระบบเท่านั้น");
+      }
+      setAdmin((s) => ({
+        ...s,
+        email: me?.data?.user?.email ?? "-",
+        username: me?.data?.user?.email?.split("@")[0] ?? "Admin",
+      }));
+
+      // 2) ดึงประวัติทั้งหมด (รองรับ pagination)
+      const { data } = await api.get("/api/admin/history", {
+        params: { page, limit },
+      });
+      const list = Array.isArray(data?.rows) ? data.rows.map(normalizeRow) : [];
+      setRows(list);
+    } catch (e) {
+      // แยก case 401/403 ให้พากลับหน้า login หรือแจ้งเตือนสิทธิ์
+      const status = e?.response?.status;
+      const msg =
+        e?.response?.data?.message ||
+        e?.response?.data?.error ||
+        e?.message ||
+        "โหลดข้อมูลล้มเหลว";
+
+      if (status === 401) {
+        Swal.fire("โปรดเข้าสู่ระบบ", "เซสชันหมดอายุหรือยังไม่ได้ล็อกอิน", "info");
+        navigate("/login");
+        return;
+      }
+      if (status === 403) {
+        Swal.fire("สิทธิ์ไม่พอ", "เฉพาะผู้ดูแลระบบเท่านั้น", "warning");
+      }
+      setErr(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true);
-
-        // 1) โปรไฟล์แอดมิน
-        const me = await api.get("/api/profile/me");
-        setAdmin({
-          username: me?.data?.username ?? "Admin",
-          email: me?.data?.email ?? "-",
-          photoUrl: me?.data?.photoUrl ?? "https://placehold.co/80x80?text=Admin",
-        });
-
-        // 2) ดึง “ทุกคำขอ” จากแอดมิน API (อ่าน data.rows)
-        const { data } = await api.get("/api/admin/history");
-        setRows(data?.rows ?? []);                   // <<<<<<<<<<<<<< สำคัญ
-      } catch (e) {
-        const msg = e?.response?.data?.message || e?.message || "โหลดข้อมูลล้มเหลว";
-        setErr(msg);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    fetchAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const confirmAct = (title, text) =>
-    Swal.fire({ title, text, icon: "question", showCancelButton: true, confirmButtonText: "ยืนยัน", cancelButtonText: "ยกเลิก" })
-      .then((r) => r.isConfirmed);
-
-  const refresh = async () => {
-    const { data } = await api.get("/api/admin/history");
-    setRows(data?.rows ?? []);
-  };
+    Swal.fire({
+      title,
+      text,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "ยืนยัน",
+      cancelButtonText: "ยกเลิก",
+    }).then((r) => r.isConfirmed);
 
   const handleApprove = async (r) => {
     if (r.status === "cancel" || r.status === "done") return;
+    if (actingId) return; // ป้องกันกดรัว
     const ok = await confirmAct("อนุมัติการจอง?", `ห้อง ${r.room} • ${fmtDate(r.date)} • ${r.startTime}-${r.endTime}`);
     if (!ok) return;
 
     try {
-      await api.patch(`/api/admin/history/${r.id}/approve`); // << ใช้ r.id
-      await refresh();
+      setActingId(r.id);
+      await api.patch(`/api/admin/history/${r.id}/approve`);
+      await fetchAll();
       Swal.fire("สำเร็จ", "อนุมัติเรียบร้อย", "success");
     } catch (e) {
-      const msg = e?.response?.data?.message || e?.message || "อนุมัติไม่สำเร็จ";
+      const msg =
+        e?.response?.data?.message ||
+        e?.response?.data?.error ||
+        e?.message ||
+        "อนุมัติไม่สำเร็จ";
       Swal.fire("ผิดพลาด", msg, "error");
+    } finally {
+      setActingId(null);
     }
   };
 
   const handleCancel = async (r) => {
     if (r.status === "cancel" || r.status === "done") return;
+    if (actingId) return;
     const ok = await confirmAct("ยกเลิกการจอง?", `ห้อง ${r.room} • ${fmtDate(r.date)} • ${r.startTime}-${r.endTime}`);
     if (!ok) return;
 
     try {
-      await api.patch(`/api/admin/history/${r.id}/cancel`); // << ใช้ r.id
-      await refresh();
+      setActingId(r.id);
+      await api.patch(`/api/admin/history/${r.id}/cancel`);
+      await fetchAll();
       Swal.fire("สำเร็จ", "ยกเลิกเรียบร้อย", "success");
     } catch (e) {
-      const msg = e?.response?.data?.message || e?.message || "ยกเลิกไม่สำเร็จ";
+      const msg =
+        e?.response?.data?.message ||
+        e?.response?.data?.error ||
+        e?.message ||
+        "ยกเลิกไม่สำเร็จ";
       Swal.fire("ผิดพลาด", msg, "error");
+    } finally {
+      setActingId(null);
     }
   };
 
@@ -119,6 +195,8 @@ export default function HistoryAdmin() {
         <div className="ha-history-list">
           {rows.map((r) => {
             const locked = r.status === "cancel" || r.status === "done";
+            const busy = actingId === r.id;
+
             return (
               <div key={r.id} className="ha-card">
                 {/* แถวบน */}
@@ -162,22 +240,34 @@ export default function HistoryAdmin() {
                   <div className="ha-col ha-actions-cell">
                     <div className="ha-actions">
                       <button
-                        className={`ha-btn ha-approve ${locked ? "ha-locked" : ""}`}
-                        onClick={() => !locked && handleApprove(r)}
-                        disabled={locked}
+                        className={`ha-btn ha-approve ${locked || busy ? "ha-locked" : ""}`}
+                        onClick={() => !locked && !busy && handleApprove(r)}
+                        disabled={locked || busy}
+                        title={locked ? "ยกเลิก/เสร็จสิ้นแล้ว" : "อนุมัติ"}
                       >
-                        {locked && <span className="lock-icon">🔒</span>} Approve
+                        {(locked || busy) && <span className="lock-icon">🔒</span>} Approve
                       </button>
                       <button
-                        className={`ha-btn ha-cancel ${locked ? "ha-locked" : ""}`}
-                        onClick={() => !locked && handleCancel(r)}
-                        disabled={locked}
+                        className={`ha-btn ha-cancel ${locked || busy ? "ha-locked" : ""}`}
+                        onClick={() => !locked && !busy && handleCancel(r)}
+                        disabled={locked || busy}
+                        title={locked ? "ยกเลิก/เสร็จสิ้นแล้ว" : "ยกเลิก"}
                       >
-                        {locked && <span className="lock-icon">🔒</span>} Cancel
+                        {(locked || busy) && <span className="lock-icon">🔒</span>} Cancel
                       </button>
                     </div>
                   </div>
                 </div>
+
+                {/* แสดง tracking ถ้ามี */}
+                {r.tracking ? (
+                  <div className="ha-row">
+                    <div className="ha-col">
+                      <div className="ha-label">Tracking</div>
+                      <div className="ha-value">{r.tracking}</div>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             );
           })}
