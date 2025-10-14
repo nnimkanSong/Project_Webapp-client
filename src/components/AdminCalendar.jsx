@@ -6,7 +6,7 @@ import { th } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../css/admin-calendar.css";
 import Swal from "sweetalert2";
-import { api } from "../api"; // ถ้ายังไม่มี ให้เปลี่ยนเป็น fetch() หรือคอมเมนต์ไว้ก่อนก็ได้
+import { api } from "../api";
 
 /* ---------- date-fns localizer (TH) ---------- */
 const locales = { th };
@@ -36,7 +36,7 @@ function combine(dateOnly, hhmm) {
   return d;
 }
 
-/* ✅ ช่วยเช็คช่วงปัจจุบัน สำหรับหัวข้อ/ปุ่มกระโดด */
+/* ✅ current period helpers */
 const isSameDay = (a, b) =>
   a.getFullYear() === b.getFullYear() &&
   a.getMonth() === b.getMonth() &&
@@ -51,7 +51,7 @@ const isSameWeek = (a, b) => {
   return isSameDay(sa, sb);
 };
 
-// สีเรียบ ใช้งานในองค์กร
+/* ✅ ให้สี event ตามสถานะ (มี done สีม่วง) */
 function eventStyleGetter(event) {
   const colorMap = {
     pending: "#D9E2EC", // ฟ้าเทาอ่อน
@@ -79,12 +79,24 @@ function eventStyleGetter(event) {
   };
 }
 
+/* ✅ คำนวณ “สถานะที่ใช้แสดงผลจริง”:
+   - ถ้า cancel ⇒ cancel
+   - ถ้าเลยเวลาจบ ⇒ done
+   - อื่น ๆ ใช้สถานะเดิม (pending/active/ฯลฯ) */
+const effectiveStatus = (booking, now = new Date()) => {
+  if (isCanceled(booking.status)) return "cancel";
+  const end = combine(booking.date, booking.endTime ?? booking.end_time);
+  if (now > end) return "done";
+  return booking.status || "pending";
+};
+
 export default function AdminCalendar() {
   const [rows, setRows] = useState([]);
   const [date, setDate] = useState(new Date());
-  const [view, setView] = useState(Views.DAY); // ✅ ใช้ Day/Week/Month/Agenda ได้
+  const [view, setView] = useState(Views.DAY);
+  const [tick, setTick] = useState(0); // ⏱️ ไว้กระตุ้น re-render ทุก ๆ 60 วิ
 
-  // โหลดข้อมูล (คุณมี api ของจริงอยู่แล้ว)
+  // โหลดข้อมูล
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -101,12 +113,19 @@ export default function AdminCalendar() {
     return () => (mounted = false);
   }, []);
 
+  // ⏱️ อัปเดตทุก 60 วินาที เพื่อให้รายการที่หมดเวลาเปลี่ยนเป็น “เสร็จสิ้น” อัตโนมัติ
+  useEffect(() => {
+    const t = setInterval(() => setTick((n) => n + 1), 60 * 1000);
+    return () => clearInterval(t);
+  }, []);
+
   const visibleRows = useMemo(
     () => rows.filter((b) => !isCanceled(b.status)),
     [rows]
   );
 
   const events = useMemo(() => {
+    const now = new Date(); // ใช้ร่วมกับ tick เพื่อคำนวณสถานะสด ๆ
     return visibleRows.map((b) => {
       const start = combine(b.date, b.startTime ?? b.start_time);
       const end = combine(b.date, b.endTime ?? b.end_time);
@@ -118,11 +137,11 @@ export default function AdminCalendar() {
         start,
         end,
         resourceId: b.room,
-        status: b.status || "pending",
+        status: effectiveStatus(b, now), // ✅ ใช้สถานะที่คำนวณแล้ว (รวมกรณี “เลยเวลา”)
         raw: b,
       };
     });
-  }, [visibleRows]);
+  }, [visibleRows, tick]); // ✅ tick ทำให้คำนวณใหม่ทุก 60 วิ
 
   const minTime = useMemo(() => {
     const d = new Date();
@@ -152,6 +171,7 @@ export default function AdminCalendar() {
         timer: 1200,
         showConfirmButton: false,
       });
+      window.dispatchEvent(new Event("rb:refresh-pending"));
       return data?.booking || null;
     } catch (e) {
       const msg =
@@ -165,34 +185,42 @@ export default function AdminCalendar() {
     const b = ev.raw;
     if (!b) return;
 
+    // แทนที่บล็อค onSelectEvent เดิมเฉพาะส่วน row() และ html
     const row = (k, v) => `
-      <div style="display:grid;grid-template-columns:120px 1fr;gap:8px;">
-        <div style="font-weight:700;color:#111827;">${k}</div>
-        <div style="color:#111827;">${v ?? "-"}</div>
-      </div>
-    `;
-    const html = `
-      <div style=";display:flex;flex-direction:row;align-items:center;justify-content:center;gap:50px;line-height:1.7;text-align:start;">
-        <div>
-          ${row("ห้องที่จอง :", b.room)}
-          ${row("วันที่จอง :", new Date(b.date).toLocaleDateString("th-TH"))}
-          ${row(
-            "เวลาที่จอง :",
-            `${b.startTime ?? b.start_time} - ${b.endTime ?? b.end_time}`
-          )}
-          ${row("ชื่อผู้จอง :", b.user?.username || b.student_name)}
-          ${row("อีเมลผู้จอง :", b.user?.email || b.student_email)}
-        </div>
-        <div>
-          ${row("จำนวนคน :", b.people)}
-          ${row("สถานะ :", b.status)}
-          ${row("วัตถุประสงค์ :", b.objective)}
-          ${b.tracking ? row("บันทึกติดตาม :", b.tracking) : ""}
-        </div>  
-      </div>
-    `;
+  <div style="display:grid;grid-template-columns:120px 1fr;gap:8px;">
+    <div style="font-weight:700;color:#111827;">${k}</div>
+    <div style="color:#111827;">${v ?? "-"}</div>
+  </div>
+`;
 
-    const showAction = !(b.status === "done" || isCanceled(b.status));
+    const html = `
+  <div style="display:flex;flex-direction:row;align-items:center;justify-content:center;gap:50px;line-height:1.7;text-align:start;">
+    <div>
+      ${row("ห้องที่จอง :", b.room)}
+      ${row("วันที่จอง :", new Date(b.date).toLocaleDateString("th-TH"))}
+      ${row(
+        "เวลาที่จอง :",
+        "${(b.startTime ?? b.start_time) + " - " + (b.endTime ?? b.end_time)}"
+      )}
+      ${row("ชื่อผู้จอง :", b.user?.username || b.student_name)}
+      ${row("อีเมลผู้จอง :", b.user?.email || b.student_email)}
+    </div>
+    <div>
+      ${row("จำนวนคน :", b.people)}
+      ${row("สถานะ :", effectiveStatus(b))}
+      ${row("วัตถุประสงค์ :", b.objective)}
+      ${b.tracking ? row("บันทึกติดตาม :", b.tracking) : ""}
+    </div>  
+  </div>
+`;
+
+    const eff = effectiveStatus(b);
+
+    /* ✅ แยกสิทธิ์ของปุ่ม:
+       - อนุมัติ: ได้เฉพาะเมื่อยังเป็น pending เท่านั้น
+       - ยกเลิก: ทำได้ถ้ายังไม่ cancel/done */
+    const canApprove = eff === "pending";
+    const canCancel = !(eff === "cancel" || eff === "done");
 
     const result = await Swal.fire({
       title: "รายละเอียดการจอง",
@@ -200,24 +228,26 @@ export default function AdminCalendar() {
       icon: "info",
       width: 680,
       showCloseButton: true,
-      showDenyButton: showAction,
-      showCancelButton: showAction,
+      showDenyButton: canApprove, // ✅ ซ่อนปุ่มอนุมัติเมื่อ active/done/cancel
+      showCancelButton: canCancel,
       denyButtonText: "อนุมัติ",
       cancelButtonText: "ยกเลิกคำขอ",
       confirmButtonText: "ปิด",
       denyButtonColor: "#08CB00",
       cancelButtonColor: "#E62727",
-      focusConfirm: !showAction,
+      focusConfirm: !(canApprove || canCancel),
       didOpen: () => {
         const actions = Swal.getActions();
         const denyBtn = Swal.getDenyButton();
         const cancelBtn = Swal.getCancelButton();
+        // ถ้ามีทั้งสองปุ่ม ให้สลับตำแหน่งให้ "อนุมัติ" อยู่ก่อน "ยกเลิก"
         if (actions && denyBtn && cancelBtn)
           actions.insertBefore(denyBtn, cancelBtn);
       },
     });
 
-    if (result.isDenied) {
+    // ✅ กันอนุมัติซ้ำด้วย logic อีกชั้น
+    if (result.isDenied && canApprove) {
       const updated = await actAndToast("approve", b.id || b._id);
       if (updated) {
         setRows((prev) =>
@@ -234,7 +264,7 @@ export default function AdminCalendar() {
       }
     }
 
-    if (result.dismiss === Swal.DismissReason.cancel) {
+    if (result.dismiss === Swal.DismissReason.cancel && canCancel) {
       const updated = await actAndToast("cancel", b.id || b._id);
       if (updated) {
         setRows((prev) =>
@@ -246,42 +276,39 @@ export default function AdminCalendar() {
     }
   };
 
-  /* ✅ ปรับให้ปุ่มก่อนหน้า/ถัดไป เลื่อนตามมุมมองปัจจุบัน */
+  /* ✅ ปุ่มก่อนหน้า/ถัดไป เลื่อนตามมุมมองปัจจุบัน */
   const go = (delta) =>
     setDate((d) => {
       const nd = new Date(d);
       if (view === Views.WEEK) {
-        nd.setDate(nd.getDate() + delta * 7);   // เลื่อนเป็น “สัปดาห์”
+        nd.setDate(nd.getDate() + delta * 7);
         return nd;
       }
       if (view === Views.MONTH) {
-        nd.setMonth(nd.getMonth() + delta);     // เลื่อนเป็น “เดือน”
+        nd.setMonth(nd.getMonth() + delta);
         return nd;
       }
-      // DAY / AGENDA => เลื่อนเป็น “วัน”
-      nd.setDate(nd.getDate() + delta);
+      nd.setDate(nd.getDate() + delta); // DAY/AGENDA
       return nd;
     });
 
-  /* ✅ ป้ายบนปุ่มกระโดด และพฤติกรรมกระโดดตามช่วง */
+  /* ✅ ป้ายบนปุ่มกระโดด */
   const jumpLabel = useMemo(() => {
     if (view === Views.MONTH) return "เดือนนี้";
     if (view === Views.WEEK) return "สัปดาห์นี้";
-    return "วันนี้"; // DAY / AGENDA
+    return "วันนี้";
   }, [view]);
 
   const jumpToCurrentPeriod = () => {
     const now = new Date();
-    if (view === Views.MONTH) {
+    if (view === Views.MONTH)
       setDate(new Date(now.getFullYear(), now.getMonth(), 1));
-    } else if (view === Views.WEEK) {
+    else if (view === Views.WEEK)
       setDate(startOfWeek(now, { weekStartsOn: 0 }));
-    } else {
-      setDate(now);
-    }
+    else setDate(now);
   };
 
-  /* ✅ แสดงหัววันที่ให้เป็น “วันนี้/สัปดาห์นี้/เดือนนี้” เมื่ออยู่ช่วงปัจจุบัน */
+  /* ✅ แสดงหัววันที่ */
   const fmtHeader = useMemo(() => {
     const now = new Date();
 
@@ -307,7 +334,6 @@ export default function AdminCalendar() {
       return `${fmt(start)} – ${fmt(end)}`;
     }
 
-    // DAY / AGENDA
     if (isSameDay(date, now)) return "วันนี้";
     return new Intl.DateTimeFormat("th-TH", {
       weekday: "long",
@@ -328,16 +354,13 @@ export default function AdminCalendar() {
 
         <div className="ab-cal__legend">
           <span>
-            <i className="ab-dot ab-dot--p" />
-            รอพิจารณา
+            <i className="ab-dot ab-dot--p" /> รอพิจารณา
           </span>
           <span>
-            <i className="ab-dot ab-dot--a" />
-            อนุมัติแล้ว
+            <i className="ab-dot ab-dot--a" /> อนุมัติแล้ว
           </span>
           <span>
-            <i className="ab-dot ab-dot--d" />
-            เสร็จสิ้น
+            <i className="ab-dot ab-dot--d" /> เสร็จสิ้น
           </span>
         </div>
       </div>
@@ -394,23 +417,21 @@ export default function AdminCalendar() {
         events={events}
         startAccessor="start"
         endAccessor="end"
-        /* 30 นาที/ช่อง ใน Day/Week (ไม่มีผลกับ Month/Agenda) */
         step={30}
         timeslots={2}
         defaultView={Views.DAY}
         min={minTime}
         max={maxTime}
-        /* ใช้ resources เฉพาะ Day เพื่อไม่ให้ Week/Month แสดงเป็น resource columns */
         resources={view === Views.DAY ? ROOM_OPTIONS : undefined}
         resourceIdAccessor={view === Views.DAY ? "resourceId" : undefined}
         resourceTitleAccessor={view === Views.DAY ? "resourceTitle" : undefined}
         eventPropGetter={eventStyleGetter}
         onSelectEvent={onSelectEvent}
         style={{ height: "calc(100vh - 260px)" }}
-        /* เปิด 4 มุมมอง */
         views={[Views.DAY, Views.WEEK, Views.MONTH, Views.AGENDA]}
         components={{ toolbar: () => null }}
       />
     </div>
   );
 }
+//

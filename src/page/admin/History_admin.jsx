@@ -1,8 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../../css/History_admin.css";
 import Swal from "sweetalert2";
 import { api } from "../../api";
-import { useNavigate } from "react-router-dom";
 
 const badgeClass = (s) =>
   s === "pending" ? "badge pending"
@@ -22,36 +21,49 @@ const fmtDate = (d) => {
   }
 };
 
-// ทำให้ข้อมูลจาก API แน่นอนขึ้น (รองรับ field เก่า/ใหม่)
-function normalizeRow(b) {
-  const room =
-    b.room ||
-    b.roomLabel ||
-    b.roomCode ||
-    b.roomId?.code ||
-    "—";
+/* ---------- tracking format: แสดงวันที่+เวลา ถ้า parse ได้ ---------- */
+const fmtDateTime = (v) => {
+  try {
+    const dt = new Date(v);
+    if (isNaN(dt.getTime())) return v ?? "-";
+    return dt.toLocaleString("th-TH", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch { return v ?? "-"; }
+};
 
-  return {
-    id: b.id || b._id,                           // ฝั่ง API เราส่ง id อยู่แล้ว
-    status: b.status || "pending",
-    room,
-    date: b.date ?? b.createdAt ?? null,
-    startTime: b.startTime ?? b.start_time ?? "–",
-    endTime:   b.endTime   ?? b.end_time   ?? "–",
-    people: b.people ?? 0,
-    objective: b.objective ?? "",
-    tracking: b.tracking || "",
-    user: {
-      username: b.user?.username ?? "-",
-      email: b.user?.email ?? "-",
-      studentNumber: b.user?.studentNumber ?? "N/A",
-    },
-  };
-}
+const ensureHttps = (u) => {
+  if (!u || typeof u !== "string") return u;
+  try {
+    const url = new URL(u);
+    if (url.protocol === "http:") url.protocol = "https:";
+    return url.toString();
+  } catch { return u; }
+};
+
+const pickPhoto = (u) => {
+  if (!u) return null;
+  return (
+    u.photoUrl ||
+    u.avatar ||
+    u.image ||
+    u.profileImg ||
+    u.photo ||
+    u?.profile?.photoUrl ||
+    u?.profile?.image ||
+    u?.profile?.photo?.url ||
+    u?.cloudinary?.secure_url ||
+    u?.cloudinary?.url ||
+    u?.photos?.[0]?.url ||
+    null
+  );
+};
 
 export default function HistoryAdmin() {
-  const navigate = useNavigate();
-
   const [rows, setRows] = useState([]);
   const [admin, setAdmin] = useState({
     username: "",
@@ -60,124 +72,96 @@ export default function HistoryAdmin() {
   });
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(true);
-  const [actingId, setActingId] = useState(null); // ป้องกันกดซ้ำระหว่างรอ API
 
-  const page = 1;   // ถ้าทำ pagination ค่อยผูก state
-  const limit = 50;
+  const mapRows = (arr) =>
+    (Array.isArray(arr) ? arr : []).map((r) => ({
+      ...r,
+      id: r.id || r._id || r.bookingId || r.booking_id, // กันพลาดเรื่องคีย์
+    }));
 
-  const fetchAll = async () => {
-    setErr("");
-    setLoading(true);
-    try {
-      // 1) โปรไฟล์แอดมิน (ใช้ /api/auth/me จะการันตีมี role)
-      const me = await api.get("/api/auth/me");
-      const role = me?.data?.user?.role || "user";
-      if (!["admin", "superadmin", "staff"].includes(String(role).toLowerCase())) {
-        throw new Error("ต้องเป็นผู้ดูแลระบบเท่านั้น");
-      }
-      setAdmin((s) => ({
-        ...s,
-        email: me?.data?.user?.email ?? "-",
-        username: me?.data?.user?.email?.split("@")[0] ?? "Admin",
-      }));
-
-      // 2) ดึงประวัติทั้งหมด (รองรับ pagination)
-      const { data } = await api.get("/api/admin/history", {
-        params: { page, limit },
-      });
-      const list = Array.isArray(data?.rows) ? data.rows.map(normalizeRow) : [];
-      setRows(list);
-    } catch (e) {
-      // แยก case 401/403 ให้พากลับหน้า login หรือแจ้งเตือนสิทธิ์
-      const status = e?.response?.status;
-      const msg =
-        e?.response?.data?.message ||
-        e?.response?.data?.error ||
-        e?.message ||
-        "โหลดข้อมูลล้มเหลว";
-
-      if (status === 401) {
-        Swal.fire("โปรดเข้าสู่ระบบ", "เซสชันหมดอายุหรือยังไม่ได้ล็อกอิน", "info");
-        navigate("/login");
-        return;
-      }
-      if (status === 403) {
-        Swal.fire("สิทธิ์ไม่พอ", "เฉพาะผู้ดูแลระบบเท่านั้น", "warning");
-      }
-      setErr(msg);
-    } finally {
-      setLoading(false);
-    }
+  const refresh = async () => {
+    const { data } = await api.get("/api/admin/history");
+    setRows(mapRows(data?.rows));
   };
 
   useEffect(() => {
-    fetchAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    (async () => {
+      try {
+        setLoading(true);
+
+        // 1) โปรไฟล์ผู้ดูแล
+        const me = await api.get("/api/profile/me");
+        const u = me?.data?.user || me?.data?.profile || me?.data || {};
+        const photo = ensureHttps(pickPhoto(u)) || "https://placehold.co/80x80?text=Admin";
+        setAdmin({
+          username: u.username ?? (u.email ? u.email.split("@")[0] : "Admin"),
+          email: u.email ?? "-",
+          photoUrl: photo,
+        });
+
+        // 2) ดึงรายการทั้งหมด
+        await refresh();
+      } catch (e) {
+        const msg = e?.response?.data?.message || e?.message || "โหลดข้อมูลล้มเหลว";
+        setErr(msg);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   const confirmAct = (title, text) =>
     Swal.fire({
-      title,
-      text,
-      icon: "question",
+      title, text, icon: "question",
       showCancelButton: true,
       confirmButtonText: "ยืนยัน",
       cancelButtonText: "ยกเลิก",
     }).then((r) => r.isConfirmed);
 
   const handleApprove = async (r) => {
-    if (r.status === "cancel" || r.status === "done") return;
-    if (actingId) return; // ป้องกันกดรัว
+    // ปล่อยให้ cancel/done/active ถูกบล็อกในปุ่มแล้ว ไม่ต้องเช็กที่นี่ก็ได้
     const ok = await confirmAct("อนุมัติการจอง?", `ห้อง ${r.room} • ${fmtDate(r.date)} • ${r.startTime}-${r.endTime}`);
     if (!ok) return;
-
     try {
-      setActingId(r.id);
       await api.patch(`/api/admin/history/${r.id}/approve`);
-      await fetchAll();
+      await refresh();
       Swal.fire("สำเร็จ", "อนุมัติเรียบร้อย", "success");
     } catch (e) {
-      const msg =
-        e?.response?.data?.message ||
-        e?.response?.data?.error ||
-        e?.message ||
-        "อนุมัติไม่สำเร็จ";
+      const msg = e?.response?.data?.message || e?.message || "อนุมัติไม่สำเร็จ";
       Swal.fire("ผิดพลาด", msg, "error");
-    } finally {
-      setActingId(null);
     }
   };
 
   const handleCancel = async (r) => {
-    if (r.status === "cancel" || r.status === "done") return;
-    if (actingId) return;
     const ok = await confirmAct("ยกเลิกการจอง?", `ห้อง ${r.room} • ${fmtDate(r.date)} • ${r.startTime}-${r.endTime}`);
     if (!ok) return;
-
     try {
-      setActingId(r.id);
       await api.patch(`/api/admin/history/${r.id}/cancel`);
-      await fetchAll();
+      await refresh();
       Swal.fire("สำเร็จ", "ยกเลิกเรียบร้อย", "success");
     } catch (e) {
-      const msg =
-        e?.response?.data?.message ||
-        e?.response?.data?.error ||
-        e?.message ||
-        "ยกเลิกไม่สำเร็จ";
+      const msg = e?.response?.data?.message || e?.message || "ยกเลิกไม่สำเร็จ";
       Swal.fire("ผิดพลาด", msg, "error");
-    } finally {
-      setActingId(null);
     }
   };
+
+  const adminFallback = "https://placehold.co/80x80?text=Admin";
 
   return (
     <div className="ha-history-container">
       <h2 className="ha-history-title">History (Admin)</h2>
 
-      {/* แถบโปรไฟล์แอดมิน */}
+      {/* โปรไฟล์แอดมิน */}
       <div className="ha-profile-row">
-        <img src={admin.photoUrl} alt="admin" className="ha-profile-img" />
+        <div className="ha-profile-avatar">
+          <img
+            src={admin.photoUrl || adminFallback}
+            alt="admin"
+            className="ha-profile-img"
+            onError={(e) => { e.currentTarget.src = adminFallback; }}
+            referrerPolicy="no-referrer"
+          />
+        </div>
         <div className="ha-profile-meta">
           <div className="ha-username">{admin.username}</div>
           <div className="ha-email">{admin.email}</div>
@@ -194,13 +178,15 @@ export default function HistoryAdmin() {
       ) : (
         <div className="ha-history-list">
           {rows.map((r) => {
-            const locked = r.status === "cancel" || r.status === "done";
-            const busy = actingId === r.id;
+            // ล็อกทั้งสองปุ่มเมื่อ cancel/done
+            const isLockedAll = r.status === "cancel" || r.status === "done";
+            // ล็อกปุ่ม Approve เพิ่มเติมเมื่อเป็น active
+            const isApproveLocked = isLockedAll || r.status === "active";
 
             return (
               <div key={r.id} className="ha-card">
                 {/* แถวบน */}
-                <div className="ha-row ha-row-top">
+                <div className="ha-row ha-row-top ha-grid-4">
                   <div className="ha-col">
                     <div className="ha-label">User</div>
                     <div className="ha-value">
@@ -221,7 +207,7 @@ export default function HistoryAdmin() {
                 </div>
 
                 {/* แถวล่าง */}
-                <div className="ha-row ha-row-bottom">
+                <div className="ha-row ha-row-bottom ha-grid-4">
                   <div className="ha-col">
                     <div className="ha-label">Date / Time</div>
                     <div className="ha-value">
@@ -239,32 +225,43 @@ export default function HistoryAdmin() {
 
                   <div className="ha-col ha-actions-cell">
                     <div className="ha-actions">
+                      {/* Approve: ล็อกเมื่อ cancel/done/active */}
                       <button
-                        className={`ha-btn ha-approve ${locked || busy ? "ha-locked" : ""}`}
-                        onClick={() => !locked && !busy && handleApprove(r)}
-                        disabled={locked || busy}
-                        title={locked ? "ยกเลิก/เสร็จสิ้นแล้ว" : "อนุมัติ"}
+                        className={`ha-btn ha-approve ${isApproveLocked ? "ha-locked" : ""}`}
+                        onClick={() => !isApproveLocked && handleApprove(r)}
+                        disabled={isApproveLocked}
+                        title={
+                          isApproveLocked
+                            ? (r.status === "active"
+                                ? "สถานะ ACTIVE — ไม่ต้องอนุมัติซ้ำ"
+                                : "ยกเลิก/เสร็จสิ้นแล้ว")
+                            : "อนุมัติ"
+                        }
                       >
-                        {(locked || busy) && <span className="lock-icon">🔒</span>} Approve
+                        {isApproveLocked && <span className="lock-icon">🔒</span>} Approve
                       </button>
+
+                      {/* Cancel: ล็อกเฉพาะเมื่อ cancel/done */}
                       <button
-                        className={`ha-btn ha-cancel ${locked || busy ? "ha-locked" : ""}`}
-                        onClick={() => !locked && !busy && handleCancel(r)}
-                        disabled={locked || busy}
-                        title={locked ? "ยกเลิก/เสร็จสิ้นแล้ว" : "ยกเลิก"}
+                        className={`ha-btn ha-cancel ${isLockedAll ? "ha-locked" : ""}`}
+                        onClick={() => !isLockedAll && handleCancel(r)}
+                        disabled={isLockedAll}
+                        title={isLockedAll ? "ยกเลิก/เสร็จสิ้นแล้ว" : "ยกเลิก"}
                       >
-                        {(locked || busy) && <span className="lock-icon">🔒</span>} Cancel
+                        {isLockedAll && <span className="lock-icon">🔒</span>} Cancel
                       </button>
                     </div>
                   </div>
                 </div>
 
-                {/* แสดง tracking ถ้ามี */}
+                {/* Tracking */}
                 {r.tracking ? (
-                  <div className="ha-row">
+                  <div className="ha-row ha-row-tracking">
                     <div className="ha-col">
                       <div className="ha-label">Tracking</div>
-                      <div className="ha-value">{r.tracking}</div>
+                      <div className="ha-value">
+                        {fmtDateTime(r.tracking)}
+                      </div>
                     </div>
                   </div>
                 ) : null}

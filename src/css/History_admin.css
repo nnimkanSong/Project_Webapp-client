@@ -148,6 +148,7 @@
 }
 
 .ha-btn {
+  width: 130px;
   border: 1px solid transparent;
   border-radius: 10px;
   padding: 9px 14px;

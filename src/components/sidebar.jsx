@@ -1,13 +1,13 @@
 // Sidebar.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import "../css/sidebar.css";
-import { Power , CalendarCheck} from "lucide-react";
+import { Power } from "lucide-react";
 import Swal from "sweetalert2";
-import axios from "axios";
+// ใช้ axios instance กลางของโปรเจกต์คุณ (มี baseURL/headers/cookies ครบ)
+import { api } from "../api";
 import { VscArchive } from "react-icons/vsc";
-import { Shield, ShieldCheck, ShieldUser, UserCog, Crown } from "lucide-react";
-<CalendarCheck size={14} />
+import { ShieldUser } from "lucide-react";
 
 const items = [
   { key: "profile", label: "Profile", icon: ProfileIcon },
@@ -16,8 +16,9 @@ const items = [
   { key: "feedback", label: "Feedback", icon: DocIcon },
   { key: "dashboard", label: "Dashboard", icon: ChartIcon },
   { key: "users", label: "Users Management", icon: UsersIcon },
-  { key: "logout", label: "Logout", icon: Power }, // จะไม่เรนเดอร์ในเมนู เราจะไปวางที่ footer
+  { key: "logout", label: "Logout", icon: Power },
 ];
+
 const PATH_BY_KEY = {
   admin: "/admin/dashboard",
   dashboard: "/admin/dashboard",
@@ -30,10 +31,39 @@ const PATH_BY_KEY = {
 
 export default function Sidebar({ initialCollapsed = false, onSelect, setAuth }) {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
+  const [pendingCount, setPendingCount] = useState(0);
   const navigate = useNavigate();
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
-  // ✅ Logout + SweetAlert2
+      useEffect(() => {
+  let cancel = false;
+
+  async function fetchCount() {
+    try {
+      const { data } = await api.get("/api/admin/history/bookings/count?status=pending", { withCredentials: true });
+      const n = Number(data?.count ?? 0);
+      if (!cancel) setPendingCount(Number.isFinite(n) ? n : 0);
+    } catch (e) {
+      if (!cancel) setPendingCount(0);
+    }
+  }
+
+  fetchCount();
+
+  const onRefresh = () => fetchCount();
+  window.addEventListener("rb:refresh-pending", onRefresh);
+  window.addEventListener("focus", onRefresh);
+  document.addEventListener("visibilitychange", onRefresh);
+
+  return () => {
+    cancel = true;
+    window.removeEventListener("rb:refresh-pending", onRefresh);
+    window.removeEventListener("focus", onRefresh);
+    document.removeEventListener("visibilitychange", onRefresh);
+  };
+}, []);
+
+
+
   function handleLogout() {
     return async () => {
       const result = await Swal.fire({
@@ -48,7 +78,7 @@ export default function Sidebar({ initialCollapsed = false, onSelect, setAuth })
       if (!result.isConfirmed) return;
 
       try {
-        await axios.post(`${BASE_URL}/api/auth/logout`, {}, { withCredentials: true });
+        await api.post(`/api/auth/logout`, {}, { withCredentials: true });
         Swal.fire({ icon: "success", title: "ออกจากระบบสำเร็จ", showConfirmButton: false, timer: 1500 });
       } catch (e) {
         Swal.fire("เกิดข้อผิดพลาด!", "ไม่สามารถออกจากระบบได้", "error");
@@ -65,7 +95,7 @@ export default function Sidebar({ initialCollapsed = false, onSelect, setAuth })
       <div className="sb__header">
         <div className="sb__brand">
           <div className="sb__logo"><ShieldUser /></div>
-          {!collapsed && <div className="sb__title">Admin</div>}
+        {!collapsed && <div className="sb__title">Admin</div>}
         </div>
         <button
           className="sb__collapse"
@@ -76,12 +106,13 @@ export default function Sidebar({ initialCollapsed = false, onSelect, setAuth })
         </button>
       </div>
 
-      {/* Menu (ไม่รวม Logout) */}
+      {/* Menu */}
       <nav className="sb__menu">
         {items
           .filter(i => i.key !== "logout")
           .map(({ key, label, icon: Icon }) => {
             const to = PATH_BY_KEY[key] || "/admin/booking";
+            const isBooking = key === "booking";
             return (
               <NavLink
                 key={key}
@@ -92,14 +123,21 @@ export default function Sidebar({ initialCollapsed = false, onSelect, setAuth })
               >
                 <span className="sb__icon"><Icon /></span>
                 {!collapsed && <span className="sb__label">{label}</span>}
-                {!collapsed && key === "booking" && <span className="sb__badge">New</span>}
+
+                {/* แสดงเสมอ (0 จะเป็นสีซอฟต์) */}
+                {!collapsed && isBooking && (
+                  <span className={`sb__badge sb__badge--count ${pendingCount === 0 ? "is-zero" : ""}`}>
+                    {pendingCount > 99 ? "99+" : pendingCount}
+                  </span>
+                )}
+
                 {!collapsed && key === "dashboard" && <span className="sb__chev">›</span>}
               </NavLink>
             );
           })}
       </nav>
 
-      {/* Footer: ปุ่ม Logout ตรึงล่าง */}
+      {/* Footer: Logout */}
       <div className="sb__footer">
         <button
           type="button"
@@ -117,21 +155,7 @@ export default function Sidebar({ initialCollapsed = false, onSelect, setAuth })
   );
 }
 
-/* ---------------- Icons ---------------- */
-function LogoIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-      <defs>
-        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#7c8aff" />
-          <stop offset="1" stopColor="#6a5cff" />
-        </linearGradient>
-      </defs>
-      <rect x="2" y="2" width="20" height="20" rx="6" fill="url(#g)" />
-      <circle cx="12" cy="12" r="5" fill="white" opacity="0.9" />
-    </svg>
-  );
-}
+/* ---------------- Icons (คงเดิม) ---------------- */
 function CollapseIcon({ collapsed }) {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
@@ -144,13 +168,6 @@ function ProfileIcon() {
     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
       <circle cx="12" cy="8" r="3.2" fill="currentColor" />
       <path d="M4 20a8 8 0 0116 0H4z" fill="currentColor" />
-    </svg>
-  );
-}
-function HomeIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-      <path d="M3 11l9-7 9 7v9a2 2 0 01-2 2h-4v-6H9v6H5a2 2 0 01-2-2v-9z" fill="currentColor" />
     </svg>
   );
 }

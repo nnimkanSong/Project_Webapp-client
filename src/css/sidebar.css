@@ -156,3 +156,23 @@
   outline:none;
   box-shadow:0 0 0 3px rgba(33,212,253,.35), 0 0 0 6px rgba(255,58,196,.25);
 }
+/* ✅ Badge แบบตัวนับสำหรับ Booking */
+.sb__badge--count{
+  background: var(--sb-accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 999px;
+  margin-left: 8px;
+  min-width: 24px;                /* ให้กลมสวยแม้มีตัวเลขเดียว */
+  text-align: center;
+  box-shadow: 0 0 10px rgba(109,117,255,.45);
+}
+
+/* ตัวเลือก: ซ่อน badge ตอนย่อ sidebar (ถ้าอยากให้โชว์เฉพาะตอนกาง) */
+/*
+.sb--collapsed .sb__badge--count { display: none; }
+*/
+
