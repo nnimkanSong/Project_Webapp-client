@@ -4,6 +4,11 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import axios from "axios";
 import GoogleVerifyEmail from "../components/GoogleVerifyEmail";
+import { isCookieAllowed } from "../lib/consent";
+import CookieNotice from "../components/CookieNotice";
+/* ✅ เพิ่ม */
+import Cookies from "js-cookie";
+import { clearAllCookiesExceptConsent } from "../lib/consent";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
@@ -16,35 +21,149 @@ const Login = ({ setAuth }) => {
   const [error, setError] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [verified, setVerified] = useState(false);
-  const navigate = useNavigate();
+  const [emailVerified, setEmailVerified] = useState(false);
   const [fpCooldown, setFpCooldown] = useState(0);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     setError("");
-    if (e.target.name === "email") setVerified(false);
+    if (e.target.name === "email") setEmailVerified(false);
+  };
+
+  useEffect(() => {
+    let ignore = false;
+    const email = String(formData.email || "").trim().toLowerCase();
+    if (!email || !isKMITLEmail(email)) {
+      setEmailVerified(false);
+      return;
+    }
+
+    (async () => {
+      try {
+        const { data } = await axios.get(
+          `${BASE_URL}/api/auth/check-email?email=${encodeURIComponent(email)}`,
+          { withCredentials: true }
+        );
+        const ok = data?.verificationMethod === "google" || !!data?.emailVerified;
+        if (!ignore) setEmailVerified(ok);
+      } catch {
+        if (!ignore) setEmailVerified(false);
+      }
+    })();
+
+    return () => {
+      ignore = true;
+    };
+  }, [formData.email]);
+
+  // ✅ verify ด้วย Google
+  const verifyByGoogleOnServer = async (credential) => {
+    const email = String(formData.email || "").trim().toLowerCase();
+
+    if (!isCookieAllowed()) {
+      await Swal.fire({
+        icon: "warning",
+        title: "การใช้คุกกี้ถูกปฏิเสธ",
+        text: "คุณได้ปฏิเสธการใช้คุกกี้ ระบบจะไม่สามารถเข้าสู่ระบบได้",
+      });
+      return;
+    }
+
+    const token =
+      typeof credential === "string"
+        ? credential
+        : credential?.credential || credential?.token || credential?.id_token;
+
+    if (!token) {
+      await Swal.fire({
+        icon: "error",
+        title: "Verify ล้มเหลว",
+        text: "ไม่พบ Google credential",
+      });
+      return;
+    }
+
+    try {
+      await axios.post(
+        `${BASE_URL}/api/auth/verify-google-email`,
+        { expectedEmail: email, credential: token },
+        { withCredentials: true }
+      );
+
+      setEmailVerified(true);
+
+      await Swal.fire({
+        icon: "success",
+        title: "ยืนยันอีเมลผ่าน Google สำเร็จ",
+        timer: 1200,
+        showConfirmButton: false,
+      });
+
+      window.location.reload();
+    } catch (err) {
+      const status = err?.response?.status;
+      const msg = err?.response?.data?.error || "Verify with Google failed";
+
+      if (status === 400 && /mismatch/i.test(msg)) {
+        await Swal.fire({
+          icon: "error",
+          title: "อีเมลไม่ตรง",
+          text: "บัญชี Google ที่เลือกไม่ตรงกับอีเมลที่กรอกไว้",
+        });
+        return;
+      }
+      if (status === 403) {
+        await Swal.fire({
+          icon: "error",
+          title: "จำกัดเฉพาะ @kmitl.ac.th",
+          text: "ระบบนี้อนุญาตเฉพาะโดเมน @kmitl.ac.th",
+        });
+        return;
+      }
+
+      await Swal.fire({ icon: "error", title: "Verify ล้มเหลว", text: msg });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
 
-    // เช็กโดเมนอีเมล
-    if (!isKMITLEmail(formData.email)) {
+    // ✅ หากยังไม่ยอมรับคุกกี้: เสนอปุ่มลบคุกกี้ทั้งหมดและรีโหลด
+    if (!isCookieAllowed()) {
+      const res = await Swal.fire({
+        icon: "warning",
+        title: "ยังไม่ได้ยอมรับการใช้คุกกี้",
+        html:
+          "ระบบจำเป็นต้องใช้คุกกี้เพื่อเข้าสู่ระบบอย่างปลอดภัย<br/>" +
+          "คุณต้องการลบคุกกี้ทั้งหมดแล้วเริ่มใหม่หรือไม่?",
+        showCancelButton: true,
+        reverseButtons: true,
+        confirmButtonText: "รีโหลดคุกกี้",
+        cancelButtonText: "ยกเลิก",
+        background: "#ffffff",
+        color: "#0f172a",
+      });
+
+      if (res.isConfirmed) {
+        try {
+          clearAllCookiesExceptConsent();
+          Cookies.remove("site_cookie_consent", { path: "/" }); // ลบ consent ด้วย เพื่อให้แบนเนอร์เด้ง
+        } finally {
+          window.location.reload(); // ✅ รีโหลดเพื่อเริ่ม flow consent ใหม่
+        }
+      }
+      return; // ยุติการ submit
+    }
+
+    const email = String(formData.email || "").trim().toLowerCase();
+
+    if (!isKMITLEmail(email)) {
       await Swal.fire({
         icon: "warning",
         title: "Invalid email",
         text: "กรุณาใช้อีเมล @kmitl.ac.th",
-      });
-      return;
-    }
-
-    if (!verified) {
-      await Swal.fire({
-        icon: "info",
-        title: "Verify required",
-        text: "กรุณายืนยันอีเมลด้วย Google ก่อนเข้าสู่ระบบ",
       });
       return;
     }
@@ -63,7 +182,7 @@ const Login = ({ setAuth }) => {
 
       await axios.post(
         `${BASE_URL}/api/auth/login`,
-        { email: formData.email, password: formData.password },
+        { email, password: formData.password },
         { withCredentials: true }
       );
 
@@ -78,22 +197,79 @@ const Login = ({ setAuth }) => {
 
       navigate("/");
     } catch (err) {
-      const msg = err?.response?.data?.error || "Login failed";
-      await Swal.fire({
-        icon: "error",
-        title: "Login failed",
-        text: msg,
-      });
+      const status = err?.response?.status;
+      const msg = String(err?.response?.data?.error || "Login failed");
+
+      if (status === 403 && /google/i.test(msg)) {
+        await Swal.fire({
+          icon: "info",
+          title: "เข้าสู่ระบบด้วย Google เท่านั้น",
+          text: "บัญชีนี้เคยยืนยันด้วย Google โปรดกดปุ่ม Google เพื่อล็อกอิน",
+        });
+        return;
+      }
+
+      if (status === 403 && /verify/i.test(msg)) {
+        await Swal.fire({
+          icon: "info",
+          title: "ยังไม่ได้ยืนยันอีเมล",
+          text: "กรุณายืนยันอีเมลก่อน แล้วค่อยลองเข้าสู่ระบบอีกครั้ง",
+        });
+        return;
+      }
+
+      if (msg.includes("ไม่มี user") || /not found/i.test(msg)) {
+        const result = await Swal.fire({
+          icon: "error",
+          title: "Login failed",
+          text: msg,
+          showCancelButton: true,
+          confirmButtonText: "OK",
+          cancelButtonText: "Sign up",
+          reverseButtons: true,
+        });
+        if (result.dismiss === Swal.DismissReason.cancel) {
+          navigate("/register");
+        }
+        return;
+      }
+
+      if (/invalid credentials/i.test(msg) || status === 401 || status === 400) {
+        await Swal.fire({
+          icon: "error",
+          title: "Login failed",
+          text: "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+        });
+        return;
+      }
+
+      if (status === 429) {
+        await Swal.fire({
+          icon: "warning",
+          title: "ชั่วคราว",
+          text: "พยายามบ่อยเกินไป กรุณาลองใหม่ภายหลัง",
+        });
+        return;
+      }
+
+      if (!err?.response) {
+        await Swal.fire({
+          icon: "error",
+          title: "Network error",
+          text: "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้",
+        });
+        return;
+      }
+
+      await Swal.fire({ icon: "error", title: "Login failed", text: msg });
     } finally {
       setLoading(false);
     }
   };
 
-
-
+  // ----- OTP flow เดิม (คงไว้) -----
   async function flowEnterOtp(email) {
     let canResend = true;
-
     while (true) {
       const otpModal = await Swal.fire({
         title: "กรอกรหัส OTP",
@@ -118,7 +294,6 @@ const Login = ({ setAuth }) => {
             const denyBtn = Swal.getDenyButton();
             denyBtn.disabled = true;
             denyBtn.textContent = `รอ ${timeLeft}s`;
-
             const timer = setInterval(() => {
               timeLeft--;
               if (timeLeft > 0) {
@@ -141,7 +316,7 @@ const Login = ({ setAuth }) => {
             const { data } = await axios.post(
               `${BASE_URL}/api/auth/verify-reset-otp`,
               { email, otp: code },
-              { withCredentials: true } // ✅ cookie จะถูกเซ็ต
+              { withCredentials: true }
             );
             return data || true;
           } catch (err) {
@@ -151,13 +326,8 @@ const Login = ({ setAuth }) => {
         },
       });
 
-      // ====== กด resend ======
       if (otpModal.isDenied) {
-        if (!canResend) {
-          // กัน user กดตอน disable (ปกติ denyBtn ถูก disable แล้ว)
-          continue;
-        }
-
+        if (!canResend) continue;
         try {
           await axios.post(
             `${BASE_URL}/api/auth/resend-reset-otp`,
@@ -171,8 +341,6 @@ const Login = ({ setAuth }) => {
             timer: 1500,
             showConfirmButton: false,
           });
-
-          // ✅ หลังจาก resend สำเร็จ → lock 30s
           canResend = false;
         } catch (err) {
           await Swal.fire({
@@ -181,10 +349,9 @@ const Login = ({ setAuth }) => {
             text: err.response?.data?.error || "Server error",
           });
         }
-        continue; // เปิด popup ใหม่
+        continue;
       }
 
-      // ====== กดยืนยัน OTP ======
       if (otpModal.isConfirmed && otpModal.value) {
         await Swal.fire({
           icon: "success",
@@ -198,15 +365,15 @@ const Login = ({ setAuth }) => {
       return { ok: false };
     }
   }
+
   useEffect(() => {
     if (fpCooldown <= 0) return;
     const t = setInterval(() => setFpCooldown((s) => (s > 0 ? s - 1 : 0)), 1000);
     return () => clearInterval(t);
   }, [fpCooldown]);
 
-  // แทนที่ handleForgot เดิม
   const handleForgot = async () => {
-    if (fpCooldown > 0) return; // กันเผื่อ user ดับเบิลคลิกปุ่มด้านนอก
+    if (fpCooldown > 0) return;
 
     const emailStep = await Swal.fire({
       title: "ลืมรหัสผ่าน",
@@ -217,9 +384,9 @@ const Login = ({ setAuth }) => {
       showCancelButton: true,
       cancelButtonText: "ยกเลิก",
       inputAttributes: { autocapitalize: "off", autocorrect: "off" },
-      showLoaderOnConfirm: true,                    // ✅ กันกดย้ำตอนส่ง
-      allowOutsideClick: () => !Swal.isLoading(),   // ✅ ส่งอยู่ ห้ามปิด
-      allowEnterKey: () => !Swal.isLoading(),       // ✅ กัน Enter รัว
+      showLoaderOnConfirm: true,
+      allowOutsideClick: () => !Swal.isLoading(),
+      allowEnterKey: () => !Swal.isLoading(),
       preConfirm: async (val) => {
         const email = String(val || "").trim().toLowerCase();
         if (!email) return Swal.showValidationMessage("กรุณากรอกอีเมล");
@@ -230,7 +397,7 @@ const Login = ({ setAuth }) => {
           await axios.post(
             `${BASE_URL}/api/auth/forgot-password`,
             { email },
-            { withCredentials: true } // แนะนำให้ใส่ไว้ให้สม่ำเสมอ
+            { withCredentials: true }
           );
           return email;
         } catch (err) {
@@ -244,13 +411,9 @@ const Login = ({ setAuth }) => {
     });
 
     if (!emailStep.isConfirmed) return;
-
-    // ✅ ตั้ง cooldown 30s ให้ “ปุ่ม Forgot password?” ด้านนอก
     setFpCooldown(30);
 
     const email = emailStep.value;
-
-    // เข้า flow ใส่ OTP (มี resend cooldown 30s ที่ผมให้ไปก่อนหน้า)
     const verified = await flowEnterOtp(email);
     if (!verified.ok) return;
 
@@ -259,21 +422,21 @@ const Login = ({ setAuth }) => {
     navigate(`/reset-password?${params.toString()}`);
   };
 
-
   return (
     <div className="login-bg">
+      <CookieNotice />
       <div className="box">
         <div className="rgb">
           <div className="logo">
             <img src="/Login.png" alt="Logo" />
           </div>
 
-          {/* ปุ่มยืนยันอีเมลด้วย Google (ออปชัน) */}
+          {/* ปุ่มยืนยันอีเมลด้วย Google */}
           <div className="btn-google">
             <GoogleVerifyEmail
               expectedEmail={formData.email}
-              disabled={!formData.email}
-              onVerified={() => setVerified(true)}
+              disabled={!formData.email || !isKMITLEmail(formData.email)}
+              onVerified={verifyByGoogleOnServer}
             />
           </div>
 
@@ -300,15 +463,13 @@ const Login = ({ setAuth }) => {
                   onChange={handleChange}
                   required
                 />
-                {/* สถานะ verify (ออปชัน) */}
+                {/* สถานะ verify */}
                 <div style={{ marginTop: 8, fontSize: 14 }}>
                   {formData.email ? (
-                    verified ? (
+                    emailVerified ? (
                       <span style={{ color: "#16a34a" }}>✓ Email verified</span>
                     ) : (
-                      <span style={{ color: "#ef4444" }}>
-
-                      </span>
+                      <span style={{ color: "#ef4444" }}>✗ Not verified</span>
                     )
                   ) : null}
                 </div>
@@ -339,8 +500,6 @@ const Login = ({ setAuth }) => {
                     />
                   </button>
                 </div>
-
-
               </div>
             </div>
 
@@ -349,7 +508,6 @@ const Login = ({ setAuth }) => {
 
             <div className="btn-forgot">
               <div className="forgotwrap">
-
                 <button
                   type="button"
                   className="forgot"
@@ -357,20 +515,20 @@ const Login = ({ setAuth }) => {
                   disabled={fpCooldown > 0}
                   title={fpCooldown > 0 ? `รอ ${fpCooldown}s` : "ขอรหัสรีเซ็ต"}
                 >
-                  {fpCooldown > 0 ? `Forgot password? (รอ ${fpCooldown}s)` : "Forgot password?"}
+                  {fpCooldown > 0
+                    ? `Forgot password? (รอ ${fpCooldown}s)`
+                    : "Forgot password?"}
                 </button>
               </div>
             </div>
-
 
             <div className="btn-end">
               <a className="create" href="/register">
                 Create account
               </a>
               <div className="btn-done">
-                {/* ถ้าต้องการ "บังคับ" verify ก่อนล็อกอิน ให้ใส่ disabled={!verified || !formData.password} */}
                 <button className="done" type="submit" disabled={loading}>
-                  {loading ? "Processing..." : "Done"}
+                  {loading ? "Loading..." : "Done"}
                 </button>
               </div>
             </div>

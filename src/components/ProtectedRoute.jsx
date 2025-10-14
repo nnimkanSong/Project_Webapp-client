@@ -2,11 +2,16 @@
 import React, { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import Cookies from "js-cookie";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
-export default function ProtectedRoute({ children }) {
-  const [auth, setAuth] = useState(null); // null = กำลังเช็ก
+export default function ProtectedRoute({
+  children,
+  requireAdmin = false,
+  redirectAdminToDashboard = false,
+}) {
+  const [authState, setAuthState] = useState({ status: "checking", role: null });
   const location = useLocation();
 
   useEffect(() => {
@@ -15,17 +20,25 @@ export default function ProtectedRoute({ children }) {
 
     (async () => {
       try {
+        const token = Cookies.get("token");
         const res = await axios.get(`${BASE_URL}/api/auth/me`, {
-          withCredentials: true,
           signal: controller.signal,
-          validateStatus: s => s < 500, // ให้ 401/403 ไม่โยน error มาที่ catch
+          withCredentials: true,
+          validateStatus: (s) => s < 500,
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
+
         if (!alive) return;
-        setAuth(Boolean(res.data?.ok));   // 200 + ok:true = มี session (มี sid ใช้งานได้)
-      } catch (e) {
+
+        if (res.data?.ok) {
+          const role = String(res.data.user?.role || "").toLowerCase() || null;
+          setAuthState({ status: "authed", role });
+        } else {
+          setAuthState({ status: "unauthed", role: null });
+        }
+      } catch {
         if (!alive) return;
-        // network error / server down -> ถือว่าไม่ผ่าน
-        setAuth(false);
+        setAuthState({ status: "unauthed", role: null });
       }
     })();
 
@@ -33,11 +46,28 @@ export default function ProtectedRoute({ children }) {
       alive = false;
       controller.abort();
     };
-  }, []);
+  }, [location.pathname]);
 
-  if (auth === null) return <p>Loading...</p>;
+  if (authState.status === "checking") return <p>Loading...</p>;
 
-  return auth
-    ? children
-    : <Navigate to="/login" replace state={{ from: location }} />;
+  const isAdmin = authState.role === "admin";
+  const onAdminPath = location.pathname.startsWith("/admin");
+
+  if (authState.status === "unauthed") {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  if (requireAdmin && !isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (redirectAdminToDashboard && isAdmin && !onAdminPath) {
+    return <Navigate to="/admin/profile" replace />;
+  }
+
+  if (!isAdmin && onAdminPath) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
 }

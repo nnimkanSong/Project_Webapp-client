@@ -1,19 +1,19 @@
 /* ================== Theme Vars ================== */
-:root{
+:root {
   --ink: #2b1f10;
-  --bg-1:#ffffff;
-  --bg-2:#faf7f1;
+  --bg-1: #ffffff;
+  --bg-2: #faf7f1;
 
-  --gold-1:#f6e27a;
-  --gold-2:#e7c14f;
-  --gold-3:#d4af37;
+  --gold-1: #f6e27a;
+  --gold-2: #e7c14f;
+  --gold-3: #d4af37;
 
-  --muted:#7b6a57;
-  --line:#e9e6df;
+  --muted: #7b6a57;
+  --line: #e9e6df;
 
   --radius: 22px;
-  --shadow-1: 0 30px 60px rgba(0,0,0,.18);
-  --shadow-2: 0 12px 24px rgba(0,0,0,.08);
+  --shadow-1: 0 30px 60px rgba(0, 0, 0, .18);
+  --shadow-2: 0 12px 24px rgba(0, 0, 0, .08);
 }
 
 /* ============ Layout / Page ============ */
@@ -38,50 +38,55 @@
   padding: 44px 52px;
   text-align: center;
   background: linear-gradient(180deg, var(--bg-1), var(--bg-2));
-  box-shadow: var(--shadow-1), var(--shadow-2), inset 0 1px 0 rgba(255,255,255,.6);
+  box-shadow: var(--shadow-1), var(--shadow-2), inset 0 1px 0 rgba(255, 255, 255, .6);
   overflow: hidden;
 }
 
 /* ขอบทองแบบ gradient ด้วย mask */
-.ap-profile-card::before{
-  content:"";
-  position:absolute;
-  inset:-2px;              /* ปรับความหนากรอบได้ */
+.ap-profile-card::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  /* ปรับความหนากรอบได้ */
   border-radius: inherit;
-  padding:2px;
-  background: linear-gradient(135deg,var(--gold-1),var(--gold-2) 40%,var(--gold-3) 75%,#a07a1c);
+  padding: 2px;
+  background: linear-gradient(135deg, var(--gold-1), var(--gold-2) 40%, var(--gold-3) 75%, #a07a1c);
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
-          mask-composite: exclude;
-  pointer-events:none;
+  mask-composite: exclude;
+  pointer-events: none;
 }
+
 /* โกลว์ทองนุ่ม ๆ */
-.ap-profile-card::after{
-  content:"";
-  position:absolute;
-  inset:-18px;
+.ap-profile-card::after {
+  content: "";
+  position: absolute;
+  inset: -18px;
   border-radius: inherit;
-  background: radial-gradient(1200px 400px at 50% -10%, rgba(245,221,130,.22), transparent 60%);
+  background: radial-gradient(1200px 400px at 50% -10%, rgba(245, 221, 130, .22), transparent 60%);
   filter: blur(8px);
-  pointer-events:none;
+  pointer-events: none;
 }
 
 .ap-profile-title {
   margin-bottom: 18px;
   font-size: 40px;
-  letter-spacing:.4px;
+  letter-spacing: .4px;
 }
-.ap-profile-image{
+
+.ap-profile-image {
   gap: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-top: 10px;    
-  margin-bottom: 20px;          /* ลดช่องว่างภาพกับปุ่ม */
+  margin-top: 10px;
+  margin-bottom: 20px;
+  /* ลดช่องว่างภาพกับปุ่ม */
 }
+
 /* ============ Avatar ============ */
 .ap-profile-image img {
   width: 250px;
@@ -89,7 +94,7 @@
   border-radius: 50%;
   object-fit: cover;
   padding: 8px;
-  background: linear-gradient(135deg,var(--gold-1),var(--gold-2) 40%,var(--gold-3));
+  background: linear-gradient(135deg, var(--gold-1), var(--gold-2) 40%, var(--gold-3));
   margin-bottom: 26px;
 }
 
@@ -101,13 +106,16 @@
   line-height: 1.5;
   color: var(--ink);
 }
+
 .ap-profile-info div {
-  display: flex;              /* label + value ชิดแนวนอน */
+  display: flex;
+  /* label + value ชิดแนวนอน */
   align-items: center;
   justify-content: center;
   gap: 14px;
   margin-bottom: 12px;
 }
+
 .ap-profile-info span {
   font-weight: 700;
   width: 140px;
@@ -116,7 +124,7 @@
 }
 
 /* grid เวอร์ชันใหม่ที่คอมโพเนนต์ใช้อยู่ */
-.ap-profile-info-grid{
+.ap-profile-info-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px 24px;
@@ -124,14 +132,58 @@
   margin: 8px auto 28px;
   text-align: left;
 }
-.ap-profile-info-grid .ap-label{
+
+.ap-profile-info-grid .ap-label {
   text-align: right;
   opacity: .85;
   font-weight: 700;
 }
-.ap-profile-info-grid .ap-value{
+
+.ap-profile-info-grid .ap-value {
   text-align: left;
   font-weight: 600;
+}
+
+/* ======= Input Style (Gold Theme) ======= */
+.ap-profile-page .ap-input,
+.ap-profile-page input.ap-input,
+.ap-profile-page input {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 2px solid #d4af37;
+  /* ✅ กรอบทอง */
+  background-color: #fffef9;
+  /* โทนพื้นครีมทองอ่อน */
+  color: #2b1f10;
+  font-family: "Ledger", serif;
+  font-size: 16px;
+  transition: all 0.25s ease;
+  outline: none;
+}
+
+/* ======= เมื่อ Hover ======= */
+.ap-profile-page .ap-input:hover,
+.ap-profile-page input:hover {
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
+}
+
+/* ======= เมื่อ Focus (ตอนกดแก้) ======= */
+.ap-profile-page .ap-input:focus,
+.ap-profile-page input:focus {
+  border-color: #ffd700;
+  /* ทองสว่างขึ้น */
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+  background-color: #fffdfa;
+  /* พื้นขาวนวล */
+}
+
+/* ======= เมื่อ Disabled ======= */
+.ap-profile-page .ap-input:disabled,
+.ap-profile-page input:disabled {
+  background-color: #f4f1e8;
+  border-color: #c1a34a;
+  opacity: 0.8;
+  cursor: not-allowed;
 }
 
 /* inputs */
@@ -145,13 +197,15 @@
   transition: box-shadow .15s ease, border-color .15s ease, background .15s;
   background: #fff;
 }
-.ap-profile-info input:focus{
+
+.ap-profile-info input:focus {
   border-color: var(--gold-3);
-  box-shadow: 0 0 0 4px rgba(212,175,55,.18);
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, .18);
 }
+
 .ap-profile-info input:disabled {
   background-color: #f3f2ee;
-  color:#8a7b68;
+  color: #8a7b68;
   cursor: not-allowed;
 }
 
@@ -173,23 +227,37 @@
   transition: transform .15s ease, box-shadow .15s ease, background .15s ease, opacity .15s;
   background: #f3f2ee;
   color: var(--ink);
-  box-shadow: 0 6px 16px rgba(0,0,0,.08);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .08);
 }
-.ap-btn:hover{ transform: translateY(-1px); box-shadow: 0 10px 22px rgba(0,0,0,.12); }
-.ap-btn:active{ transform: translateY(0); box-shadow: 0 6px 16px rgba(0,0,0,.08); }
 
-.ap-btn.ap-back{
-  background:#ece8df;
+.ap-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, .12);
 }
-.ap-btn.ap-edit{
-  background: linear-gradient(135deg,var(--gold-1),var(--gold-3));
-  color:#2b1f10;
-  box-shadow: 0 10px 24px rgba(212,175,55,.35), inset 0 1px 0 rgba(255,255,255,.7);
+
+.ap-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .08);
 }
-.ap-btn.ap-reset{
-  background:#e9ecf3;
+
+.ap-btn.ap-back {
+  background: #ece8df;
 }
-.ap-btn.ap-small{ padding: 8px 14px; font-size: 14px; }
+
+.ap-btn.ap-edit {
+  background: linear-gradient(135deg, var(--gold-1), var(--gold-3));
+  color: #2b1f10;
+  box-shadow: 0 10px 24px rgba(212, 175, 55, .35), inset 0 1px 0 rgba(255, 255, 255, .7);
+}
+
+.ap-btn.ap-reset {
+  background: #e9ecf3;
+}
+
+.ap-btn.ap-small {
+  padding: 8px 14px;
+  font-size: 14px;
+}
 
 /* ============ Popup (premium) ============ */
 .ap-popup-overlay {
@@ -215,25 +283,27 @@
   box-shadow: var(--shadow-1), var(--shadow-2);
   color: var(--ink);
 }
-.ap-popup-card::before{
-  content:"";
-  position:absolute;
-  inset:-2px;
+
+.ap-popup-card::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
   border-radius: inherit;
-  padding:2px;
-  background: linear-gradient(135deg,var(--gold-1),var(--gold-2) 40%,var(--gold-3));
+  padding: 2px;
+  background: linear-gradient(135deg, var(--gold-1), var(--gold-2) 40%, var(--gold-3));
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
-          mask-composite: exclude;
-  pointer-events:none;
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
 .ap-popup-card h2 {
   font-size: 28px;
   margin-bottom: 10px;
 }
+
 .ap-popup-card p {
   font-size: 16px;
   color: var(--muted);
@@ -247,7 +317,7 @@
   background: none;
   font-size: 28px;
   cursor: pointer;
-  color:#7b6a57;
+  color: #7b6a57;
 }
 
 .ap-popup-icon {
@@ -259,21 +329,260 @@
   color: #2b1f10;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg,var(--gold-1),var(--gold-3));
-  box-shadow: 0 8px 18px rgba(212,175,55,.35), inset 0 1px 0 rgba(255,255,255,.7);
+  background: linear-gradient(135deg, var(--gold-1), var(--gold-3));
+  box-shadow: 0 8px 18px rgba(212, 175, 55, .35), inset 0 1px 0 rgba(255, 255, 255, .7);
 }
 
 /* ============ Responsive ============ */
-@media (max-width: 768px){
-  .ap-profile-card{ padding: 30px 22px; }
-  .ap-profile-title{ font-size: 30px; }
-  .ap-profile-image img{ width: 180px; height: 180px; }
-  .ap-profile-info span{ width: 110px; }
-  .ap-profile-info input{ width: 220px; }
-  .ap-profile-info-grid{
+@media (max-width: 768px) {
+  .ap-profile-card {
+    padding: 30px 22px;
+  }
+
+  .ap-profile-title {
+    font-size: 30px;
+  }
+
+  .ap-profile-image img {
+    width: 180px;
+    height: 180px;
+  }
+
+  .ap-profile-info span {
+    width: 110px;
+  }
+
+  .ap-profile-info input {
+    width: 220px;
+  }
+
+  .ap-profile-info-grid {
     grid-template-columns: 1fr;
     text-align: center;
   }
+
   .ap-profile-info-grid .ap-label,
-  .ap-profile-info-grid .ap-value{ text-align: center; }
+  .ap-profile-info-grid .ap-value {
+    text-align: center;
+  }
 }
+
+
+/* ============ SweetAlert2 (Theme match) ============ */
+.ap-swal {
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, var(--bg-1), var(--bg-2)) !important;
+  color: var(--ink);
+  box-shadow: var(--shadow-1), var(--shadow-2), inset 0 1px 0 rgba(255, 255, 255, .6);
+  padding: 28px 26px !important;
+}
+
+.ap-swal::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(135deg, var(--gold-1), var(--gold-2) 40%, var(--gold-3), #a07a1c);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.ap-swal-title {
+  font-family: 'Ledger', serif;
+  letter-spacing: .2px;
+  color: var(--ink);
+}
+
+.ap-swal-text {
+  color: var(--muted);
+}
+
+.ap-swal-confirm,
+.ap-swal-cancel {
+  border-radius: 14px !important;
+  font-weight: 700 !important;
+  padding: 11px 22px !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .08);
+}
+
+.ap-swal-confirm {
+  background: linear-gradient(135deg, var(--gold-1), var(--gold-3)) !important;
+  color: #2b1f10 !important;
+  box-shadow: 0 10px 24px rgba(212, 175, 55, .35), inset 0 1px 0 rgba(255, 255, 255, .7) !important;
+}
+
+.ap-swal-cancel {
+  background: #e9ecf3 !important;
+  color: var(--ink) !important;
+}
+
+.ap-swal .swal2-actions {
+  gap: 10px !important;
+}
+
+.ap-swal .swal2-input.ap-input {
+  border-radius: 12px !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: none !important;
+}
+
+.ap-swal .swal2-input.ap-input:focus {
+  border-color: var(--gold-3) !important;
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, .18) !important;
+}
+
+/* ไอคอนให้ดูกลมกลืน */
+.ap-swal .swal2-icon {
+  box-shadow: 0 8px 18px rgba(212, 175, 55, .18);
+  border-color: var(--gold-2) !important;
+}
+
+.ap-btn {
+  cursor: pointer !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, opacity 0.15s;
+}
+
+.ap-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, .12);
+}
+
+.ap-btn:active {
+  transform: translateY(0);
+}
+
+
+
+button {
+  cursor: pointer;
+}
+
+/* ==== SweetAlert2 Theme Lock while Loading ==== */
+
+/* กล่องหลักยังใช้ธีมเดิมเสมอ */
+.ap-swal.swal2-popup {
+  background: linear-gradient(180deg, var(--bg-1), var(--bg-2));
+  border-radius: 20px;
+  box-shadow: var(--shadow-1), var(--shadow-2);
+  color: var(--ink);
+}
+span{
+  width: max-content;
+}
+/* แถวปุ่ม (actions) */
+.ap-swal-actions.swal2-actions {
+  gap: 10px;
+}
+
+/* ปุ่มยืนยันธีมทอง (ปกติ) */
+.ap-swal-confirm {
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 0;
+  cursor: pointer;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--gold-1), var(--gold-3));
+  color: #2b1f10;
+  box-shadow: 0 10px 24px rgba(212, 175, 55, .35), inset 0 1px 0 rgba(255, 255, 255, .7);
+  transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+}
+
+/* ตอน SweetAlert ใส่คลาส swal2-loading ให้ปุ่มยืนยัน → ยังให้คงธีมเดิม */
+.ap-swal-confirm.swal2-styled.swal2-loading,
+.ap-swal-confirm.swal2-loading {
+  background: linear-gradient(135deg, var(--gold-1), var(--gold-3)) !important;
+  color: #2b1f10 !important;
+  opacity: 1 !important;
+  box-shadow: 0 10px 24px rgba(212, 175, 55, .35), inset 0 1px 0 rgba(255, 255, 255, .7) !important;
+  filter: none !important;
+}
+
+/* ปุ่มยกเลิกให้เรียบ ๆ */
+.ap-swal-cancel {
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #f3f2ee;
+  color: var(--ink);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* แต่ง Loader ของ SweetAlert ให้เป็นสีทอง */
+.swal2-loader {
+  border-color: rgba(212, 175, 55, .28) rgba(212, 175, 55, .28) rgba(212, 175, 55, .88) rgba(212, 175, 55, .88) !important;
+}
+
+/* กัน SweetAlert default style มาทับตอนมี .swal2-styled */
+.swal2-styled.ap-swal-confirm,
+.swal2-styled.ap-swal-cancel {
+  box-shadow: none;
+}
+
+
+/* ============ SweetAlert Theme — Fixed Gold Loader ============ */
+
+/* กรอบหลักคงธีมทองไว้เสมอ */
+.ap-swal.swal2-popup,
+.swal2-popup.ap-swal.swal2-loading {
+  background: #fffef9 !important;
+  border: 2px solid #d4af37 !important;
+  border-radius: 20px !important;
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.45) !important;
+  color: #2b1f10 !important;
+  font-family: "Ledger", serif !important;
+}
+
+/* ปุ่มยืนยันธีมทอง */
+.ap-swal-confirm,
+.ap-swal-confirm.swal2-styled {
+  background: linear-gradient(135deg, #f9e79f, #d4af37);
+  border: none;
+  color: #2b1f10;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(212, 175, 55, 0.4);
+  transition: all 0.2s ease;
+}
+
+/* Hover */
+.ap-swal-confirm:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(212, 175, 55, 0.5);
+}
+
+/* ปุ่มยกเลิก */
+.ap-swal-cancel {
+  background: #f2f2f2;
+  border-radius: 10px;
+  color: #333;
+  padding: 10px 20px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+}
+
+/* Loader ตอน showLoaderOnConfirm — ให้เป็นสีทอง */
+.swal2-loader {
+  border: 3px solid rgba(212, 175, 55, 0.25) !important;
+  border-top-color: #d4af37 !important;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  margin-top: 10px;
+  animation: spin 1s linear infinite;
+}
+
+/* หมุน loader */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+

@@ -19,11 +19,17 @@ import Admin_usermanagement from "./page/admin/Admin_usermanagement";
 import Admin_profile from "./page/admin/Profile_admin";
 import Admin_history from "./page/admin/History_admin";
 import Admin_dashboard from "./page/admin/Admindashboard";
-import Admin_feedback from "./page/admin/Admin_feedback";
+import ResetPasswordAdmin from "./page/Change_password_admin";
+import Feedback from "./page/admin/Admin_feedback";
 
-
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
 const App = () => {
-  const [isAuthenticated, setAuth] = useState(!!localStorage.getItem("token"));
+  const [isAuthenticated, setAuth] = useState(!!getCookie("token"));
 
   return (
     
@@ -35,7 +41,7 @@ const App = () => {
         <Route
           path="/"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute redirectAdminToDashboard>
               <Home />
             </ProtectedRoute>
           }
@@ -45,7 +51,7 @@ const App = () => {
         <Route
           path="/Booking"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute redirectAdminToDashboard>
               <Booking />
             </ProtectedRoute>
           }
@@ -54,17 +60,15 @@ const App = () => {
         <Route
           path="/feedback"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute redirectAdminToDashboard>
               <FeedbackForm />
             </ProtectedRoute>
           }
         />
-        {/* admin feedback */}
-
         <Route
           path="/Profile"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute redirectAdminToDashboard>
               <Profile_user />
             </ProtectedRoute>
           }
@@ -72,21 +76,13 @@ const App = () => {
         <Route
           path="/history"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute redirectAdminToDashboard>
               <History />
             </ProtectedRoute>
           }
         />
 
-        {/* เลือกให้ /starf เข้าถึงได้เฉพาะคนล็อกอิน */}
-        <Route
-          path="/starf"
-          element={
-            <ProtectedRoute>
-              <Starf />
-            </ProtectedRoute>
-          }
-        />
+        
       </Route>
 
       {/* กลุ่มที่ไม่ใช้ Layout (เช่น หน้า Auth) */}
@@ -118,9 +114,9 @@ const App = () => {
       <Route
         path="/reset-password"
         element={
-          <PublicRoute>
+          // <ProtectedRoute>
             <ResetPassword  />
-          </PublicRoute>
+          // </ProtectedRoute>
         }
       />
       {/* admin page แสดงใน Layout ด้วย */}
@@ -129,25 +125,64 @@ const App = () => {
           <Layout_admin isAuthenticated={isAuthenticated} setAuth={setAuth} />
         }
       >
-        <Route path="/admin/booking" element={<BookingTable />} />
-        <Route path="/admin/profile" element={<Admin_profile />} />
+        <Route path="/admin/booking" element={
+          <ProtectedRoute>
+
+          <BookingTable />
+          </ProtectedRoute>
+          
+          } />
+        <Route 
+        path="/admin/profile"
+        element={
+          <Admin_profile />} />
         <Route
           path="/admin/users-management"
-          element={<Admin_usermanagement />}
+          element={
+            <ProtectedRoute>
+              
+          <Admin_usermanagement />
+            </ProtectedRoute>
+        
+        }
         />
         <Route
           path="/admin/history"
-          element={<Admin_history />}
+          element={
+            <ProtectedRoute requireAdmin>
+              <Admin_history />
+            </ProtectedRoute>
+        }
         />
         <Route
           path="/admin/dashboard"
-          element={<Admin_dashboard />}
+          element={
+            <ProtectedRoute requireAdmin>
+            <Admin_dashboard />
+
+          </ProtectedRoute>
+        }
         />
         <Route
           path="/admin/feedback"
-          element={<Admin_feedback />}
-          />
+          element={
+            <ProtectedRoute requireAdmin>
+            <Feedback />
+  
+          </ProtectedRoute>
+        }
+        />
       </Route>
+        <Route
+          path="/admin/reset-password"
+          element={
+            <ProtectedRoute requireAdmin>
+            <ResetPasswordAdmin />
+
+          </ProtectedRoute>
+        }
+        />
+
     </Routes>
   );
 };

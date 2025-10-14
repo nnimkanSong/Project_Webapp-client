@@ -136,10 +136,11 @@
   position: relative;
   z-index: 51;
   width: min(1100px, 94vw);
-  max-height: 90vh;
+  max-height: 70vh;
   background: #fff;
   box-shadow: 0 20px 60px rgba(0,0,0,.2);
   overflow: hidden;
+  border-radius: 20px;
 }
 .split {
   display: grid;

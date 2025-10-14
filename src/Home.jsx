@@ -5,6 +5,7 @@ import "./Home.css";
 import Sliderhome from "./components/Sliderhome";
 import { api } from "./api";
 import { Clock } from "lucide-react";
+import CookieNotice from './components/CookieNotice';
 
 const Home = () => {
   const [stat, setStat] = useState({
@@ -92,8 +93,10 @@ const Home = () => {
   }, [stat.breakdown]);
 
   return (
+    
     <div className="pg-home">
       {/* HERO */}
+      <CookieNotice/>
       <div className="top">
         <img src="./CHP_4173.jpg" alt="KMITL CE Building" />
       </div>

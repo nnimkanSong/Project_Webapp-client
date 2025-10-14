@@ -316,7 +316,7 @@ export default function Create_account() {
             <div className="cr-btn-end">
               <div className="cr-btn-done">
                 <button className="cr-done" type="submit" disabled={loading}>
-                  {loading ? "Processing..." : "Done"}
+                  {loading ? "Loading..." : "Done"}
                 </button>
               </div>
             </div>
