@@ -49,7 +49,7 @@ export default function Sidebar({ initialCollapsed = false, onSelect, setAuth })
 
       try {
         await axios.post(`${BASE_URL}/api/auth/logout`, {}, { withCredentials: true });
-        Swal.fire({ icon: "success", title: "ออกจากระบบสำเร็จ", showConfirmButton: false, timer: 1500 });
+        await Swal.fire({ icon: "success", title: "ออกจากระบบสำเร็จ", showConfirmButton: false, timer: 1500 });
       } catch (e) {
         Swal.fire("เกิดข้อผิดพลาด!", "ไม่สามารถออกจากระบบได้", "error");
       } finally {

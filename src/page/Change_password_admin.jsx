@@ -3,15 +3,14 @@ import React, { useMemo, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import axios from "axios";
-import "../css/change.css";
+import styles from "../css/ResetPasswordAdmin.module.css"; // ✅ ใช้ CSS Module (เปลี่ยนจาก import ธรรมดา)
 
-function ResetPassword() {
+function ResetPasswordAdmin() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
   const email = (params.get("email") || "").trim().toLowerCase();
-  // token ใน URL ไม่จำเป็นแล้ว เพราะอ่านจาก HttpOnly cookie
   const resetToken = (params.get("token") || "").trim();
 
   const [newPwd, setNewPwd] = useState("");
@@ -34,7 +33,7 @@ function ResetPassword() {
       "• a special character",
     []
   );
-  
+
   const PWD_PATTERN = "(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}";
   const PWD_MSG = "ต้องมี ≥8 ตัว, มี a-z, A-Z, 0-9 และอักขระพิเศษ";
 
@@ -58,7 +57,6 @@ function ResetPassword() {
 
       try {
         setLoading(true);
-        // ✅ ใช้ token จาก HttpOnly cookie; ไม่ต้องส่ง token ใน body
         await axios.post(
           `${BASE_URL}/api/auth/reset-password`,
           { newPassword: np },
@@ -84,23 +82,23 @@ function ResetPassword() {
   );
 
   return (
-    <div className="change-bg">
-      <div className="ch-box">
-        <div className="ch-rgb">
-          <div className="ch-logo">
+    <div className={styles["change-bg"]}>
+      <div className={styles["ch-box"]}>
+        <div className={styles["ch-rgb"]}>
+          <div className={styles["ch-logo"]}>
             <img src="/Chang_password.png" alt="Reset Password" />
           </div>
 
           {/* ✅ ปุ่มอยู่ "ใน" form แล้ว */}
-          <form className="ch-input" onSubmit={handleSubmit}>
-            <div className="ch-name">
+          <form className={styles["ch-input"]} onSubmit={handleSubmit}>
+            <div className={styles["ch-name"]}>
               <p>New password :</p>
               <p>Confirm password :</p>
             </div>
 
-            <div className="ch-box-input">
+            <div className={styles["ch-box-input"]}>
               {/* New Password */}
-              <div className="input-wrap-ch">
+              <div className={styles["input-wrap-ch"]}>
                 <input
                   type={showNew ? "text" : "password"}
                   placeholder="New Password"
@@ -108,16 +106,16 @@ function ResetPassword() {
                   onChange={(e) => setNewPwd(e.target.value)}
                   disabled={loading}
                   autoComplete="new-password"
-                  className="pwd-input"
+                  className={styles["pwd-input"]}
                   required
-                  pattern={PWD_PATTERN}   // ✅ เหมือนหน้า Create_account
-                  title={PWD_MSG}         // ✅ ข้อความช่วยเหลือแบบเดียวกัน
+                  pattern={PWD_PATTERN}
+                  title={PWD_MSG}
                   inputMode="text"
                   aria-label="New Password"
                 />
                 <button
                   type="button"
-                  className="toggle-visibility"
+                  className={styles["toggle-visibility"]}
                   onClick={() => setShowNew((v) => !v)}
                   aria-label={showNew ? "Hide password" : "Show password"}
                 >
@@ -125,46 +123,42 @@ function ResetPassword() {
                 </button>
               </div>
 
-              <hr />
+              <hr className={styles.hr} />
 
               {/* Confirm Password */}
-              <div className="input-wrap-ch">
+              <div className={styles["input-wrap-ch"]}>
                 <input
                   type={showConfirm ? "text" : "password"}
                   placeholder="Confirm Password"
                   value={confirmPwd}
                   onChange={(e) => setConfirmPwd(e.target.value)}
-                  disabled={loading || !newPwd}   // ✅ ปิดจนกว่าจะมีรหัสหลัก (เหมือนแนวคิดหน้า Create_account)
+                  disabled={loading || !newPwd}
                   autoComplete="new-password"
-                  className="pwd-input"
+                  className={styles["pwd-input"]}
                   required
                   inputMode="text"
                   aria-label="Confirm Password"
-                // ไม่ใส่ pattern ที่ช่องยืนยัน เพื่อปล่อยให้เทียบกับช่องหลัก + Swal จัดการ
                 />
                 <button
                   type="button"
-                  className="toggle-visibility"
+                  className={styles["toggle-visibility"]}
                   onClick={() => setShowConfirm((v) => !v)}
                   aria-label={showConfirm ? "Hide password" : "Show password"}
-                  disabled={!newPwd}              // ✅ ปิดปุ่มตาจนกว่าจะมีรหัสหลัก
+                  disabled={!newPwd}
                 >
                   <i className={showConfirm ? "fa-solid fa-eye-slash" : "fa-solid fa-eye"} />
                 </button>
               </div>
-
-              
             </div>
-
-
           </form>
-          <div className="ch-btn-end" style={{ marginTop: 16 }}>
-            <div className="ch-btn-done">
-              <button className="ch-done" onClick={handleSubmit} disabled={loading}>
+
+          <div className={styles["ch-btn-end"]} style={{ marginTop: 16 }}>
+            <div className={styles["ch-btn-done"]}>
+              <button className={styles["ch-done"]} onClick={handleSubmit} disabled={loading}>
                 {loading ? "Loading..." : "Done"}
               </button>
             </div>
-          </div>
+          </div>  
 
           {email ? (
             <small style={{ marginTop: 12, color: "#64748b", alignSelf: "center" }}>
@@ -177,4 +171,4 @@ function ResetPassword() {
   );
 }
 
-export default ResetPassword; 
+export default ResetPasswordAdmin;

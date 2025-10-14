@@ -1,13 +1,67 @@
-import React, { useEffect, useRef, useState } from "react";
+// src/pages/Profile_admin.jsx
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";          // ✅ เพิ่ม
 import "../../css/Profile_admin.css";
-import { api } from "../../api"; // axios instance withCredentials: true
+import { api } from "../../api";                         // axios instance (withCredentials: true)
+import Swal from "sweetalert2";
+
+const themedSwal = Swal.mixin({
+  customClass: {
+    popup: "ap-swal",
+    title: "ap-swal-title",
+    htmlContainer: "ap-swal-text",
+    confirmButton: "ap-swal-confirm",
+    cancelButton: "ap-swal-cancel",
+    input: "ap-input",
+    actions: "ap-swal-actions",
+  },
+  buttonsStyling: false, // ให้ใช้ class ของเราแทนสไตล์ default
+  backdrop: true,
+});
+
+// ✅ ตัวช่วยตรวจอีเมลโดเมน KMITL
+const isKMITLEmail = (email) =>
+  /^[a-zA-Z0-9._%+-]+@(?:kmitl\.ac\.th|mail\.kmitl\.ac\.th|student\.kmitl\.ac\.th)$/i
+    .test(String(email || "").trim());
+
+// ✅ flow กรอก OTP แบบง่าย (ปรับตามระบบจริงของคุณได้)
+// ใน Profile_admin.jsx
+async function flowEnterOtp(email) {
+  const r = await themedSwal.fire({
+    title: "กรอกรหัสยืนยัน (OTP)",
+    input: "text",
+    inputLabel: `ส่งไปที่ ${email}`,
+    inputPlaceholder: "เช่น 123456",
+    showCancelButton: true,
+    confirmButtonText: "ยืนยัน",
+    showLoaderOnConfirm: true,
+ allowOutsideClick: () => !themedSwal.isLoading(),
+ allowEnterKey:   () => !themedSwal.isLoading(),
+    preConfirm: async (otp) => {
+      const code = String(otp || "").trim();
+      if (!/^\d{6}$/.test(code)) return themedSwal.showValidationMessage("กรุณากรอก OTP 6 หลัก");
+      try {
+        const { data } = await api.post("/api/auth/verify-reset-otp", { email, otp: code }); // withCredentials= true ใน instance แล้ว
+        return data || true;
+      } catch (err) {
+        themedSwal.showValidationMessage(err.response?.data?.error || "โค้ดไม่ถูกต้อง/หมดอายุ");
+      }
+    },
+  });
+  return r.isConfirmed ? { ok: true } : { ok: false };
+}
+
+
+
 
 const Profile = () => {
+  const navigate = useNavigate();                       // ✅ ใช้ navigate
   const [isEditing, setIsEditing] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [loading, setLoading] = useState(true);
   const fileRef = useRef(null);
   const lastPreviewUrlRef = useRef(null);
+  const [fpCooldown, setFpCooldown] = useState(0);
 
   const [user, setUser] = useState({
     username: "",
@@ -16,6 +70,13 @@ const Profile = () => {
     userType: "user",
     photoUrl: "https://placehold.co/200x200?text=Profile",
   });
+
+  // ✅ นับถอยหลัง cooldown
+  useEffect(() => {
+    if (fpCooldown <= 0) return;
+    const t = setInterval(() => setFpCooldown((s) => (s > 0 ? s - 1 : 0)), 1000);
+    return () => clearInterval(t);
+  }, [fpCooldown]);
 
   useEffect(() => {
     (async () => {
@@ -67,11 +128,68 @@ const Profile = () => {
       }));
     }
   };
+  const handleForgot = useCallback(async () => {
+    if (fpCooldown > 0) return;
+
+    const emailStep = await themedSwal.fire({
+      title: "ลืมรหัสผ่าน",
+      input: "email",
+      inputLabel: "กรอกอีเมลที่ใช้สมัคร",
+      inputPlaceholder: "name@kmitl.ac.th",
+      confirmButtonText: "ส่งรหัส/ลิงก์รีเซ็ต",
+      showCancelButton: true,
+      cancelButtonText: "ยกเลิก",
+      inputAttributes: { autocapitalize: "off", autocorrect: "off" },
+      showLoaderOnConfirm: true,
+      allowOutsideClick: () => !themedSwal.isLoading(),
+      allowEnterKey: () => !themedSwal.isLoading(),
+      preConfirm: async (val) => {
+        const email = String(val || "").trim().toLowerCase();
+        if (!email) return themedSwal.showValidationMessage("กรุณากรอกอีเมล");
+        if (!isKMITLEmail(email)) {
+          return themedSwal.showValidationMessage("กรุณาใช้อีเมลโดเมน @kmitl.ac.th");
+        }
+
+        try {
+          // ✅ ส่งแบบแนบ cookie (สำหรับเซิร์ฟเวอร์ set HttpOnly cookie)
+          await api.post(
+            "/api/auth/forgot-password",
+            { email },
+            { withCredentials: true } // สำคัญมาก — เพื่อให้เซิร์ฟเวอร์ตั้ง cookie ได้
+          );
+          return email;
+        } catch (err) {
+          const msg =
+            err?.response?.status === 429
+              ? "ส่งคำขอบ่อยเกินไป กรุณาลองใหม่ภายหลัง"
+              : err?.response?.data?.error || "ส่งคำขอล้มเหลว";
+          themedSwal.showValidationMessage(msg);
+        }
+      },
+    });
+
+    if (!emailStep.isConfirmed) return;
+
+    setFpCooldown(30);
+    const email = emailStep.value;
+
+    // ✅ Flow OTP เหมือนเดิม
+    const verified = await flowEnterOtp(email);
+    if (!verified?.ok) return;
+
+    // ✅ ตอนนี้ไม่ต้องแนบ token ใน URL แล้ว
+    // เพราะ backend ใช้ HttpOnly cookie อยู่แล้ว
+    navigate(`/admin/reset-password?email=${encodeURIComponent(email)}`);
+  }, [fpCooldown, navigate]);
+
+
+
 
   const handleSave = async () => {
     try {
       const payload = { username: user.username, studentNumber: user.studentNumber };
       const { data } = await api.put("/api/profile", payload);
+
       setUser((prev) => ({
         ...prev,
         username: data.username,
@@ -80,27 +198,32 @@ const Profile = () => {
         userType: data.userType || prev.userType,
       }));
       setIsEditing(false);
-      setShowPopup(true);
+
+      // ✅ SweetAlert สไตล์ทองพรีเมียม
+      await themedSwal.fire({
+        icon: "success",
+        title: "บันทึกสำเร็จ!",
+        text: "ข้อมูลของคุณได้รับการอัปเดตเรียบร้อยแล้ว",
+        confirmButtonText: "ตกลง",
+      });
+
     } catch (e) {
       console.error("save profile error:", e);
-      alert(e?.response?.data?.error || "Update failed");
+      await themedSwal.fire({
+        icon: "error",
+        title: "เกิดข้อผิดพลาด",
+        text: e?.response?.data?.error || "บันทึกข้อมูลไม่สำเร็จ",
+        confirmButtonText: "ลองใหม่",
+      });
     }
   };
-
-  if (loading) {
-    return (
-      <div className="ap-profile-page">
-        <div className="ap-profile-card">Loading…</div>
-      </div>
-    );
-  }
-
   const roleClass =
     user.userType === "admin"
       ? "badge admin"
       : user.userType === "vip"
-      ? "badge vip"
-      : "badge user";
+        ? "badge vip"
+        : "badge user";
+
 
   return (
     <div className="ap-profile-page">
@@ -170,11 +293,12 @@ const Profile = () => {
 
           <button
             className="ap-btn ap-reset"
-            onClick={() => (window.location.href = "/Forgot")}
+            onClick={handleForgot}
             aria-label="Reset your password"
-            title="Reset your password"
+            disabled={fpCooldown > 0}
+            title={fpCooldown > 0 ? `รอ ${fpCooldown}s` : "ขอรหัสรีเซ็ต"}
           >
-            Reset password
+            {fpCooldown > 0 ? `Reset password (${fpCooldown}s)` : "Reset password"}
           </button>
 
           {isEditing ? (

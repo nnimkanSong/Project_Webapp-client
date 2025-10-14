@@ -1,16 +1,21 @@
 // src/pages/Admin_dashboard.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import SalesRevenueChart from "../../components/SalesRevenueChart";
 import { BsPeopleFill } from "react-icons/bs";
 import { MdRoomPreferences, MdBorderColor } from "react-icons/md";
 import "../../css/adminDashboard.css";
 import { ResponsivePie } from "@nivo/pie";
 import { ResponsiveLine } from "@nivo/line";
-import { api } from "../../api"; // axios withCredentials: true
+import { ResponsiveBar } from "@nivo/bar";
+import { api } from "../../api";
 
-const KPI = ({ icon, title, value, sub }) => (
-  <div className="kpi">
-    <div className="kpi-icon">{icon}</div>
+
+const KPI = ({ icon, title, value, sub, tone = "blue" }) => (
+  <div className={`kpi kpi-${tone} card-premium`}>
+    <div className="kpi-icon">
+      <span className="kpi-ring" />
+      <span className="kpi-glow" />
+      {icon}
+    </div>
     <div className="kpi-body">
       <div className="kpi-title">{title}</div>
       <div className="kpi-value">{value}</div>
@@ -26,16 +31,22 @@ const MyPie = ({ data = [] }) => {
       <ResponsivePie
         data={data}
         margin={{ top: 20, right: 24, bottom: 40, left: 24 }}
-        innerRadius={0.6}
-        padAngle={0.6}
-        cornerRadius={7}
-        activeOuterRadiusOffset={8}
-        colors={({ id }) => (id === "Active" ? "#4296FD" : "#D4E2F4")}
+        innerRadius={0.62}
+        padAngle={0.7}
+        cornerRadius={9}
+        activeOuterRadiusOffset={10}
+        colors={({ id }) => (id === "Active" ? "#3B82F6" : "#D4E2F4")}
         arcLabel={(d) => `${Math.round(((d.value || 0) / total) * 100)}%`}
         arcLabelsSkipAngle={8}
         arcLabelsTextColor={{ from: "color", modifiers: [["darker", 2.2]] }}
-        legends={[{ anchor: "bottom", direction: "row", translateY: 30, itemWidth: 100, itemHeight: 16, symbolSize: 10 }]}
-        theme={{ labels: { text: { fontSize: 12 } }, legends: { text: { fontSize: 12 } }, tooltip: { container: { fontSize: 13 } } }}
+        legends={[
+          { anchor: "bottom", direction: "row", translateY: 30, itemWidth: 100, itemHeight: 16, symbolSize: 10 }
+        ]}
+        theme={{
+          labels: { text: { fontSize: 12 } },
+          legends: { text: { fontSize: 12 } },
+          tooltip: { container: { fontSize: 13, } }
+        }}
       />
     </div>
   );
@@ -48,82 +59,228 @@ const MyPieRooms = ({ data = [] }) => {
       <ResponsivePie
         data={data}
         margin={{ top: 20, right: 24, bottom: 40, left: 24 }}
-        innerRadius={0.55}
-        padAngle={0.6}
-        cornerRadius={7}
-        activeOuterRadiusOffset={10}
+        innerRadius={0.58}
+        padAngle={0.7}
+        cornerRadius={9}
+        activeOuterRadiusOffset={12}
         colors={palette}
         arcLabelsSkipAngle={10}
         arcLabelsTextColor={{ from: "color", modifiers: [["darker", 2.2]] }}
-        legends={[{ anchor: "bottom", direction: "row", translateY: 30, itemWidth: 80, itemHeight: 16, symbolSize: 10 }]}
+        legends={[
+          { anchor: "bottom", direction: "row", translateY: 30, itemWidth: 80, itemHeight: 16, symbolSize: 10 }
+        ]}
       />
     </div>
   );
 };
 
-// ----- แทนที่ MyLine เดิมทั้งบล็อกด้วยเวอร์ชันนี้ -----
-const MyLine = ({ series = [] }) => {
-  // บังคับให้ y เป็นตัวเลขเสมอ ป้องกัน null/undefined
-  const safeSeries = (Array.isArray(series) ? series : []).map(s => ({
-    id: s?.id ?? "Unknown",
-    data: (s?.data ?? []).map(p => ({
+const MyTimeSeriesChart = ({ series = [], mode = "line" }) => {
+  const palette = ["#2563EB", "#16A34A", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4"];
+
+  // ทำความสะอาด + ติดสี
+  const safeSeries = (Array.isArray(series) ? series : []).map((s, i) => ({
+    id: s?.id ?? `Series ${i + 1}`,
+    color: palette[i % palette.length],
+    data: (s?.data ?? []).map((p) => ({
       x: p?.x ?? "",
       y: Number.isFinite(p?.y) ? p.y : 0,
     })),
   }));
 
-  // ถ้าไม่มีข้อมูล ให้แสดงข้อความแทนกราฟ
-  if (!safeSeries.length || !safeSeries.some(s => s.data.length)) {
-    return (
-      <div style={{height: 320, display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b"}}>
-        No data
-      </div>
-    );
+  if (!safeSeries.length || !safeSeries.some((s) => s.data?.length)) {
+    return <div className="empty-graph">No data</div>;
   }
 
+  // แปลงข้อมูลสำหรับ Bar: [{month:'Jan', A:10, B:5}, ...]
+  const barIndex = "month";
+  const barKeys = safeSeries.map((s) => s.id);
+  const allX = Array.from(new Set(safeSeries.flatMap((s) => s.data.map((d) => d.x))));
+  const barData = allX.map((x) => {
+    const row = { [barIndex]: x };
+    safeSeries.forEach((s) => {
+      const f = s.data.find((d) => d.x === x);
+      row[s.id] = f ? f.y : 0;
+    });
+    return row;
+  });
+
+  const commonTheme = {
+    fontFamily:
+      'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Thai"',
+    axis: {
+      ticks: { text: { fontSize: 12, fill: "#334155" } },
+      legend: { text: { fontSize: 12, fill: "#111827", fontWeight: 600 } },
+    },
+    grid: { line: { stroke: "#EEF2F7" } },
+    legends: { text: { fontSize: 12, fill: "#475569", fontWeight: 600 } },
+    tooltip: { container: { fontSize: 12 } },
+  };
+
+
   return (
-    <div style={{ height: 320 }}>
-      <ResponsiveLine
-        data={safeSeries}
-        margin={{ top: 30, right: 90, bottom: 40, left: 50 }}
-        xScale={{ type: "point" }} // ใช้ label เดือนจาก API (Jan..Dec) ตามที่ BE ส่งมา
-        yScale={{ type: "linear", min: "auto", max: "auto", stacked: false }}
-        axisBottom={{ tickSize: 0, tickPadding: 8, legend: "month", legendOffset: 30 }}
-        axisLeft={{ tickSize: 0, tickPadding: 8, legend: "bookings", legendOffset: -40 }}
-        enablePoints
-        pointSize={8}
-        pointColor={{ theme: "background" }}
-        pointBorderWidth={2}
-        pointBorderColor={{ from: "seriesColor" }}
-        useMesh
-        legends={[{
-          anchor: "bottom-right",
-          direction: "column",
-          translateX: 80,
-          itemWidth: 80,
-          itemHeight: 18,
-          symbolSize: 10,
-          symbolShape: "circle"
-        }]}
-        tooltip={({ point }) => (
-          <div style={{ background: 'white', padding: '6px 8px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 12 }}>
-            <div><b>{point.serieId}</b></div>
-            <div>{point.data.xFormatted}: {point.data.yFormatted}</div>
-          </div>
-        )}
-        theme={{
-          axis: { ticks: { text: { fontSize: 12 } }, legend: { text: { fontSize: 12 } } },
-          legends: { text: { fontSize: 12 } },
-          tooltip: { container: { fontSize: 12 } },
-        }}
-      />
+    <div className="lineBox" style={{ height: 340 }}>
+      {mode === "bar" ? (
+        <ResponsiveBar
+          data={barData}
+          keys={barKeys}
+          indexBy={barIndex}
+          margin={{ top: 30, right: 110, bottom: 46, left: 56 }}
+          padding={0.25}
+          valueScale={{ type: "linear" }}
+          indexScale={{ type: "band", round: true }}
+          colors={(d) => {
+            const i = barKeys.indexOf(d.id);
+            return palette[i % palette.length];
+          }}
+          axisBottom={{
+            tickPadding: 8,
+            tickSize: 0,
+            legend: "month",
+            legendOffset: 34,
+            legendPosition: "middle",
+          }}
+          axisLeft={{
+            tickPadding: 8,
+            tickSize: 0,
+            legend: "bookings",
+            legendOffset: -44,
+            legendPosition: "middle",
+            format: (v) => Intl.NumberFormat().format(v),
+          }}
+          labelSkipWidth={16}
+          labelSkipHeight={16}
+          labelTextColor={{ from: "color", modifiers: [["darker", 2.2]] }}
+          legends={[
+            {
+              dataFrom: "keys",
+              anchor: "bottom-right",
+              direction: "column",
+              translateX: 96,
+              itemWidth: 90,
+              itemHeight: 18,
+              itemsSpacing: 6,
+              symbolSize: 12,
+              symbolShape: "circle",
+            },
+          ]}
+          theme={commonTheme}
+          tooltip={({ id, value, color, indexValue }) => (
+            <div
+              className="nivo-tip premium-tip"
+              style={{
+                width: "max-content",
+                background: "#fff",
+                padding: "8px 10px",
+                border: "1px solid #e5e7eb",
+                borderRadius: 8,
+                boxShadow: "0 6px 24px rgba(0,0,0,.08)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: "50%",
+                    background: color,
+                    display: "inline-block",
+                  }}
+                />
+                <b>{id}</b>
+              </div>
+              <div style={{ marginTop: 4 }}>
+                {indexValue} : <b>{Intl.NumberFormat().format(value)}</b>
+              </div>
+            </div>
+          )}
+        />
+      ) : (
+        <ResponsiveLine
+          data={safeSeries}
+          colors={(d) => d.color}
+          margin={{ top: 30, right: 110, bottom: 46, left: 56 }}
+          xScale={{ type: "point" }}
+          yScale={{ type: "linear", min: "auto", max: "auto", stacked: false }}
+          curve="monotoneX"
+          enableGridX={false}
+          enableGridY={true}
+          lineWidth={3}
+          enableArea={mode === "area"}
+          areaOpacity={0.1}
+          enablePoints
+          pointSize={8}
+          pointColor={{ theme: "background" }}
+          pointBorderWidth={2}
+          pointBorderColor={{ from: "seriesColor" }}
+          useMesh
+          motionConfig="gentle"
+          axisBottom={{
+            tickSize: 0,
+            tickPadding: 8,
+            legend: "month",
+            legendOffset: 34,
+            legendPosition: "middle",
+          }}
+          axisLeft={{
+            tickSize: 0,
+            tickPadding: 8,
+            legend: "bookings",
+            legendOffset: -44,
+            legendPosition: "middle",
+            format: (v) => Intl.NumberFormat().format(v),
+          }}
+          legends={[
+            {
+              anchor: "bottom-right",
+              direction: "column",
+              translateX: 96,
+              itemWidth: 90,
+              itemHeight: 18,
+              itemsSpacing: 6,
+              symbolSize: 12,
+              symbolShape: "circle",
+              toggleSerie: true,
+              effects: [{ on: "hover", style: { itemTextColor: "#111827" } }],
+            },
+          ]}
+          tooltip={({ point }) => (
+            <div
+              className="nivo-tip premium-tip"
+              style={{
+                background: "#fff",
+                padding: "8px 10px",
+                border: "1px solid #e5e7eb",
+                borderRadius: 8,
+                boxShadow: "0 6px 24px rgba(0,0,0,.08)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: "50%",
+                    background: point.serieColor,
+                    display: "inline-block",
+                  }}
+                />
+                <b>{point.serieId}</b>
+              </div>
+              <div style={{ marginTop: 4 }}>
+                {String(point.data.xFormatted)} :{" "}
+                <b>{Intl.NumberFormat().format(point.data.yFormatted)}</b>
+              </div>
+            </div>
+          )}
+          theme={commonTheme}
+        />
+      )}
     </div>
   );
 };
 
-
 const RecentTable = ({ rows = [] }) => (
-  <div className="card">
+  <div className="card card-premiums">
     <div className="card-title">Recent Bookings</div>
     <div className="table-wrap">
       <table className="tbl">
@@ -133,24 +290,44 @@ const RecentTable = ({ rows = [] }) => (
           </tr>
         </thead>
         <tbody>
-          {rows.map(r => (
-            <tr key={r.id}>
-              <td>{r.id}</td>
-              <td>{r.room}</td>
-              <td>{r.user}</td>
-              <td>{r.date}</td>
-              <td>{r.time}</td>
-              <td><span className={`pill ${r.status}`}>{r.status}</span></td>
-            </tr>
-          ))}
+          {rows.map(r => {
+            const raw = String(r.status || "").toLowerCase();
+
+            // map คีย์เวิร์ดจาก BE เป็นคลาสที่เราสตางไว้
+            const statusClass = raw.includes("pending")
+              ? "pending"
+              : raw.includes("cancel")
+                ? "cancelled"     // รวม cancel/canceled/cancelled
+                : raw.includes("active") || raw.includes("success") || raw.includes("approve")
+                  ? "approved"
+                  : "pending";      // default เผื่อกรณีไม่รู้จัก
+
+            // label สวย ๆ
+            const label =
+              statusClass === "approved" ? "active" :
+                statusClass === "cancelled" ? "cancel" :
+                  "pending";
+
+            return (
+              <tr key={r.id}>
+                <td>{r.id}</td>
+                <td>{r.room}</td>
+                <td>{r.user}</td>
+                <td>{r.date}</td>
+                <td>{r.time}</td>
+                <td><span className={`pill ${statusClass}`}>{label}</span></td>
+              </tr>
+            );
+          })}
         </tbody>
+
       </table>
     </div>
   </div>
 );
 
 const Notice = ({ items = [] }) => (
-  <div className="card">
+  <div className="card card-premium">
     <div className="card-title">Notifications</div>
     <ul className="notice">
       {items.map((t, i) => <li key={i}>{t}</li>)}
@@ -159,6 +336,7 @@ const Notice = ({ items = [] }) => (
 );
 
 export default function Admin_dashboard() {
+  const [chartMode, setChartMode] = useState("line");
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
@@ -167,7 +345,7 @@ export default function Admin_dashboard() {
   const [roomsPie, setRoomsPie] = useState([]);
   const [recent, setRecent] = useState([]);
   const [notifications, setNotifications] = useState([]);
-  const [series, setSeries] = useState([]); // line series
+  const [series, setSeries] = useState([]);
 
   useEffect(() => {
     (async () => {
@@ -185,11 +363,7 @@ export default function Admin_dashboard() {
         setNotifications(m.data?.notifications || []);
         setSeries(s.data?.series || []);
       } catch (e) {
-        console.error("Admin dashboard load error:", e?.response?.status, e?.response?.data);
-        const msg =
-          e?.response?.data?.error ||
-          e?.message ||
-          "โหลดข้อมูลแดชบอร์ดไม่สำเร็จ";
+        const msg = e?.response?.data?.error || e?.message || "โหลดข้อมูลแดชบอร์ดไม่สำเร็จ";
         setErr(msg);
       } finally {
         setLoading(false);
@@ -198,48 +372,78 @@ export default function Admin_dashboard() {
   }, []);
 
   return (
-    <section className="admin-wrap">
+    <section className="admin-wrap premium-bg">
+      {/* ฉากหลังสายรุ้งนิ่ม ๆ */}
+      <div className="bg-orb orb-1" />
+      <div className="bg-orb orb-2" />
+      <div className="bg-orb orb-3" />
+
       <div className="page-title">Dashboard</div>
 
       {err && <div className="error">{err}</div>}
-      {loading && <div className="loader">กำลังโหลดข้อมูล…</div>}
+      {loading && (
+        <div className="loaderWrap">
+          <div className="loaderSpinner" />
+          <div className="loaderText">กำลังโหลดข้อมูล…</div>
+        </div>
+      )}
 
       {/* KPIs */}
       <div className="kpi-grid">
-        <KPI icon={<BsPeopleFill />} title="Active Users" value={kpi.activeUsersMonth} sub="this month" />
-        <KPI icon={<MdRoomPreferences />} title="Total Bookings" value={kpi.totalBookingsMonth} sub="this month" />
-        <KPI icon={<MdBorderColor />} title="Pending Today" value={kpi.pendingToday} sub="awaiting approval" />
-        <KPI icon={<MdRoomPreferences />} title="Total Rooms" value={kpi.totalRooms} />
+        <KPI tone="blue" icon={<BsPeopleFill />} title="Active Users" value={kpi.activeUsersMonth}  />
+        <KPI tone="amber" icon={<MdRoomPreferences />} title="Total Bookings" value={kpi.totalBookingsMonth}  />
+        <KPI tone="rose" icon={<MdBorderColor />} title="Pending Today" value={kpi.pendingToday}  />
+        <KPI tone="emerald" icon={<MdRoomPreferences />} title="Total Rooms" value={kpi.totalRooms} />
       </div>
 
       {/* Charts row */}
       <div className="grid-2">
         <Notice items={notifications} />
-        <div className="card">
-          <div className="card-title">Bookings per Month</div>
-          <MyLine series={series} />
+        <div className="card card-premium">
+          <div className="card-title-row">
+            <div className="card-title">Bookings per Month</div>
+            <div className="chart-toolbar">
+              <button
+                className="chart-btn"
+                data-active={chartMode === "line"}
+                onClick={() => setChartMode("line")}
+              >
+                เส้น
+              </button>
+              <button
+                className="chart-btn"
+                data-active={chartMode === "area"}
+                onClick={() => setChartMode("area")}
+              >
+                เส้นเติมพื้นที่
+              </button>
+              <button
+                className="chart-btn"
+                data-active={chartMode === "bar"}
+                onClick={() => setChartMode("bar")}
+              >
+                แท่ง
+              </button>
+            </div>
+          </div>
+
+          {/* ใช้คอมโพเนนต์ใหม่ */}
+          <MyTimeSeriesChart series={series} mode={chartMode} />
         </div>
 
-        {/* <div className="card">
-          <div className="card-title">Revenue / Volume (sample)</div>
-          <div className="bar" style={{ height: 300 }}>
-            <SalesRevenueChart />
-          </div>
-        </div> */}
       </div>
 
-      {/* Pie + Recent */}
+      {/* Pie row */}
       <div className="grid-3">
-        <div className="card">
+        <div className="card card-premium">
           <div className="card-title">Users</div>
           <MyPie data={usersPie} />
         </div>
 
-        <div className="card">
+        <div className="card card-premium">
           <div className="card-title">Bookings by Room</div>
           <MyPieRooms data={roomsPie} />
         </div>
-
       </div>
 
       <RecentTable rows={recent} />

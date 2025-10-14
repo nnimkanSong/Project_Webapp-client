@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import Nav from './components/Nav';
 import './css/layout.css'
+
 const Layout = () => {
   return (
     <div className='bg'>
@@ -14,6 +15,7 @@ const Layout = () => {
       </main>
       {/* <footer> */}
     </div>
+    
   );
 };
 

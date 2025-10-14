@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import "./Home.css";
 import Sliderhome from "./components/Sliderhome";
 import { api } from "./api";
+import CookieNotice from './components/CookieNotice';
 
 const Home = () => {
   const [stat, setStat] = useState({
@@ -60,7 +61,9 @@ const Home = () => {
   }, [stat.breakdown]);
 
   return (
+    
     <div className="pg-home">
+      <CookieNotice/>
       <div className="top">
         <img src="./CHP_4173.jpg" alt="" />
       </div>
