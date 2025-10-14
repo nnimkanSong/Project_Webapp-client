@@ -5,7 +5,7 @@ import "./Home.css";
 import Sliderhome from "./components/Sliderhome";
 import { api } from "./api";
 import { Clock } from "lucide-react";
-import CookieNotice from './components/CookieNotice';
+import CookieNotice from "./components/CookieNotice";
 
 const Home = () => {
   const [stat, setStat] = useState({
@@ -86,17 +86,18 @@ const Home = () => {
   const statusByRoom = useMemo(() => {
     const map = {};
     (stat.breakdown || []).forEach((b) => {
-      const code = String(b.room || "").trim().toUpperCase();
+      const code = String(b.room || "")
+        .trim()
+        .toUpperCase();
       map[code] = b.status; // 'available' | 'in-use' | 'renovation'
     });
     return map;
   }, [stat.breakdown]);
 
   return (
-    
     <div className="pg-home">
       {/* HERO */}
-      <CookieNotice/>
+      <CookieNotice />
       <div className="top">
         <img src="./CHP_4173.jpg" alt="KMITL CE Building" />
       </div>
@@ -158,12 +159,15 @@ const Home = () => {
       <div className="end">
         {/* E107 */}
         <Sliderhome
-          images={["./E113_1.jpg", "./E113_2.jpg", "./E113_3.jpg", "./E113_4.jpg"]}
+          roomCode="E107"
+          fetchPath="/api/rooms/E107/images" // ← ดึงจาก DB
           details={[
-            { title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107" },
-            { title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107" },
-            { title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107" },
-            { title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107" },
+            {
+              title: "Laboratory",
+              subtitle: "Computer Engineering",
+              price: "E107",
+              room: "E107",
+            },
           ]}
           interval={2400}
           rounded
@@ -173,12 +177,15 @@ const Home = () => {
 
         {/* E111 */}
         <Sliderhome
-          images={["./E113_1.jpg", "./E113_2.jpg", "./E113_3.jpg", "./E113_4.jpg"]}
+          roomCode="E111"
+          fetchPath="/api/rooms/E111/images" // ← ดึงจาก DB
           details={[
-            { title: "Meeting", subtitle: "Computer Engineering", price: "E111", room: "E111" },
-            { title: "Meeting", subtitle: "Computer Engineering", price: "E111", room: "E111" },
-            { title: "Meeting", subtitle: "Computer Engineering", price: "E111", room: "E111" },
-            { title: "Meeting", subtitle: "Computer Engineering", price: "E111", room: "E111" },
+            {
+              title: "Meeting",
+              subtitle: "Computer Engineering",
+              price: "E111",
+              room: "E111",
+            },
           ]}
           interval={3200}
           statusByRoom={statusByRoom}
@@ -187,12 +194,15 @@ const Home = () => {
 
         {/* E113 */}
         <Sliderhome
-          images={["./E113_1.jpg", "./E113_2.jpg", "./E113_3.jpg", "./E113_4.jpg"]}
+          roomCode="E113"
+          fetchPath="/api/rooms/E113/images" // ← ดึงจาก DB
           details={[
-            { title: "Computer Club", subtitle: "Computer Engineering", price: "E113", room: "E113" },
-            { title: "Computer Club", subtitle: "Computer Engineering", price: "E113", room: "E113" },
-            { title: "Computer Club", subtitle: "Computer Engineering", price: "E113", room: "E113" },
-            { title: "Computer Club", subtitle: "Computer Engineering", price: "E113", room: "E113" },
+            {
+              title: "Computer Club",
+              subtitle: "Computer Engineering",
+              price: "E113",
+              room: "E113",
+            },
           ]}
           interval={2000}
           rounded={false}
@@ -202,12 +212,15 @@ const Home = () => {
 
         {/* B317 */}
         <Sliderhome
-          images={["./E113_1.jpg", "./E113_2.jpg", "./E113_3.jpg", "./E113_4.jpg"]}
+          roomCode="B317"
+          fetchPath="/api/rooms/B317/images" // ← ดึงจาก DB
           details={[
-            { title: "Server", subtitle: "Computer Engineering", price: "B317", room: "B317" },
-            { title: "Server", subtitle: "Computer Engineering", price: "B317", room: "B317" },
-            { title: "Server", subtitle: "Computer Engineering", price: "B317", room: "B317" },
-            { title: "Server", subtitle: "Computer Engineering", price: "B317", room: "B317" },
+            {
+              title: "Server",
+              subtitle: "Computer Engineering",
+              price: "B317",
+              room: "B317",
+            },
           ]}
           interval={2000}
           rounded={false}

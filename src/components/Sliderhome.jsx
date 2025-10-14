@@ -1,31 +1,93 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import styles from "../css/sliderhome.module.css";
+import { api } from "../api";
 
-/**
- * Card เดี่ยวรูปเปลี่ยนอัตโนมัติ (Auto-Fade)
- * - แสดงใบเดียวตามดีไซน์ในรูป
- * - ภาพสลับด้วยเอฟเฟกต์ fade
- * - Hover / touch จะหยุดชั่วคราว
- * - คลิกเพื่อเปิด Expanded (2:1) พร้อมรายละเอียด
- * - แสดงไฟสถานะห้อง (available / in-use / renovation / unknown)
- */
+// แปลง payload จาก API -> [{src, alt}]
+function normalizeFromApi(data, { roomCode = "" } = {}) {
+  const raw = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.items)
+    ? data.items
+    : Array.isArray(data?.data)
+    ? data.data
+    : [];
+
+  return raw
+    .map((it, i) => {
+      if (typeof it === "string") return { src: it, alt: `${roomCode} • ${i + 1}` };
+      const src = it?.url || it?.src || it?.imageUrl || it?.path || "";
+      const alt = it?.alt || it?.caption || it?.label || `${roomCode} • ${i + 1}`;
+      return src ? { src, alt } : null;
+    })
+    .filter(Boolean);
+}
+
+function normalizeImagesProp(images = [], { roomCode = "" } = {}) {
+  return images.map((it, i) =>
+    typeof it === "string" ? { src: it, alt: `${roomCode} • ${i + 1}` } : it
+  );
+}
+
 const Sliderhome = ({
   images = ["./E113_1.jpg", "./E113_2.jpg", "./E113_3.jpg", "./E113_4.jpg"],
-  // details: [{ title, subtitle, price, description, extra, room }]
   details = [],
+  fetchPath,        // เช่น "/api/rooms/E113/images" -> ดึงจาก DB
+  fetchQuery = {},
+  roomCode,
   interval = 2500,
   rounded = true,
-  // 👇 ส่ง map สถานะจาก parent: { E107: 'available', E111: 'in-use', ... }
   statusByRoom = {},
   showStatus = true,
 }) => {
   const [idx, setIdx] = useState(0);
   const [expanded, setExpanded] = useState(false);
+  const [items, setItems] = useState(
+    normalizeImagesProp(images, { roomCode: roomCode || "" })
+  );
+  const [loading, setLoading] = useState(!!fetchPath);
+  const [err, setErr] = useState("");
+
   const timerRef = useRef(null);
   const hoveringRef = useRef(false);
   const touchingRef = useRef(false);
 
-  const len = images.length;
+  // ✅ โหลด “จาก Database ผ่าน API” เท่านั้น
+  useEffect(() => {
+    let mounted = true;
+    if (!fetchPath) return;
+
+    (async () => {
+      setLoading(true);
+      setErr("");
+      try {
+        const res = await api.get(fetchPath, { params: fetchQuery });
+        const list = normalizeFromApi(res?.data, { roomCode: roomCode || "" });
+        if (mounted) {
+          setItems(list.length ? list : normalizeImagesProp(images, { roomCode: roomCode || "" }));
+        }
+      } catch (e) {
+        if (mounted) {
+          setErr(e?.response?.data?.message || e?.message || "Load images failed");
+          setItems(normalizeImagesProp(images, { roomCode: roomCode || "" }));
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+
+    return () => { mounted = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchPath, JSON.stringify(fetchQuery), roomCode]);
+
+  // ถ้าไม่มี fetchPath ก็ใช้ props images ตามเดิม
+  useEffect(() => {
+    if (!fetchPath) {
+      setItems(normalizeImagesProp(images, { roomCode: roomCode || "" }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(images), roomCode, fetchPath]);
+
+  const len = items.length;
   const safeIdx = (i) => ((i % len) + len) % len;
 
   const info = useMemo(() => {
@@ -36,13 +98,12 @@ const Sliderhome = ({
       price: d.price || `AED 456`,
       description: d.description || `รายละเอียดของรูปที่ ${safeIdx(idx) + 1}`,
       extra: d.extra || null,
-      room: d.room || d.price || null, // เผื่อคุณใส่ room แยกไว้
+      room: d.room || roomCode || null,
     };
-  }, [idx, details, len]);
+  }, [idx, details, len, roomCode]);
 
-  // สถานะห้องปัจจุบันของใบที่โชว์
-  const roomCode = info.room; // เช่น "E107"
-  const roomStatus = (roomCode && statusByRoom?.[roomCode]) || "unknown";
+  const currentRoomCode = info.room || null;
+  const roomStatus = (currentRoomCode && statusByRoom?.[currentRoomCode]) || "unknown";
   const statusLabelMap = {
     available: "Available",
     "in-use": "In Use",
@@ -64,11 +125,7 @@ const Sliderhome = ({
     timerRef.current = null;
   };
 
-  useEffect(() => {
-    start();
-    return stop;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [interval, expanded, len]);
+  useEffect(() => { start(); return stop; }, [interval, expanded, len]); // eslint-disable-line
 
   const onMouseEnter = () => (hoveringRef.current = true);
   const onMouseLeave = () => (hoveringRef.current = false);
@@ -78,7 +135,7 @@ const Sliderhome = ({
   const openExpanded = () => setExpanded(true);
   const closeExpanded = () => setExpanded(false);
 
-  if (!len) return null;
+  if (!len && !loading) return null;
 
   return (
     <div
@@ -91,7 +148,6 @@ const Sliderhome = ({
       aria-roledescription="carousel"
       aria-label="Single-card auto switching"
     >
-      {/* การ์ดเดี่ยวตามดีไซน์ */}
       {!expanded && (
         <div
           className={`${styles.singleCard} ${rounded ? styles.rounded : ""}`}
@@ -99,37 +155,40 @@ const Sliderhome = ({
           role="button"
           aria-label="Open image details"
         >
-          {/* เวทีซ้อนรูปแบบ fade */}
           <div className={styles.singleStage}>
-            {images.map((src, i) => (
+            {loading && <div className={styles.skeleton}>กำลังโหลดรูป…</div>}
+            {!loading && err && (
+              <div className={styles.error} role="alert">
+                โหลดรูปไม่สำเร็จ • ใช้รูปสำรอง
+              </div>
+            )}
+
+            {items.map((it, i) => (
               <img
-                key={i}
-                src={src}
-                alt={`slide ${i + 1} of ${len}`}
-                className={`${styles.singleImage} ${
-                  i === idx ? styles.active : ""
-                }`}
+                key={`${it.src}-${i}`}
+                src={it.src}
+                alt={it.alt || `slide ${i + 1}`}
+                className={`${styles.singleImage} ${i === idx ? styles.active : ""}`}
                 loading="lazy"
+                decoding="async"
               />
             ))}
 
-            {/* 🔵 ไฟสถานะห้อง (มุมซ้ายบน) */}
             {showStatus && (
               <div
                 className={`${styles.statusBadge} ${styles[`st_${roomStatus}`]}`}
-                aria-label={`Room ${roomCode || ""} status: ${statusLabelMap[roomStatus]}`}
+                aria-label={`Room ${currentRoomCode || ""} status: ${statusLabelMap[roomStatus]}`}
                 title={
-                  roomCode
-                    ? `${roomCode}: ${statusLabelMap[roomStatus]}`
+                  currentRoomCode
+                    ? `${currentRoomCode}: ${statusLabelMap[roomStatus]}`
                     : statusLabelMap[roomStatus]
                 }
               >
                 <span className={styles.dot} />
-                {roomCode && <span className={styles.statusText}>{roomCode}</span>}
+                {currentRoomCode && <span className={styles.statusText}>{currentRoomCode}</span>}
               </div>
             )}
 
-            {/* แถบข้อมูลทับด้านล่าง */}
             <div className={styles.overlayCard}>
               <div className={styles.overlayTop}>
                 <span className={styles.overlayTitle}>{info.title}</span>
@@ -141,69 +200,38 @@ const Sliderhome = ({
         </div>
       )}
 
-      {/* Expanded 2:1 พร้อมข้อมูลยาว */}
       {expanded && (
-        <div
-          className={styles.expandedOverlay}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Image detail"
-        >
-          <div
-            className={`${styles.expandedCard} ${
-              rounded ? styles.rounded : ""
-            }`}
-          >
+        <div className={styles.expandedOverlay} role="dialog" aria-modal="true" aria-label="Image detail">
+          <div className={`${styles.expandedCard} ${rounded ? styles.rounded : ""}`}>
             <div className={styles.split}>
               <div className={styles.media} onClick={closeExpanded}>
-                <img src={images[idx]} alt={info.title} />
-                {/* ไฟสถานะซ้ำใน expanded มุมบนซ้าย */}
+                {!!len && <img src={items[idx]?.src} alt={items[idx]?.alt || info.title} />}
                 {showStatus && (
                   <div
                     className={`${styles.statusBadge} ${styles[`st_${roomStatus}`]} ${styles.statusOnMedia}`}
                     title={
-                      roomCode
-                        ? `${roomCode}: ${statusLabelMap[roomStatus]}`
+                      currentRoomCode
+                        ? `${currentRoomCode}: ${statusLabelMap[roomStatus]}`
                         : statusLabelMap[roomStatus]
                     }
                   >
                     <span className={styles.dot} />
-                    {roomCode && <span className={styles.statusText}>{roomCode}</span>}
+                    {currentRoomCode && <span className={styles.statusText}>{currentRoomCode}</span>}
                   </div>
                 )}
               </div>
               <aside className={styles.info}>
                 <div className={styles.infoHeader}>
                   <h3 className={styles.infoTitle}>{info.title}</h3>
-                  <button
-                    className={styles.closeBtn}
-                    onClick={closeExpanded}
-                    aria-label="Close"
-                  >
-                    ✕
-                  </button>
+                  <button className={styles.closeBtn} onClick={closeExpanded} aria-label="Close">✕</button>
                 </div>
                 <p className={styles.infoDesc}>{info.description}</p>
-                {info.extra && (
-                  <div className={styles.infoExtra}>{info.extra}</div>
-                )}
+                {info.extra && <div className={styles.infoExtra}>{info.extra}</div>}
                 {len > 1 && (
                   <div className={styles.expandedNav}>
-                    <button
-                      onClick={() => setIdx((p) => safeIdx(p - 1))}
-                      aria-label="Previous"
-                    >
-                      ‹
-                    </button>
-                    <span>
-                      {safeIdx(idx) + 1} / {len}
-                    </span>
-                    <button
-                      onClick={() => setIdx((p) => safeIdx(p + 1))}
-                      aria-label="Next"
-                    >
-                      ›
-                    </button>
+                    <button onClick={() => setIdx((p) => safeIdx(p - 1))} aria-label="Previous">‹</button>
+                    <span>{safeIdx(idx) + 1} / {len}</span>
+                    <button onClick={() => setIdx((p) => safeIdx(p + 1))} aria-label="Next">›</button>
                   </div>
                 )}
               </aside>
