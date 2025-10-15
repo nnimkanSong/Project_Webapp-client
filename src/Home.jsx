@@ -168,6 +168,36 @@ const Home = () => {
               price: "E107",
               room: "E107",
             },
+            {
+              title: "Laboratory",
+              subtitle: "Computer Engineering",
+              price: "E107",
+              room: "E107",
+            },
+            {
+              title: "Laboratory",
+              subtitle: "Computer Engineering",
+              price: "E107",
+              room: "E107",
+            },
+            {
+              title: "Laboratory",
+              subtitle: "Computer Engineering",
+              price: "E107",
+              room: "E107",
+            },
+            {
+              title: "Laboratory",
+              subtitle: "Computer Engineering",
+              price: "E107",
+              room: "E107",
+            },
+            {
+              title: "Laboratory",
+              subtitle: "Computer Engineering",
+              price: "E107",
+              room: "E107",
+            }
           ]}
           interval={2400}
           rounded
@@ -186,6 +216,24 @@ const Home = () => {
               price: "E111",
               room: "E111",
             },
+            {
+              title: "Meeting",
+              subtitle: "Computer Engineering",
+              price: "E111",
+              room: "E111",
+            },
+            {
+              title: "Meeting",
+              subtitle: "Computer Engineering",
+              price: "E111",
+              room: "E111",
+            },
+            {
+              title: "Meeting",
+              subtitle: "Computer Engineering",
+              price: "E111",
+              room: "E111",
+            }
           ]}
           interval={3200}
           statusByRoom={statusByRoom}
@@ -203,6 +251,24 @@ const Home = () => {
               price: "E113",
               room: "E113",
             },
+            {
+              title: "Computer Club",
+              subtitle: "Computer Engineering",
+              price: "E113",
+              room: "E113",
+            },
+            {
+              title: "Computer Club",
+              subtitle: "Computer Engineering",
+              price: "E113",
+              room: "E113",
+            },
+            {
+              title: "Computer Club",
+              subtitle: "Computer Engineering",
+              price: "E113",
+              room: "E113",
+            },
           ]}
           interval={2000}
           rounded={false}
@@ -213,7 +279,8 @@ const Home = () => {
         {/* B317 */}
         <Sliderhome
           roomCode="B317"
-          fetchPath="/api/rooms/B317/images" // ← ดึงจาก DB
+          fetchPath="/api/rooms/B317/images"
+          statusByRoom={statusByRoom}
           details={[
             {
               title: "Server",
@@ -221,11 +288,25 @@ const Home = () => {
               price: "B317",
               room: "B317",
             },
+            {
+              title: "Server",
+              subtitle: "Computer Engineering",
+              price: "B317",
+              room: "B317",
+            },
+            {
+              title: "Server",
+              subtitle: "Computer Engineering",
+              price: "B317",
+              room: "B317",
+            },
+            {
+              title: "Server",
+              subtitle: "Computer Engineering",
+              price: "B317",
+              room: "B317",
+            },
           ]}
-          interval={2000}
-          rounded={false}
-          statusByRoom={statusByRoom}
-          showStatus
         />
       </div>
 

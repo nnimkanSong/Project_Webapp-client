@@ -1,13 +1,13 @@
 // Sidebar.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import "../css/sidebar.css";
-import { Power , CalendarCheck} from "lucide-react";
+import { Power } from "lucide-react";
 import Swal from "sweetalert2";
 import axios from "axios";
 import { VscArchive } from "react-icons/vsc";
-import { Shield, ShieldCheck, ShieldUser, UserCog, Crown } from "lucide-react";
-<CalendarCheck size={14} />
+import { ShieldUser } from "lucide-react";
+// ⛔️ ลบ <CalendarCheck size={14} /> ที่ลอยอยู่ทิ้ง และไม่ต้อง import CalendarCheck
 
 const items = [
   { key: "profile", label: "Profile", icon: ProfileIcon },
@@ -18,6 +18,7 @@ const items = [
   { key: "users", label: "Users Management", icon: UsersIcon },
   { key: "logout", label: "Logout", icon: Power }, // จะไม่เรนเดอร์ในเมนู เราจะไปวางที่ footer
 ];
+
 const PATH_BY_KEY = {
   admin: "/admin/dashboard",
   dashboard: "/admin/dashboard",
@@ -30,8 +31,50 @@ const PATH_BY_KEY = {
 
 export default function Sidebar({ initialCollapsed = false, onSelect, setAuth }) {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
+  const [pendingCount, setPendingCount] = useState(0); // ✅ ตัวนับจาก DB
   const navigate = useNavigate();
   const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
+  // ✅ ดึง count จาก DB เท่านั้น + ฟัง event ให้รีเฟรช
+  useEffect(() => {
+    let cancel = false;
+
+    async function fetchCount() {
+      try {
+        const { data } = await axios.get(
+          `${BASE_URL}/api/admin/history/bookings/count?status=pending`,
+          { withCredentials: true }
+        );
+        const n = Number(data?.count ?? 0);
+        if (!cancel) setPendingCount(Number.isFinite(n) ? n : 0);
+        // console.log("[Sidebar] pending COUNT =>", n);
+      } catch (e) {
+        console.error("[Sidebar] count error:", e?.response?.status || e?.message);
+        if (!cancel) setPendingCount(0);
+      }
+    }
+
+    fetchCount();
+
+    // รีเฟรชเมื่อหน้าโฟกัส/กลับมาแอคทีฟ และเมื่อมีอีเวนต์จากหน้าจออื่น
+    const onRefresh = () => fetchCount();
+    const onFocus = () => fetchCount();
+
+    window.addEventListener("rb:refresh-pending", onRefresh);
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+
+    // (ออปชัน) ดึงทุกๆ 30 วิ
+    // const t = setInterval(fetchCount, 30000);
+
+    return () => {
+      cancel = true;
+      window.removeEventListener("rb:refresh-pending", onRefresh);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+      // clearInterval(t);
+    };
+  }, [BASE_URL]);
 
   // ✅ Logout + SweetAlert2
   function handleLogout() {
@@ -82,6 +125,7 @@ export default function Sidebar({ initialCollapsed = false, onSelect, setAuth })
           .filter(i => i.key !== "logout")
           .map(({ key, label, icon: Icon }) => {
             const to = PATH_BY_KEY[key] || "/admin/booking";
+            const isBooking = key === "booking";
             return (
               <NavLink
                 key={key}
@@ -92,7 +136,14 @@ export default function Sidebar({ initialCollapsed = false, onSelect, setAuth })
               >
                 <span className="sb__icon"><Icon /></span>
                 {!collapsed && <span className="sb__label">{label}</span>}
-                {!collapsed && key === "booking" && <span className="sb__badge">New</span>}
+
+                {/* ✅ แสดงจำนวน pending จาก DB */}
+                {!collapsed && isBooking && (
+                  <span className={`sb__badge sb__badge--count ${pendingCount === 0 ? "is-zero" : ""}`}>
+                    {pendingCount > 99 ? "99+" : pendingCount}
+                  </span>
+                )}
+
                 {!collapsed && key === "dashboard" && <span className="sb__chev">›</span>}
               </NavLink>
             );

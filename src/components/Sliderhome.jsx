@@ -93,9 +93,9 @@ const Sliderhome = ({
   const info = useMemo(() => {
     const d = details[safeIdx(idx)] || {};
     return {
-      title: d.title || `JA Resorts`,
-      subtitle: d.subtitle || `Hatta, Jabeljais`,
-      price: d.price || `AED 456`,
+      title: d.title || ``,
+      subtitle: d.subtitle || ``,
+      price: d.price || ``,
       description: d.description || `รายละเอียดของรูปที่ ${safeIdx(idx) + 1}`,
       extra: d.extra || null,
       room: d.room || roomCode || null,
