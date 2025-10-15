@@ -147,6 +147,7 @@
   grid-template-columns: 2fr 1fr;
   gap: 0;
   height: 100%;
+  scale: 0.9;
 }
 .media {
   position: relative;
