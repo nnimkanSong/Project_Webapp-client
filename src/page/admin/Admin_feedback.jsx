@@ -1,6 +1,9 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import styles from "../../css/Feedback_admin.module.css";
+
+/* ---------- ช่วยอ่าน ENV ของฝั่ง frontend ---------- */
+const API_BASE = import.meta.env.VITE_API_BASE_URL; // ต้องตั้งใน Vercel เป็น https://project-webapp-dku4.onrender.com
 
 /* ---------------- Chart Component ---------------- */
 function Chart({ data }) {
@@ -8,34 +11,19 @@ function Chart({ data }) {
   const [activeData, setActiveData] = useState(null);
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
 
-  // รวม feedback ต่อห้อง
   const grouped = data.reduce((acc, f) => {
     acc[f.room] = (acc[f.room] || 0) + 1;
     return acc;
   }, {});
-
-  const chartData = Object.keys(grouped).map(room => ({
-    name: room,
-    value: grouped[room],
-  }));
-
+  const chartData = Object.keys(grouped).map(room => ({ name: room, value: grouped[room] }));
   const total = chartData.reduce((sum, item) => sum + item.value, 0);
-
-  // ✅ ย้าย mouse move/leave มาไว้เฉพาะพื้นที่กราฟ
-  const handleAreaMouseMove = e => {
-    setCursorPos({ x: e.clientX, y: e.clientY });
-  };
-  const handleAreaMouseLeave = () => {
-    setActiveData(null);
-  };
 
   return (
     <div className={styles.donutWrapper}>
-      {/* โซนตีกรอบเฉพาะกราฟ */}
       <div
         className={styles.chartArea}
-        onMouseMove={handleAreaMouseMove}
-        onMouseLeave={handleAreaMouseLeave}
+        onMouseMove={e => setCursorPos({ x: e.clientX, y: e.clientY })}
+        onMouseLeave={() => setActiveData(null)}
       >
         <ResponsiveContainer width="100%" height={240}>
           <PieChart>
@@ -50,7 +38,7 @@ function Chart({ data }) {
               stroke="#fff"
               strokeWidth={2}
               onMouseEnter={(_, index) => setActiveData(chartData[index])}
-              onMouseLeave={() => setActiveData(null)}  // ออกจาก slice ก็เคลียร์
+              onMouseLeave={() => setActiveData(null)}
             >
               {chartData.map((entry, index) => (
                 <Cell
@@ -84,10 +72,7 @@ function Chart({ data }) {
       <ul className={styles.donutLegend}>
         {chartData.map((entry, index) => (
           <li key={index}>
-            <span
-              className={styles.legendDot}
-              style={{ background: COLORS[index % COLORS.length] }}
-            />
+            <span className={styles.legendDot} style={{ background: COLORS[index % COLORS.length] }} />
             {entry.name}
           </li>
         ))}
@@ -150,10 +135,15 @@ export default function Feedback() {
   const [filterRoom, setFilterRoom] = useState("all");
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  
+
+  // 🔁 ดึงข้อมูลจาก API จริง (ไม่ใช้ localhost)
   useEffect(() => {
-    fetch("http://localhost:5000/api/admin/feedbacks")
-      .then(res => res.json())
+    const url = `${API_BASE}/api/admin/feedbacks`;
+    fetch(url, { credentials: "include" })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then(data => {
         const mapped = data.map(f => ({
           userId: f.studentNumber,
@@ -169,19 +159,14 @@ export default function Feedback() {
   }, []);
 
   useEffect(() => {
-  const handleClickOutside = e => {
-    if (!e.target.closest(`.${styles.customDropdown}`)) {
-      setDropdownOpen(false);
-    }
-  };
-  document.addEventListener("click", handleClickOutside);
-  return () => document.removeEventListener("click", handleClickOutside);
-}, []);
+    const handleClickOutside = e => {
+      if (!e.target.closest(`.${styles.customDropdown}`)) setDropdownOpen(false);
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
 
-
-  const filteredFeedback = feedbacks.filter(f =>
-    filterRoom === "all" ? true : f.room === filterRoom
-  );
+  const filteredFeedback = feedbacks.filter(f => (filterRoom === "all" ? true : f.room === filterRoom));
 
   const roomStats = feedbacks.reduce((acc, f) => {
     if (!acc[f.room]) acc[f.room] = { total: 0, sumRating: 0 };
@@ -189,7 +174,6 @@ export default function Feedback() {
     acc[f.room].sumRating += f.rating;
     return acc;
   }, {});
-
   const roomSummary = Object.keys(roomStats).map(room => ({
     room,
     total: roomStats[room].total,
@@ -197,10 +181,9 @@ export default function Feedback() {
   }));
 
   const totalFeedback = feedbacks.length;
-  const overallAvg =
-    feedbacks.length > 0
-      ? (feedbacks.reduce((acc, f) => acc + f.rating, 0) / feedbacks.length).toFixed(2)
-      : 0;
+  const overallAvg = feedbacks.length > 0
+    ? (feedbacks.reduce((acc, f) => acc + f.rating, 0) / feedbacks.length).toFixed(2)
+    : 0;
 
   return (
     <div className={styles.fbPage}>
@@ -248,7 +231,6 @@ export default function Feedback() {
           <div className={styles.filter}>
             <small>Filter by room</small>
 
-            {/* ✅ Custom Dropdown */}
             <div
               className={`${styles.customDropdown} ${dropdownOpen ? styles.open : ""}`}
               onClick={() => setDropdownOpen(prev => !prev)}
@@ -260,27 +242,17 @@ export default function Feedback() {
 
               {dropdownOpen && (
                 <ul className={styles.dropdownList}>
-                  {/* All rooms */}
                   <li
-                    onClick={e => {
-                      e.stopPropagation();
-                      setFilterRoom("all");
-                      setDropdownOpen(false); // ✅ ปิดทันที
-                    }}
+                    onClick={e => { e.stopPropagation(); setFilterRoom("all"); setDropdownOpen(false); }}
                     className={filterRoom === "all" ? styles.selected : ""}
                   >
                     All Rooms
                   </li>
 
-                  {/* Rooms */}
                   {roomSummary.map(r => (
                     <li
                       key={r.room}
-                      onClick={e => {
-                        e.stopPropagation();
-                        setFilterRoom(r.room);
-                        setDropdownOpen(false); // ✅ ปิดทันที
-                      }}
+                      onClick={e => { e.stopPropagation(); setFilterRoom(r.room); setDropdownOpen(false); }}
                       className={filterRoom === r.room ? styles.selected : ""}
                     >
                       {r.room}
