@@ -5,7 +5,6 @@ import styles from "../../css/Feedback_admin.module.css";
 /* ---------- ช่วยอ่าน ENV ของฝั่ง frontend ---------- */
 const API_BASE = import.meta.env.VITE_API_BASE_URL; // ต้องตั้งใน Vercel เป็น https://project-webapp-dku4.onrender.com
 
-/* ---------------- Chart Component ---------------- */
 function Chart({ data }) {
   const COLORS = ["var(--c1)", "var(--c2)", "var(--c3)", "var(--c4)"];
   const [activeData, setActiveData] = useState(null);
