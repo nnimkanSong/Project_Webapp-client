@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay, EffectFade, Navigation, A11y } from "swiper/modules";
-import { api } from "../api"; // ✅ ใช้ axios instance เดิมของโปรเจกต์
+import { api } from "../api";
 
 import "swiper/css";
 import "swiper/css/pagination";
@@ -10,23 +10,16 @@ import "swiper/css/navigation";
 import "swiper/css/effect-fade";
 import "../css/Slider.css";
 
-/**
- * Helper: แทรก Cloudinary transformation แบบปลอดภัย (ถ้าเป็น Cloudinary URL)
- * ตัวอย่าง: .../upload/v123/abc.jpg -> .../upload/w_1600,c_fill,q_auto,f_auto/abc.jpg
- */
-function withCloudinaryTransform(url, transform = "w_1600,c_fill,q_auto,f_auto") {
+/** แทรก Cloudinary transformation (ถ้าเป็นลิงก์ Cloudinary) */
+function withCloudinaryTransform(url, transform = "f_auto,q_auto,dpr_auto,w_1600,c_fill,g_auto") {
   try {
     const u = new URL(url);
     if (!/res\.cloudinary\.com/i.test(u.hostname)) return url;
-    // ถ้ามี segment 'upload' อยู่ ให้สอด param หลังมัน
     const parts = u.pathname.split("/");
     const idx = parts.findIndex((p) => p === "upload");
     if (idx !== -1) {
-      // กันกรณีมี transform เดิมอยู่แล้ว
       const next = parts[idx + 1] || "";
-      if (!next || !/^[a-z0-9_,-]+$/i.test(next)) {
-        parts.splice(idx + 1, 0, transform);
-      }
+      if (!next || !/^[a-z0-9_,:-]+$/i.test(next)) parts.splice(idx + 1, 0, transform);
       u.pathname = parts.join("/");
       return u.toString();
     }
@@ -36,40 +29,59 @@ function withCloudinaryTransform(url, transform = "w_1600,c_fill,q_auto,f_auto")
   }
 }
 
-/**
- * Normalize ให้กลายเป็น { src, alt } เสมอ
- */
-function normalizeImages(raw = [], { roomCode = "E113" } = {}) {
+/** แปลง payload หลากหลายรูปแบบ → {src,alt} และแทรก transform */
+function normalizeImages(raw = [], { roomCode = "ROOM" } = {}) {
   return raw
     .map((item, i) => {
-      if (typeof item === "string") {
-        return { src: item, alt: `${roomCode} • ${i + 1}` };
-      }
-      const src =
-        item?.url ||
-        item?.secure_url ||
-        item?.path ||
-        item?.src ||
-        item?.imageUrl ||
-        "";
+      if (typeof item === "string") return { src: item, alt: `${roomCode} • ${i + 1}` };
+      const src = item?.url || item?.secure_url || item?.imageUrl || item?.src || item?.path || "";
       const alt = item?.alt || item?.caption || item?.label || `${roomCode} • ${i + 1}`;
-      return src ? { src, alt } : null;
+      return src ? { src, alt, isPrimary: !!item?.isPrimary, sortOrder: Number(item?.sortOrder ?? i) } : null;
     })
     .filter(Boolean)
-    .map((it) => ({ ...it, src: withCloudinaryTransform(it.src) }));
+    .map((it) => ({ ...it, src: withCloudinaryTransform(it.src) }))
+    // กันหลังบ้านไม่ sort: ให้ primary มาก่อน แล้วค่อย sortOrder
+    .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.sortOrder - b.sortOrder);
+}
+
+/** ดึงให้หมด (รองรับ cursor แบบทั่วไป) */
+async function fetchAll(apiInstance, path, params = {}) {
+  const all = [];
+  let next = null, page = 0;
+
+  do {
+    const res = await apiInstance.get(path, { params: { ...params, pageToken: next, page: next } });
+    const data = res?.data ?? {};
+    const items = Array.isArray(data)
+      ? data
+      : Array.isArray(data.items) ? data.items
+      : Array.isArray(data.data) ? data.data
+      : [];
+
+    all.push(...items);
+
+    // รองรับหลายชื่อ cursor
+    next = data.nextPageToken || data.nextCursor || data.next || null;
+    page += 1;
+
+    // กัน loop ไม่สิ้นสุด
+    if (page > 50) break;
+  } while (next);
+
+  return all;
 }
 
 /**
  * Slider
  * props:
- *  - roomCode: ใช้ประกอบ alt / chip (ดีสำหรับสไลด์รูปห้อง)
- *  - fetchPath: endpoint API ที่จะเรียก เช่น "/media?room=E113" หรือ "/rooms/E113/images"
- *  - query:     ถ้าต้องการ set params เพิ่ม เช่น { limit: 8 }
- *  - fallback:  array fallback เมื่อโหลดไม่ได้
+ *  - roomCode: โค้ดห้อง (ใช้แสดง chip/alt)
+ *  - fetchPath: endpoint (ถ้าไม่ส่ง จะเดาเป็น /api/rooms/${roomCode}/images)
+ *  - query: query string เพิ่มเติม (เช่น { limit: 50 } – แต่ฟังก์ชันนี้จะไล่ดึงทุกหน้าให้อยู่แล้ว)
+ *  - fallback: รูปสำรอง
  */
 export default function Slider({
   roomCode = "E113",
-  fetchPath = "/media?room=E113", // ✅ ปรับให้ตรงกับ backend ของคุณ
+  fetchPath, // ถ้าไม่ส่ง จะเดาให้ด้านล่าง
   query = {},
   fallback = [
     { src: "/E113_1.jpg", alt: "Room 1" },
@@ -83,29 +95,17 @@ export default function Slider({
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
+  const finalPath = fetchPath || `/api/rooms/${roomCode}/images`;
+
   useEffect(() => {
     let mounted = true;
     (async () => {
       setLoading(true);
       setErr("");
       try {
-        // 🔧 ถ้า fetchPath เป็นแบบมี query string อยู่แล้ว ก็ใช้ได้เลย
-        const res = await api.get(fetchPath, { params: query });
-        const data = res?.data ?? [];
-
-        // รองรับกรณี data ห่อเป็น { items: [...] } หรือ { data: [...] }
-        const raw = Array.isArray(data)
-          ? data
-          : Array.isArray(data?.items)
-          ? data.items
-          : Array.isArray(data?.data)
-          ? data.data
-          : [];
-
+        const raw = await fetchAll(api, finalPath, query);
         const imgs = normalizeImages(raw, { roomCode });
-        if (mounted) {
-          setImages(imgs.length ? imgs : fallback);
-        }
+        if (mounted) setImages(imgs.length ? imgs : fallback);
       } catch (e) {
         console.warn("⚠️ Load images error:", e);
         if (mounted) {
@@ -116,10 +116,8 @@ export default function Slider({
         if (mounted) setLoading(false);
       }
     })();
-    return () => {
-      mounted = false;
-    };
-  }, [fetchPath, JSON.stringify(query), roomCode]);
+    return () => { mounted = false; };
+  }, [finalPath, JSON.stringify(query), roomCode]);
 
   return (
     <div className="slider-root">
@@ -173,9 +171,7 @@ export default function Slider({
                   className="kenburns"
                 />
                 <div className="slide-overlay" aria-hidden>
-                  <div className="slide-chip">
-                    {`${roomCode} • ${i + 1}/${images.length}`}
-                  </div>
+                  <div className="slide-chip">{`${roomCode} • ${i + 1}/${images.length}`}</div>
                   <h3 className="slide-title">{img.alt || " "}</h3>
                 </div>
               </div>

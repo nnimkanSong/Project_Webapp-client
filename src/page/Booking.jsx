@@ -14,7 +14,6 @@ function Booking() {
     d.setHours(0, 0, 0, 0);
     return d.toISOString().split("T")[0];
   }, []);
-  
 
   const [rooms, setRooms] = useState([]);
   const [loadingRooms, setLoadingRooms] = useState(true);
@@ -39,7 +38,11 @@ function Booking() {
         const r = await api.get("/api/rooms");
         setRooms(Array.isArray(r.data?.rooms) ? r.data.rooms : []);
       } catch (e) {
-        console.error("Fetch /api/rooms error:", e?.response?.status, e?.response?.data);
+        console.error(
+          "Fetch /api/rooms error:",
+          e?.response?.status,
+          e?.response?.data
+        );
         const msg =
           e?.response?.data?.message ||
           e?.response?.data?.error ||
@@ -70,13 +73,24 @@ function Booking() {
     const { roomId, date, startTime, endTime, people, objective } = formData;
 
     // ตรวจความครบถ้วน
-    if (!roomId || !date || !startTime || !endTime || !people || !objective.trim()) {
+    if (
+      !roomId ||
+      !date ||
+      !startTime ||
+      !endTime ||
+      !people ||
+      !objective.trim()
+    ) {
       Swal.fire("Failure", "กรุณากรอกข้อมูลให้ครบทุกช่อง", "error");
       return;
     }
     // เวลาเริ่ม-สิ้นสุด
     if (endTime <= startTime) {
-      Swal.fire("เวลาไม่ถูกต้อง", "กรุณาเลือกเวลาสิ้นสุดให้มากกว่าเวลาเริ่ม", "warning");
+      Swal.fire(
+        "เวลาไม่ถูกต้อง",
+        "กรุณาเลือกเวลาสิ้นสุดให้มากกว่าเวลาเริ่ม",
+        "warning"
+      );
       return;
     }
 
@@ -131,7 +145,10 @@ function Booking() {
     <div className="bookg-page">
       <div className="bookg-content">
         <div className="bookg-image">
-          <Slider />
+          <Slider
+            fetchPath="/api/images" // ✅ ดึงทุกห้อง
+            roomCode="ALL" // ใช้แสดงบนชิปเฉยๆ ไม่ได้ไปกรอง
+          />
         </div>
         <div className="bookg-form-card">
           <h2>Booking</h2>
@@ -219,7 +236,11 @@ function Booking() {
               >
                 Back
               </button>
-              <button type="submit" className="bookg-btn-primary" disabled={submitting}>
+              <button
+                type="submit"
+                className="bookg-btn-primary"
+                disabled={submitting}
+              >
                 {submitting ? "Booking..." : "Book"}
               </button>
             </div>
@@ -229,6 +250,5 @@ function Booking() {
     </div>
   );
 }
-
 
 export default Booking;
