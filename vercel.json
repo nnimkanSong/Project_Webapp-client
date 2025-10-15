@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "client/index.html",
+      "src": "9f2f74ebd7a1b9e556efd793ac4d6e40ed72e136/index.html",
       "use": "@vercel/static-build"
     }
   ],
   "routes": [
     { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "client/index.html" }
+    { "src": "/(.*)", "dest": "index.html" }
   ],
-  "buildCommand": "npm --prefix client ci && npm --prefix client run build",
-  "outputDirectory": "client/dist"
+  "buildCommand": "npm --prefix 9f2f74ebd7a1b9e556efd793ac4d6e40ed72e136 ci && npm --prefix 9f2f74ebd7a1b9e556efd793ac4d6e40ed72e136 run build",
+  "outputDirectory": "9f2f74ebd7a1b9e556efd793ac4d6e40ed72e136/dist"
 }
