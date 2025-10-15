@@ -105,7 +105,7 @@ const Nav = ({ isAuthenticated, setAuth }) => {
       <header ref={shellRef} className={`nav-shell ${hidden ? "nav-hide" : ""}`}>
         <nav className={`nav-inner ${scrolled ? "is-scrolled" : ""}`}>
           <Link className="nav-logo" to="/">
-            <img src="/Logo_Home.png" alt="Logo" />
+            <img src="/Heow2.png" alt="Logo" />
           </Link>
 
           <ul className="nav-menu">
