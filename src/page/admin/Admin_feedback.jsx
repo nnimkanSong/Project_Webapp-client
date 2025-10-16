@@ -163,7 +163,7 @@ export default function Feedback() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   
   useEffect(() => {
-    fetch("http://localhost:5000/api/admin/feedbacks")
+    fetch("https://www.kmitl-rbs.online/api/admin/feedbacks")
       .then(res => res.json())
       .then(data => {
         const mapped = data.map(f => ({
