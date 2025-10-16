@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
-import { api } from "../../api"; // <-- แก้ path ให้ตรงโปรเจกต์
+import { api } from "../../api";
 import "../../css/Admin_usermanagement.css";
 
 const PLACEHOLDER_AVATAR =
@@ -11,25 +11,36 @@ const ROLES = [
   { key: "admin", label: "Admin" },
 ];
 
+// ✅ helper: ตรวจว่าเป็น admin หรือไม่ (รองรับหลายชื่อฟิลด์และตัวสะกด)
+const isAdminRole = (u) => {
+  const role = String(
+    u.role ?? u.userRole ?? u.userType ?? u.user_type ?? u.type ?? ""
+  ).toLowerCase();
+  return ["admin", "superadmin", "staff"].includes(role);
+};
+
 export default function AdminUserManagement() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
-  const [roleFilter, setRoleFilter] = useState("user"); // เริ่มที่ User ตามภาพตัวอย่าง
+  const [roleFilter, setRoleFilter] = useState("user");
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
-    const byRole = rows.filter((r) =>
-      roleFilter ? (r.role || "user").toLowerCase() === roleFilter : true
-    );
+    const listByTab =
+      roleFilter === "admin"
+        ? rows.filter((r) => isAdminRole(r.__raw || r))
+        : rows.filter((r) => !isAdminRole(r.__raw || r));
+
     const q = search.trim().toLowerCase();
-    if (!q) return byRole;
-    return byRole.filter(
-      (r) =>
-        (r.name || "").toLowerCase().includes(q) ||
-        (r.studentId || "").toLowerCase().includes(q) ||
-        (r.email || "").toLowerCase().includes(q)
-    );
+    if (!q) return listByTab;
+
+    return listByTab.filter((r) => {
+      const name = (r.name || "").toLowerCase();
+      const sid = (r.studentId || "").toLowerCase();
+      const email = (r.email || "").toLowerCase();
+      return name.includes(q) || sid.includes(q) || email.includes(q);
+    });
   }, [rows, roleFilter, search]);
 
   useEffect(() => {
@@ -41,45 +52,29 @@ export default function AdminUserManagement() {
     };
 
     const normalizeUser = (u = {}) => {
-      // สร้างชื่อจากหลายแหล่ง ถ้าไม่มีเลย ใช้ local-part ของอีเมล
-      const firstName = pick(u, [
-        "username",
-        "firstname",
-        "givenName",
-        "given_name",
-      ]);
-      const lastName = pick(u, [
-        "lastName",
-        "lastname",
-        "familyName",
-        "family_name",
-      ]);
-      const fullname =
-        pick(u, [
-          "name",
-          "fullName",
-          "full_name",
-          "displayName",
-          "display_name",
-        ]) || [firstName, lastName].filter(Boolean).join(" ").trim();
+      // ---- name ----
+      const firstName = pick(u, ["username", "firstname", "givenName", "given_name"]);
+      const lastName  = pick(u, ["lastName", "lastname", "familyName", "family_name"]);
+      const fullName  =
+        pick(u, ["name", "fullName", "full_name", "displayName", "display_name"]) ||
+        [firstName, lastName].filter(Boolean).join(" ").trim();
 
-      const email = pick(u, ["email", "mail", "username", "userEmail"]);
-      const studentId =
-        pick(u, [
-          "studentNumber"
-        ]) || "";
+      const email = pick(u, ["email", "mail", "userEmail", "username"]);
+      const studentId = pick(u, ["studentNumber", "studentId", "student_id"]) || "";
 
-      const role = (pick(u, ["role", "userRole"]) || "user").toLowerCase();
+      // ✅ role: รองรับหลายชื่อฟิลด์
+      const role =
+        (pick(u, ["role", "userRole", "userType", "user_type", "type"]) || "user")
+          .toLowerCase();
 
       const avatarUrl =
         pick(u, ["avatarUrl", "avatar", "photoURL", "photoUrl", "image"]) || "";
 
       const verificationMethod = pick(u, ["verificationMethod"]) || "";
 
-      // ถ้ายังไม่มีชื่อจริง ๆ ใช้อีเมลก่อน @ เป็นชื่อ
       const fallbackName =
-        fullname && fullname.trim().length
-          ? fullname
+        fullName && fullName.trim().length
+          ? fullName
           : (email || "").split("@")[0] || "User";
 
       return {
@@ -90,7 +85,7 @@ export default function AdminUserManagement() {
         role,
         avatarUrl,
         verificationMethod,
-        __raw: u, // เผื่อดีบัก
+        __raw: u, // เก็บต้นฉบับไว้ให้ isAdminRole ใช้
       };
     };
 
@@ -98,16 +93,12 @@ export default function AdminUserManagement() {
       try {
         setLoading(true);
         setErr("");
-        const res = await api.get("/api/admin/users", {
-          withCredentials: true,
-        });
+        // จะใช้รวมแล้วกรองบน FE หรือจะใส่ ?role= ตาม tab ก็ได้ (ดูตัวเลือกด้านล่าง)
+        const res = await api.get("/api/admin/users", { withCredentials: true });
         const data = Array.isArray(res.data) ? res.data : res.data?.users || [];
-        const normalized = data.map(normalizeUser);
-        setRows(normalized);
+        setRows(data.map(normalizeUser));
       } catch (e) {
-        setErr(
-          e?.response?.data?.message || e?.message || "โหลดข้อมูลไม่สำเร็จ"
-        );
+        setErr(e?.response?.data?.message || e?.message || "โหลดข้อมูลไม่สำเร็จ");
       } finally {
         setLoading(false);
       }
@@ -124,7 +115,7 @@ export default function AdminUserManagement() {
     const verificationMethod = u.verificationMethod || "-";
 
     Swal.fire({
-      width: '90%',                   // ✅ ให้ยืดหยุ่นบนจอเล็ก
+      width: "50%",
       maxWidth: 840,
       showConfirmButton: true,
       confirmButtonText: "ปิด",
@@ -160,12 +151,7 @@ export default function AdminUserManagement() {
     try {
       await api.delete(`/api/admin/users/${u._id}`, { withCredentials: true });
       setRows((prev) => prev.filter((x) => x._id !== u._id));
-      Swal.fire({
-        icon: "success",
-        title: "ลบสำเร็จ",
-        timer: 1200,
-        showConfirmButton: false,
-      });
+      Swal.fire({ icon: "success", title: "ลบสำเร็จ", timer: 1200, showConfirmButton: false });
     } catch (e) {
       Swal.fire({
         icon: "error",
@@ -217,32 +203,18 @@ export default function AdminUserManagement() {
           {!loading &&
             !err &&
             filtered.map((u, idx) => (
-              <div
-                className={`um-row ${idx % 2 ? "alt" : ""}`}
-                key={u._id || idx}
-              >
+              <div className={`um-row ${idx % 2 ? "alt" : ""}`} key={u._id || idx}>
                 <div className="um-cell">
                   <div className="um-name">
-                    <img
-                      src={u.avatarUrl || PLACEHOLDER_AVATAR}
-                      alt=""
-                      className="um-avatar"
-                    />
+                    <img src={u.avatarUrl || PLACEHOLDER_AVATAR} alt="" className="um-avatar" />
                     <span>{u.name || "-"}</span>
                   </div>
                 </div>
                 <div className="um-cell">{u.studentId || "-"}</div>
                 <div className="um-cell">{u.email || "-"}</div>
                 <div className="um-cell right">
-                  <button className="btn btn-view" onClick={() => onView(u)}>
-                    ดู
-                  </button>
-                  <button
-                    className="btn btn-danger"
-                    onClick={() => onDelete(u)}
-                  >
-                    Delete
-                  </button>
+                  <button className="btn btn-view" onClick={() => onView(u)}>ดู</button>
+                  <button className="btn btn-danger" onClick={() => onDelete(u)}>Delete</button>
                 </div>
               </div>
             ))}
