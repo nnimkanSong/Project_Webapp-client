@@ -220,9 +220,20 @@ body {
 
 .comment,
 .equip {
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  display: block;
+  max-width: 100%;
+}
+
+/* ✅ สำหรับหลายบรรทัด (ถ้าต้องการใช้) */
+.commentMultiline {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;  /* ตัดหลัง 2 บรรทัด */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 p {
@@ -304,6 +315,42 @@ p {
   background: #c0392b;
   transform: scale(1.05);
 }
+
+.scrollBox {
+  max-height: 180px;        /* ความสูงสูงสุดของกล่องข้อความ */
+  overflow-y: auto;         /* ✅ ให้เลื่อนในแนวตั้งได้ */
+  overflow-x: hidden;
+  background: #e0dfdc;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #f3f1ed;
+  margin: 6px 0 14px;
+  white-space: pre-wrap;     /* ให้ขึ้นบรรทัดได้ */
+  line-height: 1.5;
+  font-size: 15px;
+  scrollbar-width: thin;
+  scrollbar-color: #c2c2c2 #f8f8f8;
+}
+
+/* ✅ scrollbar สวยๆ (Chrome / Edge / Safari) */
+.scrollBox::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollBox::-webkit-scrollbar-thumb {
+  background: #c2c2c2;
+  border-radius: 6px;
+}
+
+.scrollBox::-webkit-scrollbar-thumb:hover {
+  background: #a7a7a7;
+}
+
+.scrollBox::-webkit-scrollbar-track {
+  background: #f8f8f8;
+  border-radius: 6px;
+}
+
 
 /* ---------------- Donut Chart ---------------- */
 .donutWrapper {
