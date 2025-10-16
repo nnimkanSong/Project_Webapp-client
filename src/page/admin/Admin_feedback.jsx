@@ -162,22 +162,34 @@ export default function Feedback() {
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   
-  useEffect(() => {
-    fetch("https://kmitl-rbs.online/api/admin/feedbacks"
-      .then(res => res.json())
-      .then(data => {
-        const mapped = data.map(f => ({
-          userId: f.studentNumber,
-          room: f.room,
-          date: new Date(f.createdAt).toLocaleDateString("th-TH"),
-          rating: f.rating,
-          comment: f.comment,
-          equipment: f.equipment,
-        }));
-        setFeedbacks(mapped);
-      })
-      .catch(err => console.error("Error fetching feedbacks:", err));
-  }, []);
+useEffect(() => {
+  const token = localStorage.getItem("token");
+
+  fetch("https://kmitl-rbs.online/api/admin/feedbacks", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    credentials: "include", // ถ้ามี cookie ด้วย
+  })
+    .then(res => {
+      if (!res.ok) throw new Error("Failed to fetch feedbacks");
+      return res.json();
+    })
+    .then(data => {
+      const mapped = data.map(f => ({
+        userId: f.studentNumber,
+        room: f.room,
+        date: new Date(f.createdAt).toLocaleDateString("th-TH"),
+        rating: f.rating,
+        comment: f.comment,
+        equipment: f.equipment,
+      }));
+      setFeedbacks(mapped);
+    })
+    .catch(err => console.error("Error fetching feedbacks:", err));
+}, []);
 
   useEffect(() => {
   const handleClickOutside = e => {
