@@ -13,7 +13,7 @@ function Chart({ data }) {
     acc[f.room] = (acc[f.room] || 0) + 1;
     return acc;
   }, {});
-
+  
   const chartData = Object.keys(grouped).map(room => ({
     name: room,
     value: grouped[room],
@@ -163,7 +163,7 @@ export default function Feedback() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   
   useEffect(() => {
-    fetch("http://localhost:5000/api/admin/feedbacks")
+    fetch("https://kmitl-rbs.online/api/admin/feedbacks"
       .then(res => res.json())
       .then(data => {
         const mapped = data.map(f => ({
