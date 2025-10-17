@@ -2,6 +2,9 @@ import React, { useEffect, useState, useRef } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import styles from "../../css/Feedback_admin.module.css";
 
+/* ---------- ช่วยอ่าน ENV ของฝั่ง frontend ---------- */
+const API_BASE = import.meta.env.VITE_API_BASE_URL; // ต้องตั้งใน Vercel เป็น https://project-webapp-dku4.onrender.com
+
 /* ---------------- Chart Component ---------------- */
 function Chart({ data }) {
   const COLORS = ["var(--c1)", "var(--c2)", "var(--c3)", "var(--c4)"];
@@ -13,7 +16,7 @@ function Chart({ data }) {
     acc[f.room] = (acc[f.room] || 0) + 1;
     return acc;
   }, {});
-  
+
   const chartData = Object.keys(grouped).map(room => ({
     name: room,
     value: grouped[room],
@@ -162,34 +165,26 @@ export default function Feedback() {
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   
-useEffect(() => {
-  const token = localStorage.getItem("token");
-
-  fetch("https://kmitl-rbs.online/api/admin/feedbacks", {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    credentials: "include", // ถ้ามี cookie ด้วย
-  })
-    .then(res => {
-      if (!res.ok) throw new Error("Failed to fetch feedbacks");
-      return res.json();
-    })
-    .then(data => {
-      const mapped = data.map(f => ({
-        userId: f.studentNumber,
-        room: f.room,
-        date: new Date(f.createdAt).toLocaleDateString("th-TH"),
-        rating: f.rating,
-        comment: f.comment,
-        equipment: f.equipment,
-      }));
-      setFeedbacks(mapped);
-    })
-    .catch(err => console.error("Error fetching feedbacks:", err));
-}, []);
+  useEffect(() => {
+    const url = `${API_BASE}/api/admin/feedbacks`;
+    fetch(url, { credentials: "include" })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        const mapped = data.map(f => ({
+          userId: f.studentNumber,
+          room: f.room,
+          date: new Date(f.createdAt).toLocaleDateString("th-TH"),
+          rating: f.rating,
+          comment: f.comment,
+          equipment: f.equipment,
+        }));
+        setFeedbacks(mapped);
+      })
+      .catch(err => console.error("Error fetching feedbacks:", err));
+  }, []);
 
   useEffect(() => {
   const handleClickOutside = e => {
