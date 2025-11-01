@@ -2,8 +2,8 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { HeadProvider } from "react-head";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import { HelmetProvider } from "react-helmet-async";
 import axios from "axios";
 
 import "@fontsource/noto-sans/400.css";
@@ -21,12 +21,12 @@ const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <HelmetProvider>
-      <BrowserRouter>
-        <GoogleOAuthProvider clientId={clientId}>
+    <BrowserRouter>
+      <GoogleOAuthProvider clientId={clientId}>
+        <HeadProvider>
           <App />
-        </GoogleOAuthProvider>
-      </BrowserRouter>
-    </HelmetProvider>
+        </HeadProvider>
+      </GoogleOAuthProvider>
+    </BrowserRouter>
   </React.StrictMode>
 );

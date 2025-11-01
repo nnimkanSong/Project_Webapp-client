@@ -1,6 +1,6 @@
 // Home.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link as HeadLink } from "react-head";
 import "./Home.css";
 import Sliderhome from "./components/Sliderhome";
 import { api } from "./api";
@@ -159,15 +159,18 @@ const Home = () => {
   return (
     <div className="pg-home">
       {/* ✅ Preload เฉพาะหน้า Home และให้ href ตรงกับ src */}
-      <Helmet>
-        <link rel="preload" as="image" href="/CHP_4173.jpg" />
-      </Helmet>
+      <HeadLink
+        rel="preload"
+        as="image"
+        href="/CHP_4173.jpg"
+        imagesizes="(max-width: 1170px) 100vw, 1170px"
+      />
 
       {/* HERO */}
       <CookieNotice />
       <div className="top">
         <img
-          src="/CHP_4173.jpg"            {/* ← เปลี่ยนจาก "./" เป็น "/" ให้ตรงกับ preload */}
+          src="/CHP_4173.jpg"
           alt="KMITL CE Building"
           loading="eager"
           decoding="async"
