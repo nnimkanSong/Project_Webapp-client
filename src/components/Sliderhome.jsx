@@ -201,25 +201,10 @@ const Sliderhome = ({
       )}
 
       {expanded && (
-        <div
-          className={styles.expandedOverlay}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Image detail"
-          tabIndex={-1}
-          onKeyDown={(e) => { if (e.key === "Escape") closeExpanded(); }}
-        >
-          <div
-            className={`${styles.expandedCard} ${rounded ? styles.rounded : ""}`}
-            role="document"
-            onClick={(e) => e.stopPropagation()}      // กันคลิกภายใน card ไหลไป backdrop
-          >
+        <div className={styles.expandedOverlay} role="dialog" aria-modal="true" aria-label="Image detail">
+          <div className={`${styles.expandedCard} ${rounded ? styles.rounded : ""}`}>
             <div className={styles.split}>
-              <div
-                className={styles.media}
-                onClick={(e) => e.stopPropagation()}   // กันคลิกบนรูปไหลไปปิด
-                onDoubleClick={(e) => e.preventDefault()} // กัน double-tap ยิง click ซ้ำบนมือถือ
-              >
+              <div className={styles.media} onClick={closeExpanded}>
                 {!!len && <img src={items[idx]?.src} alt={items[idx]?.alt || info.title} />}
                 {showStatus && (
                   <div
@@ -235,7 +220,6 @@ const Sliderhome = ({
                   </div>
                 )}
               </div>
-
               <aside className={styles.info}>
                 <div className={styles.infoHeader}>
                   <h3 className={styles.infoTitle}>{info.title}</h3>
@@ -253,12 +237,7 @@ const Sliderhome = ({
               </aside>
             </div>
           </div>
-
-          {/* คลิก “ฉากหลังจริง ๆ” เท่านั้นถึงจะปิด */}
-          <div
-            className={styles.backdrop}
-            onClick={(e) => { if (e.currentTarget === e.target) closeExpanded(); }}
-          />
+          <div className={styles.backdrop} onClick={closeExpanded} />
         </div>
       )}
     </div>
