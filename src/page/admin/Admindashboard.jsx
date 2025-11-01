@@ -26,14 +26,20 @@ const KPI = ({ icon, title, value, sub, tone = "blue" }) => (
 
 const MyPie = ({ data = [] }) => {
   const [ref, ready] = useNonZeroSize();
+
+  // ทำความสะอาดข้อมูลให้เป็นรูป {id,label,value:number} เสมอ
   const clean = (Array.isArray(data) ? data : [])
     .filter(d => Number.isFinite(+d?.value))
-    .map(d => ({ id: String(d?.id ?? "Unknown"), label: String(d?.label ?? d?.id ?? "Unknown"), value: +d.value }));
+    .map(d => ({
+      id: String(d?.id ?? d?.label ?? "Unknown"),
+      label: String(d?.label ?? d?.id ?? "Unknown"),
+      value: +d.value
+    }));
 
-  const total = useMemo(() => clean.reduce((s, d) => s + d.value, 0) || 1, [clean]);
-
-  // รอกล่องมีขนาด + มีข้อมูลก่อน
-  if (!ready || clean.length === 0) return <div className="pieBox" ref={ref} />;
+  // ถ้าค่ารวมเป็น 0 → แสดงข้อความ "No data" (หรือจะให้แสดง pie เปล่าก็ได้)
+  const sum = clean.reduce((s, d) => s + d.value, 0);
+  if (!ready) return <div className="pieBox" ref={ref} />;         // รอกล่องมีขนาดก่อน
+  if (clean.length === 0 || sum === 0) return <div className="empty-graph" ref={ref}>No data</div>;
 
   return (
     <div className="pieBox" ref={ref}>
@@ -44,10 +50,12 @@ const MyPie = ({ data = [] }) => {
         padAngle={0.7}
         cornerRadius={9}
         activeOuterRadiusOffset={10}
-        colors={({ id }) => (id === "Active" ? "#3B82F6" : "#D4E2F4")}
-        arcLabel={(d) => `${Math.round((d.value / total) * 100)}%`}
+        // สี: ให้ Active เป็นฟ้า นอกนั้นเทาอ่อน
+        colors={({ id }) => (String(id).toLowerCase() === "active" ? "#3B82F6" : "#D4E2F4")}
+        // ไม่ต้องคำนวณ % เองก็ได้ แต่ถ้าจะทำ:
+        arcLabel={d => `${Math.round((d.value / sum) * 100)}%`}
         arcLabelsSkipAngle={8}
-        enableArcLinkLabels={false} // กัน layout เพี้ยนตอนเริ่ม
+        enableArcLinkLabels={false}     // กัน layout เพี้ยนช่วงแรก
         arcLabelsTextColor={{ from: "color", modifiers: [["darker", 2.2]] }}
         legends={[
           { anchor: "bottom", direction: "row", translateY: 30, itemWidth: 100, itemHeight: 16, symbolSize: 10 }
@@ -61,6 +69,7 @@ const MyPie = ({ data = [] }) => {
     </div>
   );
 };
+
 
 const MyPieRooms = ({ data = [] }) => {
   const [ref, ready] = useNonZeroSize();
