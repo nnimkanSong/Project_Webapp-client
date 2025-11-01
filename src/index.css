@@ -1,69 +1,96 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+:root{
+  --font-sans: "Noto Sans", system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans Thai", sans-serif;
+  --font-serif: "Ledger", Georgia, serif;
 
+  --ink: #0f172a;
+  --muted: #64748b;
+  --bg: #f7f9fc;
+  --card: #ffffff;
+
+  color-scheme: light;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+*,
+*::before,
+*::after{ box-sizing: border-box; }
+
+html, body, #root{
+  height: 100%;
 }
 
-body {
-  background-color: #0E141C;
+body{
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.5;
+  font-weight: 400;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+a{
+  color: #2563eb;
+  text-decoration: none;
+  transition: color .15s ease;
+  font-weight: 600;
+}
+a:hover{ color:#1e40af; }
+
+h1,h2,h3,h4{
+  font-family: var(--font-serif);
+  color: var(--ink);
+  margin: .6em 0 .35em;
+  line-height: 1.2;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+/* ปุ่ม */
+button{
+  appearance: none;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #111827;
+  border-radius: 10px;
+  padding: .65em 1.1em;
+  font: 600 14px/1 var(--font-sans);
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease;
 }
-button:hover {
-  border-color: #646cff;
+button:hover{
+  transform: translateY(-1px);
+  border-color:#d1d5db;
+  box-shadow: 0 8px 24px rgba(2,6,23,.08);
 }
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+button:focus-visible{
+  outline: 0;
+  box-shadow: 0 0 0 4px rgba(59,130,246,.25);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+/* ฟอร์มทั่วไป */
+input, select, textarea{
+  font: 500 14px/1.4 var(--font-sans);
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: .65em .8em;
+  background: #fff;
+  color: #0f172a;
+  width: 100%;
+}
+input:focus, select:focus, textarea:focus{
+  outline: 0;
+  border-color: #bfdbfe;
+  box-shadow: 0 0 0 4px rgba(59,130,246,.15);
+}
+
+.container{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+@media (prefers-contrast: more){
+  a{ text-decoration: underline; }
 }
