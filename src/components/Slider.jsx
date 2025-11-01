@@ -1,5 +1,5 @@
 // src/components/Slider.jsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay, EffectFade, Navigation, A11y } from "swiper/modules";
 import { api } from "../api";
@@ -10,8 +10,13 @@ import "swiper/css/navigation";
 import "swiper/css/effect-fade";
 import "../css/Slider.css";
 
+/* ===================== Helpers: URL & Images ====================== */
+
 /** แทรก Cloudinary transformation (ถ้าเป็นลิงก์ Cloudinary) */
-function withCloudinaryTransform(url, transform = "f_auto,q_auto,dpr_auto,w_1600,c_fill,g_auto") {
+function withCloudinaryTransform(
+  url,
+  transform = "f_auto,q_auto,dpr_auto,w_1600,c_fill,g_auto"
+) {
   try {
     const u = new URL(url);
     if (!/res\.cloudinary\.com/i.test(u.hostname)) return url;
@@ -29,59 +34,140 @@ function withCloudinaryTransform(url, transform = "f_auto,q_auto,dpr_auto,w_1600
   }
 }
 
-/** แปลง payload หลากหลายรูปแบบ → {src,alt} และแทรก transform */
+/** สร้าง srcset อัตโนมัติ (เฉพาะ Cloudinary) เพื่อทำ responsive */
+function buildSrcSet(url) {
+  try {
+    const u = new URL(url);
+    if (!/res\.cloudinary\.com/i.test(u.hostname)) return undefined;
+
+    // ดึง transform ปัจจุบัน แล้วแทนค่า w_ เป็นหลายขนาด
+    const parts = u.pathname.split("/");
+    const idx = parts.findIndex((p) => p === "upload");
+    if (idx === -1) return undefined;
+
+    const t = parts[idx + 1] || "";
+    const hasTransform = t && /^[a-z0-9_,:-]+$/i.test(t);
+    const baseTransforms = hasTransform ? t.split(",") : [];
+
+    // ลิสต์ความกว้างมาตรฐาน
+    const widths = [360, 640, 960, 1280, 1600, 1920];
+
+    const candidates = widths.map((w) => {
+      const t2 = [
+        ...baseTransforms.filter((k) => !/^w_/.test(k)), // ตัด w_ เดิมออก
+        `w_${w}`,
+      ].join(",");
+      const p2 = [...parts];
+      if (hasTransform) p2[idx + 1] = t2;
+      else p2.splice(idx + 1, 0, t2);
+      const u2 = new URL(u.toString());
+      u2.pathname = p2.join("/");
+      return `${u2.toString()} ${w}w`;
+    });
+
+    return candidates.join(", ");
+  } catch {
+    return undefined;
+  }
+}
+
+/** แปลง payload หลากหลาย → {src, alt, isPrimary, sortOrder} + แทรก transform */
 function normalizeImages(raw = [], { roomCode = "ROOM" } = {}) {
   return raw
     .map((item, i) => {
       if (typeof item === "string") return { src: item, alt: `${roomCode} • ${i + 1}` };
-      const src = item?.url || item?.secure_url || item?.imageUrl || item?.src || item?.path || "";
+      const src =
+        item?.url || item?.secure_url || item?.imageUrl || item?.src || item?.path || "";
       const alt = item?.alt || item?.caption || item?.label || `${roomCode} • ${i + 1}`;
-      return src ? { src, alt, isPrimary: !!item?.isPrimary, sortOrder: Number(item?.sortOrder ?? i) } : null;
+      return src
+        ? {
+            src,
+            alt,
+            isPrimary: !!item?.isPrimary,
+            sortOrder: Number(item?.sortOrder ?? i),
+            width: item?.width ? Number(item.width) : undefined,
+            height: item?.height ? Number(item.height) : undefined,
+          }
+        : null;
     })
     .filter(Boolean)
     .map((it) => ({ ...it, src: withCloudinaryTransform(it.src) }))
-    // กันหลังบ้านไม่ sort: ให้ primary มาก่อน แล้วค่อย sortOrder
     .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.sortOrder - b.sortOrder);
 }
 
-/** ดึงให้หมด (รองรับ cursor แบบทั่วไป) */
-async function fetchAll(apiInstance, path, params = {}) {
-  const all = [];
-  let next = null, page = 0;
+/* ===================== Fetch with cache & dedupe ====================== */
 
-  do {
-    const res = await apiInstance.get(path, { params: { ...params, pageToken: next, page: next } });
-    const data = res?.data ?? {};
-    const items = Array.isArray(data)
-      ? data
-      : Array.isArray(data.items) ? data.items
-      : Array.isArray(data.data) ? data.data
-      : [];
+// in-memory cache / inflight (อายุ cache 5 นาที)
+const IMG_CACHE = new Map(); // key -> { ts, items }
+const INFLIGHT = new Map(); // key -> Promise
+const CACHE_TTL = 5 * 60 * 1000;
 
-    all.push(...items);
-
-    // รองรับหลายชื่อ cursor
-    next = data.nextPageToken || data.nextCursor || data.next || null;
-    page += 1;
-
-    // กัน loop ไม่สิ้นสุด
-    if (page > 50) break;
-  } while (next);
-
-  return all;
+function keyOf(path, params) {
+  return `${path}?${JSON.stringify(params || {})}`;
 }
 
+async function fetchAllWithCache(path, params = {}, signal) {
+  const key = keyOf(path, params);
+  const now = Date.now();
+
+  const cached = IMG_CACHE.get(key);
+  if (cached && now - cached.ts < CACHE_TTL) return cached.items;
+
+  let p = INFLIGHT.get(key);
+  if (!p) {
+    p = (async () => {
+      // รองรับหน้าที่มี cursor (fetchAll)
+      const all = [];
+      let next = null;
+      let page = 0;
+
+      do {
+        const res = await api.get(path, {
+          params: { ...params, pageToken: next, page: next },
+          signal,
+        });
+        const data = res?.data ?? {};
+        const items = Array.isArray(data)
+          ? data
+          : Array.isArray(data.items)
+          ? data.items
+          : Array.isArray(data.data)
+          ? data.data
+          : [];
+        all.push(...items);
+        next = data.nextPageToken || data.nextCursor || data.next || null;
+        page += 1;
+        if (page > 50) break; // safety
+      } while (next);
+
+      IMG_CACHE.set(key, { ts: Date.now(), items: all });
+      return all;
+    })();
+    INFLIGHT.set(key, p);
+  }
+
+  try {
+    const result = await p;
+    return result;
+  } finally {
+    INFLIGHT.delete(key);
+  }
+}
+
+/* ===================== Main Component ====================== */
+
 /**
- * Slider
- * props:
- *  - roomCode: โค้ดห้อง (ใช้แสดง chip/alt)
+ * Slider props:
+ *  - roomCode: ใช้แสดงบนชิป/alt
  *  - fetchPath: endpoint (ถ้าไม่ส่ง จะเดาเป็น /api/rooms/${roomCode}/images)
- *  - query: query string เพิ่มเติม (เช่น { limit: 50 } – แต่ฟังก์ชันนี้จะไล่ดึงทุกหน้าให้อยู่แล้ว)
+ *  - query: query string เพิ่มเติม (รองรับ limit)
  *  - fallback: รูปสำรอง
+ *  - aspect: ป้องกัน CLS (เช่น "16 / 9")
+ *  - maxItems: จำกัดจำนวนรูปสูงสุดด้านหน้า (กัน payload บวม) – ไม่กระทบ BE
  */
 export default function Slider({
   roomCode = "E113",
-  fetchPath, // ถ้าไม่ส่ง จะเดาให้ด้านล่าง
+  fetchPath,
   query = {},
   fallback = [
     { src: "/E113_1.jpg", alt: "Room 1" },
@@ -89,39 +175,53 @@ export default function Slider({
     { src: "/E113_3.jpg", alt: "Room 3" },
     { src: "/E113_4.jpg", alt: "Room 4" },
   ],
+  aspect = "16 / 9",
+  maxItems = 80, // กันดึงรูปมากเกินไป
 }) {
   const progressRef = useRef(null);
-  const [images, setImages] = useState(fallback);
+  const abortRef = useRef(null);
+
+  const finalPath = fetchPath || `/api/rooms/${roomCode}/images`;
+  const _query = useMemo(() => ({ ...query }), [JSON.stringify(query)]);
+
+  const [images, setImages] = useState(() => normalizeImages(fallback, { roomCode }));
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-  const finalPath = fetchPath || `/api/rooms/${roomCode}/images`;
-
   useEffect(() => {
-    let mounted = true;
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     (async () => {
-      setLoading(true);
-      setErr("");
       try {
-        const raw = await fetchAll(api, finalPath, query);
+        setLoading(true);
+        setErr("");
+
+        // ดึงด้วย cache+dedupe แล้ว normalize
+        const raw = await fetchAllWithCache(finalPath, _query, controller.signal);
         const imgs = normalizeImages(raw, { roomCode });
-        if (mounted) setImages(imgs.length ? imgs : fallback);
+
+        // จำกัดจำนวนฝั่ง FE อีกชั้น (ไม่ต้องแก้ BE)
+        const sliced = imgs.slice(0, Math.max(1, Number(maxItems)));
+
+        // ไม่มีรูปจาก BE → ใช้ fallback
+        setImages(sliced.length ? sliced : normalizeImages(fallback, { roomCode }));
       } catch (e) {
+        if (e?.name === "CanceledError" || e?.name === "AbortError") return;
         console.warn("⚠️ Load images error:", e);
-        if (mounted) {
-          setErr(e?.response?.data?.message || e?.message || "Load images failed");
-          setImages(fallback);
-        }
+        setErr(e?.response?.data?.message || e?.message || "Load images failed");
+        setImages(normalizeImages(fallback, { roomCode }));
       } finally {
-        if (mounted) setLoading(false);
+        setLoading(false);
       }
     })();
-    return () => { mounted = false; };
-  }, [finalPath, JSON.stringify(query), roomCode]);
+
+    return () => controller.abort();
+  }, [finalPath, _query, roomCode, maxItems]);
 
   return (
     <div className="slider-root">
-      <div className="slider-box">
+      <div className="slider-box" style={{ aspectRatio: aspect }}>
         <button className="slider-nav prev" aria-label="Previous slide">
           <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6" /></svg>
         </button>
@@ -160,23 +260,33 @@ export default function Slider({
             progressRef.current?.style.setProperty("--progress", String(1 - progress));
           }}
         >
-          {images.map((img, i) => (
-            <SwiperSlide key={`${img.src}-${i}`}>
-              <div className="slide-media">
-                <img
-                  src={img.src}
-                  alt={img.alt || `${roomCode} • ${i + 1}`}
-                  loading="lazy"
-                  decoding="async"
-                  className="kenburns"
-                />
-                <div className="slide-overlay" aria-hidden>
-                  <div className="slide-chip">{`${roomCode} • ${i + 1}/${images.length}`}</div>
-                  <h3 className="slide-title">{img.alt || " "}</h3>
+          {images.map((img, i) => {
+            const isFirst = i === 0; // ช่วย LCP
+            const src = img.src;
+            const srcSet = buildSrcSet(src);
+            return (
+              <SwiperSlide key={`${src}-${i}`}>
+                <div className="slide-media" style={{ aspectRatio: aspect }}>
+                  <img
+                    src={src}
+                    srcSet={srcSet}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 1170px"
+                    alt={img.alt || `${roomCode} • ${i + 1}`}
+                    loading={isFirst ? "eager" : "lazy"}
+                    fetchPriority={isFirst ? "high" : "auto"}
+                    decoding="async"
+                    width={img.width}
+                    height={img.height}
+                    className="kenburns"
+                  />
+                  <div className="slide-overlay" aria-hidden>
+                    <div className="slide-chip">{`${roomCode} • ${i + 1}/${images.length}`}</div>
+                    <h3 className="slide-title">{img.alt || " "}</h3>
+                  </div>
                 </div>
-              </div>
-            </SwiperSlide>
-          ))}
+              </SwiperSlide>
+            );
+          })}
         </Swiper>
 
         <div ref={progressRef} className="autoplay-progress" />
