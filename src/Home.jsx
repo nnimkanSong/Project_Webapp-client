@@ -6,6 +6,7 @@ import Sliderhome from "./components/Sliderhome";
 import { api } from "./api";
 import { Clock } from "lucide-react";
 import CookieNotice from "./components/CookieNotice";
+import { Helmet } from "react-helmet-async"; // ✅ เพิ่ม
 
 const Home = () => {
   const [stat, setStat] = useState({
@@ -27,7 +28,6 @@ const Home = () => {
     inuse: false,
     reno: false,
   });
-
 
   const prevRef = useRef(stat);
 
@@ -158,11 +158,16 @@ const Home = () => {
 
   return (
     <div className="pg-home">
+      {/* ✅ Preload เฉพาะหน้า Home และให้ href ตรงกับ src */}
+      <Helmet>
+        <link rel="preload" as="image" href="/CHP_4173.jpg" />
+      </Helmet>
+
       {/* HERO */}
       <CookieNotice />
       <div className="top">
         <img
-          src="./CHP_4173.jpg"
+          src="/CHP_4173.jpg"            {/* ← เปลี่ยนจาก "./" เป็น "/" ให้ตรงกับ preload */}
           alt="KMITL CE Building"
           loading="eager"
           decoding="async"
@@ -177,7 +182,7 @@ const Home = () => {
             <Clock size={18} className="icon-clock" />
             <span>Status Now</span>
           </div>
-        <div className="sub">{nowText}</div>
+          <div className="sub">{nowText}</div>
         </div>
 
         <div className="field">
@@ -419,24 +424,6 @@ const Home = () => {
           roomCode="E113"
           fetchPath="/api/rooms/E113/images" // ← ดึงจาก DB
           details={[
-            {
-              title: "Computer Club",
-              subtitle: "Computer Engineering",
-              price: "E113",
-              room: "E113",
-              extra: (
-                <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                  <li>ความจุ: 30 คน</li>
-                  <li>อุปกรณ์</li>
-                  <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>TV</li>
-                    <li>แอร์</li>
-                    <li>3D Printer</li>
-                    <li>working space</li>
-                  </ul>
-                </ul>
-              ),
-            },
             {
               title: "Computer Club",
               subtitle: "Computer Engineering",
