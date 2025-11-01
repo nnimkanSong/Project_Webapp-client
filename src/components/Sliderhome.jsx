@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import styles from "../css/sliderhome.module.css";
 import { api } from "../api";
 
-/* ---------- Helpers: normalize payload ---------- */
+// --- helpers: normalize payload ---
 function normalizeFromApi(data, { roomCode = "" } = {}) {
   const raw = Array.isArray(data)
     ? data
@@ -17,7 +17,10 @@ function normalizeFromApi(data, { roomCode = "" } = {}) {
       if (typeof it === "string") return { src: it, alt: `${roomCode} • ${i + 1}` };
       const src = it?.url || it?.src || it?.imageUrl || it?.path || "";
       const alt = it?.alt || it?.caption || it?.label || `${roomCode} • ${i + 1}`;
-      return src ? { src, alt } : null;
+      // รองรับ width/height ถ้ามีจาก backend (กัน CLS ดียิ่งขึ้น)
+      const width = it?.width ? Number(it.width) : undefined;
+      const height = it?.height ? Number(it.height) : undefined;
+      return src ? { src, alt, width, height } : null;
     })
     .filter(Boolean);
 }
@@ -27,119 +30,48 @@ function normalizeImagesProp(images = [], { roomCode = "" } = {}) {
   );
 }
 
-/* ---------- Responsive variants ----------
-   พยายามสร้าง URL หลายขนาด/ฟอร์แมตจาก src เดิม
-   ถ้า backend ไม่รองรับ query พวก ?w=…&fmt=… ก็จะ fallback เป็นรูปเดิม
------------------------------------------------- */
-function buildVariants(src) {
-  try {
-    const u = new URL(src, typeof window !== "undefined" ? window.location.origin : "http://x");
-    // ถ้าเป็นไฟล์ static ใน public เช่น /images/xxx.jpg ก็ใช้ base ตรง ๆ
-    const base = u.pathname + (u.search ? u.search : "");
-    const make = (w, fmt) => {
-      // heuristic: ถ้าเป็น http(s) ที่ไม่รองรับ query แปลงไม่ได้ → ใช้ไฟล์เดิม
-      if (u.origin && !/^\/|^https?:\/\//i.test(base)) return { url: src, w };
-      const hasQuery = base.includes("?");
-      const join = hasQuery ? "&" : "?";
-      return { url: `${base}${join}w=${w}&fmt=${fmt}`, w };
-    };
-    return {
-      // ลอง AVIF/WebP ก่อน ถ้าเสิร์ฟไม่ได้ เบราว์เซอร์จะไป fallback เอง
-      avif: [640, 960, 1280].map((w) => make(w, "avif")),
-      webp: [640, 960, 1280].map((w) => make(w, "webp")),
-      jpg:  [640, 960, 1280].map((w) => make(w, "jpg")),
-      fallback: src,
-    };
-  } catch {
-    return {
-      avif: [], webp: [], jpg: [], fallback: src
-    };
-  }
-}
-
-/* ---------- Single responsive image (card & expanded) ---------- */
-function PictureImage({
-  src,
-  alt = "",
-  width = 420,
-  height = 280,
-  loading = "lazy",
-  decoding = "async",
-  fetchPriority,         // "high" เฉพาะรูปที่เห็นจริง ๆ
-  className,
-  style,
-}) {
-  const v = useMemo(() => buildVariants(src), [src]);
-  const srcSet = (arr) => arr.map(({ url, w }) => `${url} ${w}w`).join(", ");
-
-  return (
-    <picture>
-      {!!v.avif.length && <source type="image/avif" srcSet={srcSet(v.avif)} sizes="(max-width:640px) 90vw, (max-width:1024px) 50vw, 420px" />}
-      {!!v.webp.length && <source type="image/webp" srcSet={srcSet(v.webp)} sizes="(max-width:640px) 90vw, (max-width:1024px) 50vw, 420px" />}
-      {/* fallback เป็น jpg/ไฟล์เดิม */}
-      <img
-        src={v.jpg[0]?.url || v.fallback}
-        alt={alt}
-        width={width}
-        height={height}
-        loading={loading}
-        decoding={decoding}
-        fetchPriority={fetchPriority}
-        className={className}
-        style={{ aspectRatio: `${width} / ${height}`, objectFit: "cover", display: "block", ...style }}
-      />
-    </picture>
-  );
-}
-
-/* ============================================================= */
-
+// --- main component ---
 const Sliderhome = ({
   images = ["./E113_1.jpg", "./E113_2.jpg", "./E113_3.jpg", "./E113_4.jpg"],
   details = [],
-  fetchPath,
+  fetchPath,       // เช่น "/api/rooms/E113/images" -> ดึงจาก DB
   fetchQuery = {},
   roomCode,
   interval = 2500,
   rounded = true,
   statusByRoom = {},
   showStatus = true,
+  /** อัตราส่วนรูปเพื่อกัน CLS ถ้า backend ไม่ส่ง width/height มา */
+  aspect = "16 / 9",
 }) => {
   const [idx, setIdx] = useState(0);
   const [expanded, setExpanded] = useState(false);
-  const [items, setItems] = useState(normalizeImagesProp(images, { roomCode: roomCode || "" }));
+  const [items, setItems] = useState(
+    normalizeImagesProp(images, { roomCode: roomCode || "" })
+  );
   const [loading, setLoading] = useState(!!fetchPath);
   const [err, setErr] = useState("");
 
   const timerRef = useRef(null);
   const hoveringRef = useRef(false);
   const touchingRef = useRef(false);
-
-  /* ---- IntersectionObserver: เริ่มสไลด์เมื่อมองเห็นเท่านั้น ---- */
   const wrapperRef = useRef(null);
-  const [inView, setInView] = useState(true);
-  useEffect(() => {
-    const el = wrapperRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      (entries) => setInView(entries[0]?.isIntersecting ?? true),
-      { rootMargin: "0px", threshold: 0.1 }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
+  const visibleRef = useRef(true);
 
-  /* ---- โหลดจาก API ---- */
+  // โหลดภาพจาก API (ถ้ามี)
   useEffect(() => {
     let mounted = true;
     if (!fetchPath) return;
+
     (async () => {
       setLoading(true);
       setErr("");
       try {
         const res = await api.get(fetchPath, { params: fetchQuery });
         const list = normalizeFromApi(res?.data, { roomCode: roomCode || "" });
-        if (mounted) setItems(list.length ? list : normalizeImagesProp(images, { roomCode: roomCode || "" }));
+        if (mounted) {
+          setItems(list.length ? list : normalizeImagesProp(images, { roomCode: roomCode || "" }));
+        }
       } catch (e) {
         if (mounted) {
           setErr(e?.response?.data?.message || e?.message || "Load images failed");
@@ -149,19 +81,23 @@ const Sliderhome = ({
         if (mounted) setLoading(false);
       }
     })();
+
     return () => { mounted = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchPath, JSON.stringify(fetchQuery), roomCode]);
 
-  /* ---- ถ้าไม่มี fetchPath ใช้จาก props ---- */
+  // ไม่มี fetchPath -> ใช้ props
   useEffect(() => {
-    if (!fetchPath) setItems(normalizeImagesProp(images, { roomCode: roomCode || "" }));
+    if (!fetchPath) {
+      setItems(normalizeImagesProp(images, { roomCode: roomCode || "" }));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(images), roomCode, fetchPath]);
 
   const len = items.length;
   const safeIdx = (i) => ((i % len) + len) % len;
 
+  // รายละเอียดของการ์ดปัจจุบัน
   const info = useMemo(() => {
     const d = details[safeIdx(idx)] || {};
     return {
@@ -183,12 +119,12 @@ const Sliderhome = ({
     unknown: "Unknown",
   };
 
-  /* ---- ออโต้สไลด์: เฉพาะตอนเห็นจริง + ไม่โฮเวอร์/ทัช/ไม่ expanded ---- */
+  // --- autoplay: หยุดเมื่อ mouse hover / touch / expanded / ไม่มองเห็น / แท็บไม่โฟกัส
   const start = () => {
     stop();
-    if (len <= 1 || !inView) return;
+    if (len <= 1) return;
     timerRef.current = setInterval(() => {
-      if (!hoveringRef.current && !touchingRef.current && !expanded) {
+      if (!hoveringRef.current && !touchingRef.current && !expanded && visibleRef.current && !document.hidden) {
         setIdx((p) => (p + 1) % len);
       }
     }, interval);
@@ -197,7 +133,35 @@ const Sliderhome = ({
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = null;
   };
-  useEffect(() => { start(); return stop; }, [interval, expanded, len, inView]); // eslint-disable-line
+  useEffect(() => { start(); return stop; }, [interval, expanded, len]); // eslint-disable-line
+
+  // สังเกตการณ์ viewport เพื่อหยุด/เล่น autoplay
+  useEffect(() => {
+    if (!wrapperRef.current) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        visibleRef.current = entries[0]?.isIntersecting ?? true;
+      },
+      { root: null, threshold: 0.15 }
+    );
+    io.observe(wrapperRef.current);
+    const onVis = () => {}; // แค่ reference เพื่อถ้าจะต่อยอด
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      io.disconnect();
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, []);
+
+  // Preload สไลด์ถัดไปไว้ใน cache ให้สลับนิ่มขึ้น
+  useEffect(() => {
+    if (len <= 1) return;
+    const next = items[safeIdx(idx + 1)];
+    if (!next?.src) return;
+    const img = new Image();
+    img.decoding = "async";
+    img.src = next.src;
+  }, [idx, len, items]);
 
   const onMouseEnter = () => (hoveringRef.current = true);
   const onMouseLeave = () => (hoveringRef.current = false);
@@ -209,13 +173,18 @@ const Sliderhome = ({
 
   if (!len && !loading) return null;
 
-  /* ---- เรนเดอร์เฉพาะ: idx ปัจจุบัน + ข้างเคียง (ลดงาน DOM) ---- */
-  const visibleSet = new Set([safeIdx(idx), safeIdx(idx - 1), safeIdx(idx + 1)]);
+  // utility: สร้าง srcSet/sizes อย่างปลอดภัย (ถ้าไม่มี CDN ก็คืนค่าปกติ)
+  const buildSrcSet = (src) => {
+    // ถ้ามี query รูปแบบ ?w= ใช้แตกขนาดเอง; ถ้าไม่มี ก็ปล่อย src เดียว
+    if (!src || /\?w=/.test(src)) return undefined;
+    return undefined;
+  };
+  const sizes = "(max-width: 640px) 88vw, (max-width: 1024px) 40vw, 300px";
 
   return (
     <div
-      ref={wrapperRef}
       className={styles.wrapper}
+      ref={wrapperRef}
       tabIndex={0}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -231,26 +200,33 @@ const Sliderhome = ({
           role="button"
           aria-label="Open image details"
         >
-          <div className={styles.singleStage}>
+          <div className={styles.singleStage} style={{ aspectRatio: aspect }}>
             {loading && <div className={styles.skeleton}>กำลังโหลดรูป…</div>}
             {!loading && err && (
-              <div className={styles.error} role="alert">โหลดรูปไม่สำเร็จ • ใช้รูปสำรอง</div>
+              <div className={styles.error} role="alert">
+                โหลดรูปไม่สำเร็จ • ใช้รูปสำรอง
+              </div>
             )}
 
             {items.map((it, i) => {
-              if (!visibleSet.has(i)) return null; // render only current +/-1
+              const isActive = i === idx;
+              // รูปที่แสดงอยู่: eager + fetchPriority สูงสุด (ช่วย LCP ของการ์ดแรก)
+              const eagerProps = isActive
+                ? { loading: "eager", fetchPriority: "high" }
+                : { loading: "lazy", fetchPriority: "auto" };
+
               return (
-                <PictureImage
+                <img
                   key={`${it.src}-${i}`}
                   src={it.src}
                   alt={it.alt || `slide ${i + 1}`}
-                  className={`${styles.singleImage} ${i === idx ? styles.active : ""}`}
-                  loading="lazy"
+                  width={it.width}
+                  height={it.height}
+                  srcSet={buildSrcSet(it.src)}
+                  sizes={sizes}
+                  className={`${styles.singleImage} ${isActive ? styles.active : ""}`}
                   decoding="async"
-                  // ให้รูปปัจจุบันมี priority มากขึ้น (ช่วย first visible slide)
-                  fetchPriority={i === idx ? "high" : undefined}
-                  width={420}
-                  height={280}
+                  {...eagerProps}
                 />
               );
             })}
@@ -259,7 +235,11 @@ const Sliderhome = ({
               <div
                 className={`${styles.statusBadge} ${styles[`st_${roomStatus}`]}`}
                 aria-label={`Room ${currentRoomCode || ""} status: ${statusLabelMap[roomStatus]}`}
-                title={currentRoomCode ? `${currentRoomCode}: ${statusLabelMap[roomStatus]}` : statusLabelMap[roomStatus]}
+                title={
+                  currentRoomCode
+                    ? `${currentRoomCode}: ${statusLabelMap[roomStatus]}`
+                    : statusLabelMap[roomStatus]
+                }
               >
                 <span className={styles.dot} />
                 {currentRoomCode && <span className={styles.statusText}>{currentRoomCode}</span>}
@@ -281,14 +261,14 @@ const Sliderhome = ({
         <div className={styles.expandedOverlay} role="dialog" aria-modal="true" aria-label="Image detail">
           <div className={`${styles.expandedCard} ${rounded ? styles.rounded : ""}`}>
             <div className={styles.split}>
-              <div className={styles.media} onClick={closeExpanded}>
+              <div className={styles.media} onClick={closeExpanded} style={{ aspectRatio: aspect }}>
                 {!!len && (
-                  <PictureImage
+                  <img
                     src={items[idx]?.src}
                     alt={items[idx]?.alt || info.title}
-                    // รูปใหญ่ขึ้น: กำหนดขนาดกัน CLS สำหรับ layout ด้านซ้าย
-                    width={960}
-                    height={640}
+                    width={items[idx]?.width}
+                    height={items[idx]?.height}
+                    decoding="async"
                     loading="eager"
                     fetchPriority="high"
                   />
@@ -296,7 +276,11 @@ const Sliderhome = ({
                 {showStatus && (
                   <div
                     className={`${styles.statusBadge} ${styles[`st_${roomStatus}`]} ${styles.statusOnMedia}`}
-                    title={currentRoomCode ? `${currentRoomCode}: ${statusLabelMap[roomStatus]}` : statusLabelMap[roomStatus]}
+                    title={
+                      currentRoomCode
+                        ? `${currentRoomCode}: ${statusLabelMap[roomStatus]}`
+                        : statusLabelMap[roomStatus]
+                    }
                   >
                     <span className={styles.dot} />
                     {currentRoomCode && <span className={styles.statusText}>{currentRoomCode}</span>}

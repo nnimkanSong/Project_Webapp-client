@@ -1,11 +1,16 @@
 // Home.jsx
-import React, { useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  lazy,
+  Suspense,
+} from "react";
 import { Link } from "react-router-dom";
 import "./Home.css";
-// ลบ import เดิมของ Sliderhome แล้วใช้ lazy แทน
-// import Sliderhome from "./components/Sliderhome";
+// lazy โหลดเพื่อลด bundle แรก
 const Sliderhome = lazy(() => import("./components/Sliderhome"));
-
 import { api } from "./api";
 import { Clock } from "lucide-react";
 import CookieNotice from "./components/CookieNotice";
@@ -23,7 +28,7 @@ const Home = () => {
     new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   );
 
-  // ทำ animation เมื่อค่าตัวเลขมีการเปลี่ยน
+  // สำหรับทำ animation เมื่อค่าตัวเลขมีการเปลี่ยน
   const [changed, setChanged] = useState({
     total: false,
     avail: false,
@@ -34,11 +39,17 @@ const Home = () => {
   // เก็บค่าเดิมไว้เปรียบเทียบ
   const prevRef = useRef(stat);
 
+  // ดึงสถานะห้องเป็นระยะ ๆ (หยุดเมื่อแท็บไม่โฟกัส)
   useEffect(() => {
     let mounted = true;
+    let timerId;
+    const controller = new AbortController();
+
     const load = async () => {
       try {
-        const { data } = await api.get("/api/tracking/now");
+        const { data } = await api.get("/api/tracking/now", {
+          signal: controller.signal,
+        });
         if (!mounted) return;
 
         const next = {
@@ -49,37 +60,65 @@ const Home = () => {
           breakdown: data.breakdown ?? [],
         };
 
+        // เช็ค diff เพื่อลด re-render ที่ไม่จำเป็น
         const prev = prevRef.current;
-        setChanged({
-          total: prev.totalRooms !== next.totalRooms,
-          avail: prev.available !== next.available,
-          inuse: prev.inUse !== next.inUse,
-          reno: prev.renovation !== next.renovation,
-        });
+        if (
+          prev.totalRooms !== next.totalRooms ||
+          prev.available !== next.available ||
+          prev.inUse !== next.inUse ||
+          prev.renovation !== next.renovation ||
+          (prev.breakdown?.length || 0) !== (next.breakdown?.length || 0)
+        ) {
+          setChanged({
+            total: prev.totalRooms !== next.totalRooms,
+            avail: prev.available !== next.available,
+            inuse: prev.inUse !== next.inUse,
+            reno: prev.renovation !== next.renovation,
+          });
+          setStat(next);
+          prevRef.current = next;
 
-        setStat(next);
-        prevRef.current = next;
+          // เอา animation ออกภายใน 800ms
+          setTimeout(() => {
+            setChanged({ total: false, avail: false, inuse: false, reno: false });
+          }, 800);
+        }
 
         setNowText(
-          new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
+          new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
         );
-
-        setTimeout(() => {
-          setChanged({ total: false, avail: false, inuse: false, reno: false });
-        }, 800);
       } catch (err) {
-        console.error("tracking error:", err);
+        if (err?.name !== "CanceledError" && err?.name !== "AbortError") {
+          console.error("tracking error:", err);
+        }
       }
     };
 
+    // เริ่มโหลดทันที
     load();
-    const t = setInterval(load, 30000);
+
+    // poll เมื่อแท็บโฟกัสเท่านั้น
+    const startPolling = () => {
+      if (timerId) return;
+      timerId = setInterval(load, 30000);
+    };
+    const stopPolling = () => {
+      if (timerId) clearInterval(timerId);
+      timerId = null;
+    };
+
+    const onVis = () => {
+      if (document.visibilityState === "visible") startPolling();
+      else stopPolling();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    onVis(); // ตั้งต้นตามสถานะปัจจุบัน
+
     return () => {
       mounted = false;
-      clearInterval(t);
+      stopPolling();
+      controller.abort();
+      document.removeEventListener("visibilitychange", onVis);
     };
   }, []);
 
@@ -95,15 +134,15 @@ const Home = () => {
 
   return (
     <div className="pg-home">
-      {/* HERO (ทำเป็น LCP: picture + fetchPriority="high") */}
+      {/* HERO (LCP) */}
       <CookieNotice />
       <div className="top">
         <picture>
-          {/* ปรับ path ให้ตรงกับไฟล์จริงของคุณ (เช่น /images/... ใน public) */}
+          {/* แนะนำวางไฟล์ใน public/images แล้วใช้ path แบบด้านล่าง */}
           <source srcSet="/images/CHP_4173.avif" type="image/avif" />
           <source srcSet="/images/CHP_4173.webp" type="image/webp" />
           <img
-            src="/images/CHP_4173.jpg" // ถ้าไฟล์อยู่ข้าง ๆ ให้ใช้ "./CHP_4173.jpg"
+            src="/images/CHP_4173.jpg"
             alt="KMITL CE Building"
             width="1920"
             height="1080"
@@ -160,7 +199,7 @@ const Home = () => {
         <span className="able-underline" />
       </div>
 
-      {/* ROOM CARDS (lazy load เพื่อลด render-blocking) */}
+      {/* ROOM CARDS (lazy โหลด) */}
       <div className="end">
         <Suspense fallback={null}>
           {/* E107 */}
@@ -185,92 +224,36 @@ const Home = () => {
                   </ul>
                 ),
               },
-              // (รายการซ้ำของคุณคงเดิม)
-              {
-                title: "Laboratory",
-                subtitle: "Computer Engineering",
-                price: "E107",
-                room: "E107",
-                extra: (
+              { title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107",
+                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
+                  <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ความจุ: 30 คน</li>
-                    <li>อุปกรณ์</li>
-                    <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>โปรเจคเตอร์</li>
-                      <li>แอร์</li>
-                      <li>อุปกรณ์ทำแลป</li>
-                    </ul>
-                  </ul>
-                ),
-              },
-              {
-                title: "Laboratory",
-                subtitle: "Computer Engineering",
-                price: "E107",
-                room: "E107",
-                extra: (
+                    <li>โปรเจคเตอร์</li><li>แอร์</li><li>อุปกรณ์ทำแลป</li>
+                  </ul></ul>) },
+              { title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107",
+                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
+                  <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ความจุ: 30 คน</li>
-                    <li>อุปกรณ์</li>
-                    <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>โปรเจคเตอร์</li>
-                      <li>แอร์</li>
-                      <li>อุปกรณ์ทำแลป</li>
-                    </ul>
-                  </ul>
-                ),
-              },
-              {
-                title: "Laboratory",
-                subtitle: "Computer Engineering",
-                price: "E107",
-                room: "E107",
-                extra: (
+                    <li>โปรเจคเตอร์</li><li>แอร์</li><li>อุปกรณ์ทำแลป</li>
+                  </ul></ul>) },
+              { title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107",
+                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
+                  <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ความจุ: 30 คน</li>
-                    <li>อุปกรณ์</li>
-                    <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>โปรเจคเตอร์</li>
-                      <li>แอร์</li>
-                      <li>อุปกรณ์ทำแลป</li>
-                    </ul>
-                  </ul>
-                ),
-              },
-              {
-                title: "Laboratory",
-                subtitle: "Computer Engineering",
-                price: "E107",
-                room: "E107",
-                extra: (
+                    <li>โปรเจคเตอร์</li><li>แอร์</li><li>อุปกรณ์ทำแลป</li>
+                  </ul></ul>) },
+              { title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107",
+                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
+                  <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ความจุ: 30 คน</li>
-                    <li>อุปกรณ์</li>
-                    <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>โปรเจคเตอร์</li>
-                      <li>แอร์</li>
-                      <li>อุปกรณ์ทำแลป</li>
-                    </ul>
-                  </ul>
-                ),
-              },
-              {
-                title: "Laboratory",
-                subtitle: "Computer Engineering",
-                price: "E107",
-                room: "E107",
-                extra: (
+                    <li>โปรเจคเตอร์</li><li>แอร์</li><li>อุปกรณ์ทำแลป</li>
+                  </ul></ul>) },
+              { title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107",
+                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
+                  <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ความจุ: 30 คน</li>
-                    <li>อุปกรณ์</li>
-                    <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>โปรเจคเตอร์</li>
-                      <li>แอร์</li>
-                      <li>อุปกรณ์ทำแลป</li>
-                    </ul>
-                  </ul>
-                ),
-              },
+                    <li>โปรเจคเตอร์</li><li>แอร์</li><li>อุปกรณ์ทำแลป</li>
+                  </ul></ul>) },
             ]}
             interval={2400}
             rounded
@@ -293,69 +276,29 @@ const Home = () => {
                     <li>ความจุ: 40 คน</li>
                     <li>อุปกรณ์</li>
                     <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>โปรเจคเตอร์</li>
-                      <li>แอร์</li>
-                      <li>white board</li>
-                      <li>working space</li>
+                      <li>โปรเจคเตอร์</li><li>แอร์</li><li>white board</li><li>working space</li>
                     </ul>
                   </ul>
                 ),
               },
-              // ... (คงเดิมรายการซ้ำ)
-              {
-                title: "Meeting",
-                subtitle: "Computer Engineering",
-                price: "E111",
-                room: "E111",
-                extra: (
+              { title: "Meeting", subtitle: "Computer Engineering", price: "E111", room: "E111",
+                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
+                  <li>ความจุ: 40 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ความจุ: 40 คน</li>
-                    <li>อุปกรณ์</li>
-                    <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>โปรเจคเตอร์</li>
-                      <li>แอร์</li>
-                      <li>white board</li>
-                      <li>working space</li>
-                    </ul>
-                  </ul>
-                ),
-              },
-              {
-                title: "Meeting",
-                subtitle: "Computer Engineering",
-                price: "E111",
-                room: "E111",
-                extra: (
+                    <li>โปรเจคเตอร์</li><li>แอร์</li><li>white board</li><li>working space</li>
+                  </ul></ul>) },
+              { title: "Meeting", subtitle: "Computer Engineering", price: "E111", room: "E111",
+                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
+                  <li>ความจุ: 40 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ความจุ: 40 คน</li>
-                    <li>อุปกรณ์</li>
-                    <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>โปรเจคเตอร์</li>
-                      <li>แอร์</li>
-                      <li>white board</li>
-                      <li>working space</li>
-                    </ul>
-                  </ul>
-                ),
-              },
-              {
-                title: "Meeting",
-                subtitle: "Computer Engineering",
-                price: "E111",
-                room: "E111",
-                extra: (
+                    <li>โปรเจคเตอร์</li><li>แอร์</li><li>white board</li><li>working space</li>
+                  </ul></ul>) },
+              { title: "Meeting", subtitle: "Computer Engineering", price: "E111", room: "E111",
+                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
+                  <li>ความจุ: 40 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ความจุ: 40 คน</li>
-                    <li>อุปกรณ์</li>
-                    <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>โปรเจคเตอร์</li>
-                      <li>แอร์</li>
-                      <li>white board</li>
-                      <li>working space</li>
-                    </ul>
-                  </ul>
-                ),
-              },
+                    <li>โปรเจคเตอร์</li><li>แอร์</li><li>white board</li><li>working space</li>
+                  </ul></ul>) },
             ]}
             interval={3200}
             statusByRoom={statusByRoom}
@@ -377,87 +320,35 @@ const Home = () => {
                     <li>ความจุ: 30 คน</li>
                     <li>อุปกรณ์</li>
                     <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>TV</li>
-                      <li>แอร์</li>
-                      <li>3D Printer</li>
-                      <li>working space</li>
+                      <li>TV</li><li>แอร์</li><li>3D Printer</li><li>working space</li>
                     </ul>
                   </ul>
                 ),
               },
-              // ... (คงเดิมรายการซ้ำ)
-              {
-                title: "Computer Club",
-                subtitle: "Computer Engineering",
-                price: "E113",
-                room: "E113",
-                extra: (
+              { title: "Computer Club", subtitle: "Computer Engineering", price: "E113", room: "E113",
+                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
+                  <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ความจุ: 30 คน</li>
-                    <li>อุปกรณ์</li>
-                    <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>TV</li>
-                      <li>แอร์</li>
-                      <li>3D Printer</li>
-                      <li>working space</li>
-                    </ul>
-                  </ul>
-                ),
-              },
-              {
-                title: "Computer Club",
-                subtitle: "Computer Engineering",
-                price: "E113",
-                room: "E113",
-                extra: (
+                    <li>TV</li><li>แอร์</li><li>3D Printer</li><li>working space</li>
+                  </ul></ul>) },
+              { title: "Computer Club", subtitle: "Computer Engineering", price: "E113", room: "E113",
+                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
+                  <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ความจุ: 30 คน</li>
-                    <li>อุปกรณ์</li>
-                    <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>TV</li>
-                      <li>แอร์</li>
-                      <li>3D Printer</li>
-                      <li>working space</li>
-                    </ul>
-                  </ul>
-                ),
-              },
-              {
-                title: "Computer Club",
-                subtitle: "Computer Engineering",
-                price: "E113",
-                room: "E113",
-                extra: (
+                    <li>TV</li><li>แอร์</li><li>3D Printer</li><li>working space</li>
+                  </ul></ul>) },
+              { title: "Computer Club", subtitle: "Computer Engineering", price: "E113", room: "E113",
+                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
+                  <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ความจุ: 30 คน</li>
-                    <li>อุปกรณ์</li>
-                    <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>TV</li>
-                      <li>แอร์</li>
-                      <li>3D Printer</li>
-                      <li>working space</li>
-                    </ul>
-                  </ul>
-                ),
-              },
-              {
-                title: "Computer Club",
-                subtitle: "Computer Engineering",
-                price: "E113",
-                room: "E113",
-                extra: (
+                    <li>TV</li><li>แอร์</li><li>3D Printer</li><li>working space</li>
+                  </ul></ul>) },
+              { title: "Computer Club", subtitle: "Computer Engineering", price: "E113", room: "E113",
+                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
+                  <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ความจุ: 30 คน</li>
-                    <li>อุปกรณ์</li>
-                    <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>TV</li>
-                      <li>แอร์</li>
-                      <li>3D Printer</li>
-                      <li>working space</li>
-                    </ul>
-                  </ul>
-                ),
-              },
+                    <li>TV</li><li>แอร์</li><li>3D Printer</li><li>working space</li>
+                  </ul></ul>) },
             ]}
             interval={2000}
             rounded={false}
@@ -481,65 +372,29 @@ const Home = () => {
                     <li>ความจุ: 50 คน</li>
                     <li>อุปกรณ์</li>
                     <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>ตู้ Server</li>
-                      <li>แอร์</li>
-                      <li>อุปกรณ์ Network</li>
+                      <li>ตู้ Server</li><li>แอร์</li><li>อุปกรณ์ Network</li>
                     </ul>
                   </ul>
                 ),
               },
-              // ... (คงเดิมรายการซ้ำ)
-              {
-                title: "Server",
-                subtitle: "Computer Engineering",
-                price: "B317",
-                room: "B317",
-                extra: (
+              { title: "Server", subtitle: "Computer Engineering", price: "B317", room: "B317",
+                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
+                  <li>ความจุ: 50 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ความจุ: 50 คน</li>
-                    <li>อุปกรณ์</li>
-                    <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>ตู้ Server</li>
-                      <li>แอร์</li>
-                      <li>อุปกรณ์ Network</li>
-                    </ul>
-                  </ul>
-                ),
-              },
-              {
-                title: "Server",
-                subtitle: "Computer Engineering",
-                price: "B317",
-                room: "B317",
-                extra: (
+                    <li>ตู้ Server</li><li>แอร์</li><li>อุปกรณ์ Network</li>
+                  </ul></ul>) },
+              { title: "Server", subtitle: "Computer Engineering", price: "B317", room: "B317",
+                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
+                  <li>ความจุ: 50 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ความจุ: 50 คน</li>
-                    <li>อุปกรณ์</li>
-                    <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>ตู้ Server</li>
-                      <li>แอร์</li>
-                      <li>อุปกรณ์ Network</li>
-                    </ul>
-                  </ul>
-                ),
-              },
-              {
-                title: "Server",
-                subtitle: "Computer Engineering",
-                price: "B317",
-                room: "B317",
-                extra: (
+                    <li>ตู้ Server</li><li>แอร์</li><li>อุปกรณ์ Network</li>
+                  </ul></ul>) },
+              { title: "Server", subtitle: "Computer Engineering", price: "B317", room: "B317",
+                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
+                  <li>ความจุ: 50 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ความจุ: 50 คน</li>
-                    <li>อุปกรณ์</li>
-                    <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>ตู้ Server</li>
-                      <li>แอร์</li>
-                      <li>อุปกรณ์ Network</li>
-                    </ul>
-                  </ul>
-                ),
-              },
+                    <li>ตู้ Server</li><li>แอร์</li><li>อุปกรณ์ Network</li>
+                  </ul></ul>) },
             ]}
           />
         </Suspense>
