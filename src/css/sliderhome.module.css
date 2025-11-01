@@ -1,22 +1,19 @@
+/* ======= โครงหลัก (คงของเดิมไว้ได้) ======= */
 .wrapper {
   position: relative;
   width: 100%;
   max-width: 315px;
   margin: 0 auto;
   outline: none;
-
-  content-visibility: auto;
-  contain-intrinsic-size: 220px 280px;
-  isolation: isolate;
 }
 .rounded { border-radius: 14px; }
 
+/* ---------- การ์ดเดี่ยว (แบบในรูป) ---------- */
 .singleCard {
   padding: 10px;
   border-radius: 14px;
   box-shadow: 0 10px 25px rgba(0,0,0,.18);
   cursor: zoom-in;
-  contain: layout paint;
 }
 
 .singleStage {
@@ -27,6 +24,7 @@
   background: #000;
 }
 
+/* ซ้อนรูปทั้งหมดทับกัน แล้วใช้ fade */
 .singleImage {
   position: absolute;
   inset: 0;
@@ -36,11 +34,9 @@
   opacity: 0;
   transition: opacity .6s ease;
 }
-.singleImage.active {
-  opacity: 1;
-  will-change: opacity;
-}
+.singleImage.active { opacity: 1; }
 
+/* ---------- 🔵 Status badge ---------- */
 .statusBadge {
   position: absolute;
   top: 10px;
@@ -52,18 +48,14 @@
   padding: 6px 10px;
   border-radius: 999px;
   background: rgba(15, 19, 30, 0.75);
+  backdrop-filter: blur(4px);
   color: #e9eef8;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: .2px;
   box-shadow: 0 6px 16px rgba(0,0,0,.25);
-  backdrop-filter: blur(4px);
 }
 .statusOnMedia { top: 12px; left: 12px; }
-
-@supports not ((backdrop-filter: blur(4px))) {
-  .statusBadge { background: rgba(15,19,30,.9); }
-}
 
 .dot {
   width: 10px;
@@ -73,6 +65,7 @@
   position: relative;
 }
 
+/* Pulse effect */
 @keyframes pulse {
   0%   { box-shadow: 0 0 0 0 rgba(255,255,255,.45); }
   70%  { box-shadow: 0 0 0 8px rgba(255,255,255,0); }
@@ -81,24 +74,27 @@
 
 /* สีสถานะแต่ละแบบ */
 .st_available .dot {
-  background: #1ec765;
+  background: #1ec765;          /* เขียว */
   animation: pulse 2.4s infinite ease-out;
 }
 .st_in-use .dot {
-  background: #ef4444;
+  background: #ef4444;          /* แดง */
   animation: pulse 2.4s infinite ease-out;
 }
 .st_renovation .dot {
-  background: #f59e0b;
+  background: #f59e0b;          /* ส้ม */
   animation: pulse 2.4s infinite ease-out;
 }
 .st_unknown .dot {
-  background: #9aa7b2;
+  background: #9aa7b2;          /* เทา */
   opacity: .9;
 }
 
-.statusText { opacity: .95; }
+.statusText {
+  opacity: .95;
+}
 
+/* แถบข้อมูลทับด้านล่างของรูป */
 .overlayCard {
   position: absolute;
   left: 8px;
@@ -109,7 +105,6 @@
   background: rgba(20, 24, 36, .92);
   color: #eaeef6;
   box-shadow: 0 8px 20px rgba(0,0,0,.22);
-  contain: paint;
 }
 
 .overlayTop {
@@ -123,13 +118,13 @@
 .overlayPrice { font-size: 14px; opacity: .95; }
 .overlaySub { margin-top: 6px; font-size: 13px; color: rgba(234, 238, 246, .55); }
 
+/* ---------- Expanded Mode ---------- */
 .expandedOverlay {
   position: fixed;
   inset: 0;
   z-index: 50;
   display: grid;
   place-items: center;
-  contain: layout paint;
 }
 .backdrop {
   position: absolute;
@@ -137,10 +132,6 @@
   background: rgba(0,0,0,.45);
   backdrop-filter: blur(2px);
 }
-@supports not ((backdrop-filter: blur(2px))) {
-  .backdrop { background: rgba(0,0,0,.55); }
-}
-
 .expandedCard {
   position: relative;
   z-index: 51;
@@ -161,7 +152,6 @@
   position: relative;
   background: #000;
   cursor: zoom-out;
-  contain: paint;
 }
 .media img {
   width: 100%;
@@ -214,29 +204,9 @@
 }
 .expandedNav span { opacity: .7; }
 
+/* responsive */
 @media (max-width: 640px) {
   .expandedCard { width: 96vw; max-height: 92vh; }
   .split { grid-template-columns: 1fr; }
   .info { border-left: none; border-top: 1px solid rgba(0,0,0,.06); }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .singleImage { transition: none !important; }
-  .st_available .dot,
-  .st_in-use .dot,
-  .st_renovation .dot { animation: none !important; }
-}
-
-/* ให้ซูมแล้วเลื่อนรูปได้ และไม่บล็อก pinch-zoom */
-.media {
-  position: relative;
-  background: #000;
-  cursor: zoom-out;
-  contain: paint;
-  overflow: auto;
-  touch-action: pan-x pan-y;
-}
-
-/* กันเคสคลิกทะลุ */
-.expandedCard { pointer-events: auto; }
-.backdrop     { pointer-events: auto; }
