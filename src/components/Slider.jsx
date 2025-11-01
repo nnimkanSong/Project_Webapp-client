@@ -10,8 +10,22 @@ import "swiper/css/navigation";
 import "swiper/css/effect-fade";
 import "../css/Slider.css";
 
-/** Cloudinary transform (แบบเดิม) + ปรับให้ไม่ซ้อนทับกับ segment ที่มีอยู่ */
-function withCloudinaryTransform(url, transform = "f_auto,q_auto,dpr_auto,w_1600,c_fill,g_auto") {
+/** --- Cloudinary helpers -------------------------------------------------- */
+
+function isCloudinary(url) {
+  try {
+    const u = new URL(url);
+    return /res\.cloudinary\.com/i.test(u.hostname);
+  } catch {
+    return false;
+  }
+}
+
+/** ใส่ Cloudinary transform ถ้ายังไม่มี segment ถัดจาก "upload" */
+function withCloudinaryTransform(
+  url,
+  transform = "f_auto,q_auto:eco,dpr_auto,w_1024,h_768,c_fill,g_auto"
+) {
   try {
     const u = new URL(url);
     if (!/res\.cloudinary\.com/i.test(u.hostname)) return url;
@@ -19,7 +33,6 @@ function withCloudinaryTransform(url, transform = "f_auto,q_auto,dpr_auto,w_1600
     const idx = parts.findIndex((p) => p === "upload");
     if (idx !== -1) {
       const next = parts[idx + 1] || "";
-      // ถ้า segment ถัดจาก upload ยังไม่ใช่ transformation ให้แทรก
       if (!next || !/^[a-z0-9_,:-]+$/i.test(next)) parts.splice(idx + 1, 0, transform);
       u.pathname = parts.join("/");
       return u.toString();
@@ -30,7 +43,19 @@ function withCloudinaryTransform(url, transform = "f_auto,q_auto,dpr_auto,w_1600
   }
 }
 
-/** ลบเลขเวอร์ชัน /v1234567 ออกจากพาธ (ใช้ตอนภาพ 404 คาดว่า version ตาย) */
+/** ★ NEW: ใส่ transform แบบ “กำหนดความกว้าง” และคงอัตราส่วน 4:3 (h = 0.75 * w) */
+function withCloudinaryWidth(url, width) {
+  const h = Math.round(width * 0.75); // 4:3
+  return withCloudinaryTransform(url, `f_auto,q_auto:eco,dpr_auto,w_${width},h_${h},c_fill,g_auto`);
+}
+
+/** ★ NEW: gen srcset หลาย breakpoints (เฉพาะ Cloudinary) */
+function cloudinarySrcset(baseUrl, widths = [480, 768, 1024, 1600]) {
+  if (!isCloudinary(baseUrl)) return ""; // ถ้าไม่ใช่ Cloudinary ปล่อยว่าง (browser จะใช้ src หลัก)
+  return widths.map((w) => `${withCloudinaryWidth(baseUrl, w)} ${w}w`).join(", ");
+}
+
+/** ลบเลขเวอร์ชัน /v1234567 (ใช้ตอนภาพ 404 คาดว่า version ตาย) */
 function stripCloudinaryVersion(url) {
   try {
     const u = new URL(url);
@@ -42,7 +67,7 @@ function stripCloudinaryVersion(url) {
   }
 }
 
-/** แปลง payload หลากหลาย → {src,alt} + แทรก transform */
+/** แปลง payload หลากหลาย → {src,alt} + แทรก transform พื้นฐาน (1024×768) */
 function normalizeImages(raw = [], { roomCode = "ROOM" } = {}) {
   return raw
     .map((item, i) => {
@@ -82,12 +107,8 @@ async function fetchAll(apiInstance, path, params = {}) {
   return all;
 }
 
-/**
- * Slider (เวอร์ชันกันตาย)
- * - ปรับ loop/autoplay/nav/pagination ตามจำนวนสไลด์จริง
- * - watchOverflow ปิด gesture/arrow อัตโนมัติเมื่อสไลด์น้อย
- * - onError: ลอง strip /v123/ แล้วรีโหลด 1 ครั้ง ก่อนลง placeholder
- */
+/** ------------------------------------------------------------------------ */
+
 export default function Slider({
   roomCode = "E113",
   fetchPath,
@@ -145,7 +166,6 @@ export default function Slider({
         return;
       }
     }
-    // สุดท้ายค่อยลง placeholder (กัน loop error)
     img.dataset.tried = "2";
     img.src = "/placeholder.jpg";
   }
@@ -193,28 +213,53 @@ export default function Slider({
             progressRef.current?.style.setProperty("--progress", String(1 - progress));
           }}
         >
-          {images.map((img, i) => (
-            <SwiperSlide key={`${img.src}-${i}`}>
-              <div className="slide-media">
-                <img
-                  src={img.src}
-                  alt={img.alt || `${roomCode} • ${i + 1}`}
-                  loading="lazy"
-                  decoding="async"
-                  className="kenburns"
-                  onError={handleImgError}
-                />
-                <div className="slide-overlay" aria-hidden="true">
-                  <div className="slide-chip">{`${roomCode} • ${i + 1}/${n}`}</div>
-                  <h3 className="slide-title">{img.alt || " "}</h3>
+          {images.map((img, i) => {
+            // ★ NEW: ทำ responsive image เฉพาะลิงก์ Cloudinary
+            const isCld = isCloudinary(img.src);
+            const src = isCld
+              ? withCloudinaryWidth(img.src, 1024)
+              : img.src;
+
+            const srcSet = isCld
+              ? cloudinarySrcset(img.src, [480, 768, 1024, 1600])
+              : undefined;
+
+            const sizes = "(max-width: 768px) 100vw, 1024px"; // ★ NEW: จอบนมือถือลดขนาดรูป, จอใหญ่ cap ไว้ ~1024px
+
+            // เพิ่ม width/height เพื่อกัน CLS ให้สอดคล้องกับ 4:3
+            const width = 1024;
+            const height = 768;
+
+            // LCP hint: slide แรกเท่านั้นให้ priority สูงขึ้นเล็กน้อย (ไม่ใช้ preload เพื่อเลี่ยง warning)
+            const fetchpriority = i === 0 ? "high" : "auto";
+
+            return (
+              <SwiperSlide key={`${img.src}-${i}`}>
+                <div className="slide-media">
+                  <img
+                    src={src}
+                    {...(srcSet ? { srcSet, sizes } : {})}  // ★ NEW
+                    alt={img.alt || `${roomCode} • ${i + 1}`}
+                    loading={i === 0 ? "eager" : "lazy"}     // แรกสุด eager เพื่อลด LCP
+                    fetchpriority={fetchpriority}            // ★ NEW
+                    decoding="async"
+                    className="kenburns"
+                    width={width}                             // ★ NEW
+                    height={height}
+                    onError={handleImgError}
+                  />
+                  <div className="slide-overlay" aria-hidden="true">
+                    <div className="slide-chip">{`${roomCode} • ${i + 1}/${n}`}</div>
+                    <h3 className="slide-title">{img.alt || " "}</h3>
+                  </div>
                 </div>
-              </div>
-            </SwiperSlide>
-          ))}
+              </SwiperSlide>
+            );
+          })}
           {!n && (
             <SwiperSlide>
               <div className="slide-media">
-                <img src="/placeholder.jpg" alt="No images" />
+                <img src="/placeholder.jpg" alt="No images" width="1024" height="768" />
               </div>
             </SwiperSlide>
           )}
