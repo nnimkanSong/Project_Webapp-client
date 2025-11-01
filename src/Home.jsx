@@ -6,7 +6,6 @@ import Sliderhome from "./components/Sliderhome";
 import { api } from "./api";
 import { Clock } from "lucide-react";
 import CookieNotice from "./components/CookieNotice";
-import { Helmet } from "react-helmet-async"; // ✅ เพิ่ม
 
 const Home = () => {
   const [stat, setStat] = useState({
