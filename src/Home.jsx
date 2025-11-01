@@ -138,8 +138,6 @@ const Home = () => {
       <CookieNotice />
       <div className="top">
         <picture>
-          <source srcSet="/CHP_4173.avif" type="image/avif" />
-          <source srcSet="/CHP_4173.webp" type="image/webp" />
           <img
             src="/CHP_4173.jpg"
             alt="KMITL CE Building"
