@@ -2,47 +2,42 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import styles from "../css/sliderhome.module.css";
 import { api } from "../api";
 
-// --- helpers: normalize payload ---
+// แปลง payload จาก API -> [{src, alt}]
 function normalizeFromApi(data, { roomCode = "" } = {}) {
   const raw = Array.isArray(data)
     ? data
     : Array.isArray(data?.items)
-      ? data.items
-      : Array.isArray(data?.data)
-        ? data.data
-        : [];
+    ? data.items
+    : Array.isArray(data?.data)
+    ? data.data
+    : [];
 
   return raw
     .map((it, i) => {
       if (typeof it === "string") return { src: it, alt: `${roomCode} • ${i + 1}` };
       const src = it?.url || it?.src || it?.imageUrl || it?.path || "";
       const alt = it?.alt || it?.caption || it?.label || `${roomCode} • ${i + 1}`;
-      // รองรับ width/height ถ้ามีจาก backend (กัน CLS ดียิ่งขึ้น)
-      const width = it?.width ? Number(it.width) : undefined;
-      const height = it?.height ? Number(it.height) : undefined;
-      return src ? { src, alt, width, height } : null;
+      return src ? { src, alt } : null;
     })
     .filter(Boolean);
 }
+
 function normalizeImagesProp(images = [], { roomCode = "" } = {}) {
   return images.map((it, i) =>
     typeof it === "string" ? { src: it, alt: `${roomCode} • ${i + 1}` } : it
   );
 }
 
-// --- main component ---
 const Sliderhome = ({
   images = ["./E113_1.jpg", "./E113_2.jpg", "./E113_3.jpg", "./E113_4.jpg"],
   details = [],
-  fetchPath,       // เช่น "/api/rooms/E113/images" -> ดึงจาก DB
+  fetchPath,        // เช่น "/api/rooms/E113/images" -> ดึงจาก DB
   fetchQuery = {},
   roomCode,
   interval = 2500,
   rounded = true,
   statusByRoom = {},
   showStatus = true,
-  /** อัตราส่วนรูปเพื่อกัน CLS ถ้า backend ไม่ส่ง width/height มา */
-  aspect = "16 / 9",
 }) => {
   const [idx, setIdx] = useState(0);
   const [expanded, setExpanded] = useState(false);
@@ -55,10 +50,8 @@ const Sliderhome = ({
   const timerRef = useRef(null);
   const hoveringRef = useRef(false);
   const touchingRef = useRef(false);
-  const wrapperRef = useRef(null);
-  const visibleRef = useRef(true);
 
-  // โหลดภาพจาก API (ถ้ามี)
+  // ✅ โหลด “จาก Database ผ่าน API” เท่านั้น
   useEffect(() => {
     let mounted = true;
     if (!fetchPath) return;
@@ -86,7 +79,7 @@ const Sliderhome = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchPath, JSON.stringify(fetchQuery), roomCode]);
 
-  // ไม่มี fetchPath -> ใช้ props
+  // ถ้าไม่มี fetchPath ก็ใช้ props images ตามเดิม
   useEffect(() => {
     if (!fetchPath) {
       setItems(normalizeImagesProp(images, { roomCode: roomCode || "" }));
@@ -97,7 +90,6 @@ const Sliderhome = ({
   const len = items.length;
   const safeIdx = (i) => ((i % len) + len) % len;
 
-  // รายละเอียดของการ์ดปัจจุบัน
   const info = useMemo(() => {
     const d = details[safeIdx(idx)] || {};
     return {
@@ -119,12 +111,11 @@ const Sliderhome = ({
     unknown: "Unknown",
   };
 
-  // --- autoplay: หยุดเมื่อ mouse hover / touch / expanded / ไม่มองเห็น / แท็บไม่โฟกัส
   const start = () => {
     stop();
     if (len <= 1) return;
     timerRef.current = setInterval(() => {
-      if (!hoveringRef.current && !touchingRef.current && !expanded && visibleRef.current && !document.hidden) {
+      if (!hoveringRef.current && !touchingRef.current && !expanded) {
         setIdx((p) => (p + 1) % len);
       }
     }, interval);
@@ -133,35 +124,8 @@ const Sliderhome = ({
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = null;
   };
+
   useEffect(() => { start(); return stop; }, [interval, expanded, len]); // eslint-disable-line
-
-  // สังเกตการณ์ viewport เพื่อหยุด/เล่น autoplay
-  useEffect(() => {
-    if (!wrapperRef.current) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        visibleRef.current = entries[0]?.isIntersecting ?? true;
-      },
-      { root: null, threshold: 0.15 }
-    );
-    io.observe(wrapperRef.current);
-    const onVis = () => { }; // แค่ reference เพื่อถ้าจะต่อยอด
-    document.addEventListener("visibilitychange", onVis);
-    return () => {
-      io.disconnect();
-      document.removeEventListener("visibilitychange", onVis);
-    };
-  }, []);
-
-  // Preload สไลด์ถัดไปไว้ใน cache ให้สลับนิ่มขึ้น
-  useEffect(() => {
-    if (len <= 1) return;
-    const next = items[safeIdx(idx + 1)];
-    if (!next?.src) return;
-    const img = new Image();
-    img.decoding = "async";
-    img.src = next.src;
-  }, [idx, len, items]);
 
   const onMouseEnter = () => (hoveringRef.current = true);
   const onMouseLeave = () => (hoveringRef.current = false);
@@ -173,18 +137,9 @@ const Sliderhome = ({
 
   if (!len && !loading) return null;
 
-  // utility: สร้าง srcSet/sizes อย่างปลอดภัย (ถ้าไม่มี CDN ก็คืนค่าปกติ)
-  const buildSrcSet = (src) => {
-    // ถ้ามี query รูปแบบ ?w= ใช้แตกขนาดเอง; ถ้าไม่มี ก็ปล่อย src เดียว
-    if (!src || /\?w=/.test(src)) return undefined;
-    return undefined;
-  };
-  const sizes = "(max-width: 640px) 88vw, (max-width: 1024px) 40vw, 300px";
-
   return (
     <div
       className={styles.wrapper}
-      ref={wrapperRef}
       tabIndex={0}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -200,7 +155,7 @@ const Sliderhome = ({
           role="button"
           aria-label="Open image details"
         >
-          <div className={styles.singleStage} style={{ aspectRatio: aspect }}>
+          <div className={styles.singleStage}>
             {loading && <div className={styles.skeleton}>กำลังโหลดรูป…</div>}
             {!loading && err && (
               <div className={styles.error} role="alert">
@@ -208,28 +163,16 @@ const Sliderhome = ({
               </div>
             )}
 
-            {items.map((it, i) => {
-              const isActive = i === idx;
-              // รูปที่แสดงอยู่: eager + fetchPriority สูงสุด (ช่วย LCP ของการ์ดแรก)
-              const eagerProps = isActive
-                ? { loading: "eager", fetchPriority: "high" }
-                : { loading: "lazy", fetchPriority: "auto" };
-
-              return (
-                <img
-                  key={`${it.src}-${i}`}
-                  src={it.src}
-                  alt={it.alt || `slide ${i + 1}`}
-                  width={it.width}
-                  height={it.height}
-                  srcSet={buildSrcSet(it.src)}
-                  sizes={sizes}
-                  className={`${styles.singleImage} ${isActive ? styles.active : ""}`}
-                  decoding="async"
-                  {...eagerProps}
-                />
-              );
-            })}
+            {items.map((it, i) => (
+              <img
+                key={`${it.src}-${i}`}
+                src={it.src}
+                alt={it.alt || `slide ${i + 1}`}
+                className={`${styles.singleImage} ${i === idx ? styles.active : ""}`}
+                loading="lazy"
+                decoding="async"
+              />
+            ))}
 
             {showStatus && (
               <div
@@ -267,29 +210,17 @@ const Sliderhome = ({
           onKeyDown={(e) => { if (e.key === "Escape") closeExpanded(); }}
         >
           <div
-            className={styles.expandedCard}
+            className={`${styles.expandedCard} ${rounded ? styles.rounded : ""}`}
             role="document"
-            onClick={(e) => e.stopPropagation()} // กันคลิกภายใน card ไหลไป backdrop
+            onClick={(e) => e.stopPropagation()}      // กันคลิกภายใน card ไหลไป backdrop
           >
             <div className={styles.split}>
               <div
                 className={styles.media}
-                style={{ aspectRatio: aspect }}
-                onClick={(e) => e.stopPropagation()}     // กันคลิกบนรูปไหลไปปิด
+                onClick={(e) => e.stopPropagation()}   // กันคลิกบนรูปไหลไปปิด
                 onDoubleClick={(e) => e.preventDefault()} // กัน double-tap ยิง click ซ้ำบนมือถือ
               >
-                {!!len && (
-                  <img
-                    src={items[idx]?.src}
-                    alt={items[idx]?.alt || info.title}
-                    width={items[idx]?.width}
-                    height={items[idx]?.height}
-                    decoding="async"
-                    loading="eager"
-                    fetchPriority="high"
-                  />
-                )}
-
+                {!!len && <img src={items[idx]?.src} alt={items[idx]?.alt || info.title} />}
                 {showStatus && (
                   <div
                     className={`${styles.statusBadge} ${styles[`st_${roomStatus}`]} ${styles.statusOnMedia}`}
@@ -310,10 +241,8 @@ const Sliderhome = ({
                   <h3 className={styles.infoTitle}>{info.title}</h3>
                   <button className={styles.closeBtn} onClick={closeExpanded} aria-label="Close">✕</button>
                 </div>
-
                 <p className={styles.infoDesc}>{info.description}</p>
                 {info.extra && <div className={styles.infoExtra}>{info.extra}</div>}
-
                 {len > 1 && (
                   <div className={styles.expandedNav}>
                     <button onClick={() => setIdx((p) => safeIdx(p - 1))} aria-label="Previous">‹</button>
@@ -325,16 +254,13 @@ const Sliderhome = ({
             </div>
           </div>
 
-          {/* คลิก “ฉากหลัง” เท่านั้นถึงจะปิด */}
+          {/* คลิก “ฉากหลังจริง ๆ” เท่านั้นถึงจะปิด */}
           <div
             className={styles.backdrop}
-            onClick={(e) => {
-              if (e.currentTarget === e.target) closeExpanded();
-            }}
+            onClick={(e) => { if (e.currentTarget === e.target) closeExpanded(); }}
           />
         </div>
       )}
-
     </div>
   );
 };
