@@ -145,16 +145,7 @@ const Home = () => {
       <div className="top">
         <picture>
           {/* ให้ใส่ไฟล์จริงใน public: /CHP_4173.avif, /CHP_4173.webp, /CHP_4173.jpg */}
-          <source
-            type="image/avif"
-            srcSet="/CHP_4173.avif 1920w, /CHP_4173-1280.avif 1280w, /CHP_4173-768.avif 768w"
-            sizes={HERO_SIZES}
-          />
-          <source
-            type="image/webp"
-            srcSet="/CHP_4173.webp 1920w, /CHP_4173-1280.webp 1280w, /CHP_4173-768.webp 768w"
-            sizes={HERO_SIZES}
-          />
+
           <img
             src="/CHP_4173.jpg"
             srcSet="/CHP_4173.jpg 1920w, /CHP_4173-1280.jpg 1280w, /CHP_4173-768.jpg 768w"
