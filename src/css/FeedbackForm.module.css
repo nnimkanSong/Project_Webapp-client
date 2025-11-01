@@ -196,3 +196,24 @@
   background-color: #48331A;
   color: white;
 }
+/* ดาวให้คะแนน (รองรับปุ่ม + SVG) */
+.starRating {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-start;
+  margin-top: 4px;
+}
+
+.star {
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  line-height: 1;
+  color: #d9d9d9;   /* สีดาวปกติ */
+  transition: color .2s;
+}
+
+.star.filled {
+  color: #ffd104;   /* สีดาวเมื่อเลือก/hover */
+}

@@ -1,9 +1,27 @@
+// FeedbackForm.jsx
 import React, { useState, useRef, useEffect } from "react";
 import Swal from "sweetalert2";
 import styles from "../css/FeedbackForm.module.css";
 import { api } from "../feedback_api";
 
 const roomOptions = ["B317", "E107", "E111", "E113"];
+
+// ✅ ไอคอนดาวแบบ SVG (ไม่ง้อ CDN/Font Awesome)
+const Star = ({ filled }) => (
+  <svg
+    width="28"
+    height="28"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+    focusable="false"
+    fill={filled ? "currentColor" : "none"}
+    stroke="currentColor"
+    strokeWidth="1.6"
+    style={{ display: "inline-block", verticalAlign: "middle" }}
+  >
+    <path d="M12 3.6l2.63 5.33 5.89.86-4.26 4.15 1 5.84L12 17.9 6.74 19.8l1.01-5.84L3.5 9.79l5.87-.86L12 3.6z" />
+  </svg>
+);
 
 const FeedbackForm = () => {
   const [studentNumber, setStudentNumber] = useState("");
@@ -15,7 +33,7 @@ const FeedbackForm = () => {
   const [equipment, setEquipment] = useState("");
   const dropdownRef = useRef(null);
 
-  // 🔹 ปิด dropdown เมื่อคลิกข้างนอก
+  // ปิด dropdown เมื่อคลิกข้างนอก
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -26,14 +44,13 @@ const FeedbackForm = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ ดึงข้อมูล student_number + room จาก backend โดยใช้ token ใน cookie
+  // ดึงข้อมูล student_number + room จาก backend โดยใช้ token ใน cookie
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await api.get("/api/bookings/latest"); // ✅ token อยู่ใน cookie แล้ว
-        console.log("Fetched data:", res.data);
-        setStudentNumber(res.data.studentNumber || "");
-        setSelectedRoom(res.data.room || "");
+        const res = await api.get("/api/bookings/latest");
+        setStudentNumber(res.data?.studentNumber || "");
+        setSelectedRoom(res.data?.room || "");
       } catch (err) {
         console.error("Error fetching:", err.response?.data || err.message);
         Swal.fire("Error", "ไม่สามารถโหลดข้อมูลได้", "error");
@@ -90,9 +107,7 @@ const FeedbackForm = () => {
               <div className={styles.dropdownSelected}>
                 {selectedRoom || "Select a room"}
                 <i
-                  className={`fa-solid ${
-                    dropdownOpen ? "fa-angle-up" : "fa-angle-down"
-                  } ${styles.dropdownArrow}`}
+                  className={`fa-solid ${dropdownOpen ? "fa-angle-up" : "fa-angle-down"} ${styles.dropdownArrow}`}
                 ></i>
               </div>
               {dropdownOpen && (
@@ -128,18 +143,19 @@ const FeedbackForm = () => {
             <div className={styles.starRating}>
               {[...Array(5)].map((_, i) => {
                 const starValue = i + 1;
+                const isFilled = starValue <= (hover || rating);
                 return (
-                  <span
+                  <button
+                    type="button"
                     key={starValue}
-                    className={`${styles.star} ${
-                      starValue <= (hover || rating) ? styles.filled : ""
-                    }`}
+                    className={`${styles.star} ${isFilled ? styles.filled : ""}`}
                     onClick={() => setRating(starValue)}
                     onMouseEnter={() => setHover(starValue)}
                     onMouseLeave={() => setHover(0)}
+                    aria-label={`ให้คะแนน ${starValue} ดาว`}
                   >
-                    <i className="fa-solid fa-star"></i>
-                  </span>
+                    <Star filled={isFilled} />
+                  </button>
                 );
               })}
             </div>
