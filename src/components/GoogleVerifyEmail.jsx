@@ -1,7 +1,7 @@
-// src/components/GoogleVerifyEmail.jsx
 import React, { useEffect, useRef } from "react";
 import Swal from "sweetalert2";
 import axios from "axios";
+import { loadGoogleSDK } from "../lib/loadGoogleSDK";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -19,50 +19,50 @@ export default function GoogleVerifyEmail({ expectedEmail, onVerified, disabled 
     emailRef.current = (expectedEmail || "").trim();
   }, [expectedEmail]);
 
-  useEffect(() => {
-    if (inited.current) return;
+  async function ensureGISReady() {
+    if (window.google?.accounts?.id) return true;
+    await loadGoogleSDK();
+    return !!window.google?.accounts?.id;
+  }
 
-    const timer = setInterval(() => {
-      if (!btnRef.current) return;
-      if (window.google && CLIENT_ID) {
-        clearInterval(timer);
-        inited.current = true;
+  function initGISIfNeeded() {
+    if (inited.current) return true;
+    if (!CLIENT_ID || !window.google?.accounts?.id) return false;
 
-        window.google.accounts.id.initialize({
-          client_id: CLIENT_ID,
-          callback: handleCredentialResponse,
-          ux_mode: "popup",
-        });
+    window.google.accounts.id.initialize({
+      client_id: CLIENT_ID,
+      callback: handleCredentialResponse,
+      ux_mode: "popup",
+    });
 
-        window.google.accounts.id.renderButton(btnRef.current, {
-          theme: "outline",
-          size: "large",
-          text: "signin_with",
-          shape: "pill",
-          width: 320,
-        });
+    if (btnRef.current) {
+      window.google.accounts.id.renderButton(btnRef.current, {
+        theme: "outline",
+        size: "large",
+        text: "signin_with",
+        shape: "pill",
+        width: 320,
+      });
+      btnRef.current.style.display = "none";
+    }
 
-        btnRef.current.style.display = "none"; // ซ่อนปุ่มจริงของ GIS
-      }
-    }, 100);
-
-    return () => clearInterval(timer);
-  }, []);
+    inited.current = true;
+    return true;
+  }
 
   async function handleCredentialResponse(response) {
-    const fromRef = emailRef.current;
-    const fromDom = (document.querySelector('input[name="email"]')?.value || "").trim();
-    const currentEmail = (fromRef || fromDom).toLowerCase();
+    const email =
+      (emailRef.current || document.querySelector('input[name="email"]')?.value || "").trim().toLowerCase();
 
     if (!response?.credential) {
       await Swal.fire({ icon: "error", title: "Verify failed", text: "ไม่พบ credential จาก Google" });
       return;
     }
-    if (!currentEmail) {
+    if (!email) {
       await Swal.fire({ icon: "info", title: "กรอกอีเมลก่อน", text: "โปรดกรอกอีเมล @kmitl.ac.th ก่อนกดยืนยัน" });
       return;
     }
-    if (!isKMITLEmail(currentEmail)) {
+    if (!isKMITLEmail(email)) {
       await Swal.fire({ icon: "warning", title: "อีเมลไม่ถูกต้อง", text: "รองรับเฉพาะโดเมน @kmitl.ac.th" });
       return;
     }
@@ -76,7 +76,7 @@ export default function GoogleVerifyEmail({ expectedEmail, onVerified, disabled 
 
       const { data } = await axios.post(
         `${BASE_URL}/api/auth/verify-google-email`,
-        { credential: response.credential, expectedEmail: currentEmail },
+        { credential: response.credential, expectedEmail: email },
         { withCredentials: true }
       );
 
@@ -94,11 +94,10 @@ export default function GoogleVerifyEmail({ expectedEmail, onVerified, disabled 
     }
   }
 
-  // ✅ ใหม่: เช็คก่อน ถ้า verified แล้ว ข้าม Google ได้เลย
   const precheckAndTrigger = async () => {
     if (disabled) return;
-
     const email = (emailRef.current || "").toLowerCase().trim();
+
     if (!email) {
       await Swal.fire({ icon: "info", title: "กรอกอีเมลก่อน", text: "โปรดกรอกอีเมล @kmitl.ac.th" });
       return;
@@ -114,31 +113,29 @@ export default function GoogleVerifyEmail({ expectedEmail, onVerified, disabled 
         await Swal.fire({
           icon: "success",
           title: "อีเมลนี้ยืนยันไว้แล้ว",
-          text: "คุณสามารถเข้าสู่ระบบได้เลย",
+          text: "สามารถเข้าสู่ระบบได้เลย",
           timer: 1200,
           showConfirmButton: false,
         });
         onVerified?.(data);
-        return; // ข้าม popup Google
+        return;
       }
-    } catch (e) {
-      // เงียบไว้ก็ได้ (ไม่ critical) หรือจะแจ้งเตือนก็ได้
+    } catch {}
+
+    const ok = await ensureGISReady();
+    if (!ok || !initGISIfNeeded()) {
+      await Swal.fire({ icon: "error", title: "Google not ready", text: "กรุณาลองใหม่อีกครั้ง" });
+      return;
     }
 
-    // ยังไม่ verified → เรียกปุ่ม GIS จริง
     const realBtn = btnRef.current?.querySelector("div[role=button]");
     if (realBtn) realBtn.click();
-    else {
-      await Swal.fire({ icon: "error", title: "Google not ready", text: "กำลังโหลด Google… กรุณาลองใหม่อีกครั้ง" });
-    }
+    else await Swal.fire({ icon: "error", title: "Google not ready", text: "กรุณาลองใหม่อีกครั้ง" });
   };
 
   return (
     <div style={{ textAlign: "center", width: "100%" }}>
-      {/* ปุ่มจริงของ GIS (ซ่อน) */}
       <div ref={btnRef} />
-
-      {/* ปุ่ม custom UI เดิม */}
       <button
         type="button"
         onClick={precheckAndTrigger}
@@ -160,7 +157,6 @@ export default function GoogleVerifyEmail({ expectedEmail, onVerified, disabled 
           transition: "0.2s",
           margin: "0 auto",
         }}
-        title={disabled ? "กรอกอีเมลก่อน" : undefined}
       >
         <img
           src="/google_logo.png"
