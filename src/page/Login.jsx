@@ -22,12 +22,12 @@ function isKMITLEmail(email) {
 // ==== Inline SVGs (แทน Font Awesome) ====
 const Eye = ({ size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-    <path fill="currentColor" d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-2.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/>
+    <path fill="currentColor" d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-2.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
   </svg>
 );
 const EyeOff = ({ size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-    <path fill="currentColor" d="M2.1 3.51 3.5 2.1l18.4 18.39-1.41 1.41-3.13-3.13A13.5 13.5 0 0 1 12 19c-7 0-10-7-10-7a18.3 18.3 0 0 1 4.23-5.46L2.1 3.5Zm6.9 6.9a3 3 0 0 0 4.24 4.24l-4.24-4.24ZM12 5c7 0 10 7 10 7a18.5 18.5 0 0 1-3.76 4.94l-1.44-1.44A12 12 0 0 0 20 12s-3-6-8-6c-1.23 0-2.34.28-3.33.72L7.12 5.17A10.6 10.6 0 0 1 12 5Z"/>
+    <path fill="currentColor" d="M2.1 3.51 3.5 2.1l18.4 18.39-1.41 1.41-3.13-3.13A13.5 13.5 0 0 1 12 19c-7 0-10-7-10-7a18.3 18.3 0 0 1 4.23-5.46L2.1 3.5Zm6.9 6.9a3 3 0 0 0 4.24 4.24l-4.24-4.24ZM12 5c7 0 10 7 10 7a18.5 18.5 0 0 1-3.76 4.94l-1.44-1.44A12 12 0 0 0 20 12s-3-6-8-6c-1.23 0-2.34.28-3.33.72L7.12 5.17A10.6 10.6 0 0 1 12 5Z" />
   </svg>
 );
 
@@ -275,6 +275,7 @@ const Login = ({ setAuth }) => {
 
   const handleForgot = async () => {
     if (fpCooldown > 0) return;
+
     const emailStep = await Swal.fire({
       title: "ลืมรหัสผ่าน",
       input: "email",
@@ -290,14 +291,27 @@ const Login = ({ setAuth }) => {
       preConfirm: async (val) => {
         const email = String(val || "").trim().toLowerCase();
         if (!email) return Swal.showValidationMessage("กรุณากรอกอีเมล");
-        if (!isKMITLEmail(email)) return Swal.showValidationMessage("กรุณาใช้อีเมลโดเมน @kmitl.ac.th");
+        if (!isKMITLEmail(email))
+          return Swal.showValidationMessage("กรุณาใช้อีเมลโดเมน @kmitl.ac.th");
+
         try {
+          // ✅ ขั้นตอนใหม่: ตรวจว่ามี user ในระบบหรือไม่
+          const check = await axios.get(
+            `${BASE_URL}/api/auth/check-email?email=${encodeURIComponent(email)}`
+          );
+          if (!check.data?.emailVerified && !check.data?.verificationMethod) {
+            Swal.showValidationMessage("ไม่พบบัญชีผู้ใช้ในระบบนี้");
+            return false;
+          }
+
+          // ถ้ามี → ส่งคำขอ forgot-password ต่อได้เลย
           await axios.post(`${BASE_URL}/api/auth/forgot-password`, { email });
           return email;
         } catch (err) {
-          const msg = err?.response?.status === 429
-            ? "ส่งคำขอบ่อยเกินไป กรุณาลองใหม่ภายหลัง"
-            : err?.response?.data?.error || "ส่งคำขอล้มเหลว";
+          const msg =
+            err?.response?.status === 429
+              ? "ส่งคำขอบ่อยเกินไป กรุณาลองใหม่ภายหลัง"
+              : err?.response?.data?.error || "ส่งคำขอล้มเหลว";
           Swal.showValidationMessage(msg);
         }
       },
@@ -314,6 +328,7 @@ const Login = ({ setAuth }) => {
     if (verified.token) params.set("token", verified.token);
     navigate(`/reset-password?${params.toString()}`);
   };
+
 
   return (
     <div className="login-bg">
