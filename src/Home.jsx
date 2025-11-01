@@ -20,6 +20,7 @@ const Home = () => {
     new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   );
 
+  // สำหรับทำ animation เมื่อค่าตัวเลขมีการเปลี่ยน
   const [changed, setChanged] = useState({
     total: false,
     avail: false,
@@ -27,6 +28,7 @@ const Home = () => {
     reno: false,
   });
 
+  // เก็บค่าเดิมไว้เปรียบเทียบ
   const prevRef = useRef(stat);
 
   useEffect(() => {
@@ -44,6 +46,7 @@ const Home = () => {
           breakdown: data.breakdown ?? [],
         };
 
+        // เช็คการเปลี่ยนแปลงเพื่อใส่คลาสกระพริบ/เด้ง
         const prev = prevRef.current;
         setChanged({
           total: prev.totalRooms !== next.totalRooms,
@@ -62,6 +65,7 @@ const Home = () => {
           })
         );
 
+        // เอา animation ออกภายใน 800ms
         setTimeout(() => {
           setChanged({ total: false, avail: false, inuse: false, reno: false });
         }, 800);
@@ -78,11 +82,13 @@ const Home = () => {
     };
   }, []);
 
-  // ✅ สร้าง map สถานะห้อง
+  // ✅ แปลง breakdown เป็น map: { E107:'in-use', E111:'available', ... }
   const statusByRoom = useMemo(() => {
     const map = {};
     (stat.breakdown || []).forEach((b) => {
-      const code = String(b.room || "").trim().toUpperCase();
+      const code = String(b.room || "")
+        .trim()
+        .toUpperCase();
       map[code] = b.status; // 'available' | 'in-use' | 'renovation'
     });
     return map;
@@ -108,28 +114,36 @@ const Home = () => {
 
         <div className="field">
           <div className="label">All</div>
-          <div className={`stat-num sub0 ${changed.total ? "bump updated" : ""}`}>
+          <div
+            className={`stat-num sub0 ${changed.total ? "bump updated" : ""}`}
+          >
             {stat.totalRooms}
           </div>
         </div>
 
         <div className="field">
           <div className="label">Available</div>
-          <div className={`stat-num sub1 ${changed.avail ? "bump updated" : ""}`}>
+          <div
+            className={`stat-num sub1 ${changed.avail ? "bump updated" : ""}`}
+          >
             {stat.available}
           </div>
         </div>
 
         <div className="field">
           <div className="label">In Use</div>
-          <div className={`stat-num sub2 ${changed.inuse ? "bump updated" : ""}`}>
+          <div
+            className={`stat-num sub2 ${changed.inuse ? "bump updated" : ""}`}
+          >
             {stat.inUse}
           </div>
         </div>
 
         <div className="field">
           <div className="label">Renovation</div>
-          <div className={`stat-num sub3 ${changed.reno ? "bump updated" : ""}`}>
+          <div
+            className={`stat-num sub3 ${changed.reno ? "bump updated" : ""}`}
+          >
             {stat.renovation}
           </div>
         </div>
@@ -146,7 +160,7 @@ const Home = () => {
         {/* E107 */}
         <Sliderhome
           roomCode="E107"
-          fetchPath="/api/rooms/E107/images"
+          fetchPath="/api/rooms/E107/images" // ← ดึงจาก DB
           details={[
             {
               title: "Laboratory",
@@ -158,10 +172,11 @@ const Home = () => {
                   <li>ความจุ: 30 คน</li>
                   <li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>โปรเจคเตอร์</li>
-                    <li>แอร์</li>
-                    <li>อุปกรณ์ทำแลป</li>
-                  </ul>
+                  <li>โปรเจคเตอร์</li>
+                  <li>แอร์</li>
+                  <li>อุปกรณ์ทำแลป</li>
+
+                </ul>
                 </ul>
               ),
             },
@@ -175,10 +190,11 @@ const Home = () => {
                   <li>ความจุ: 30 คน</li>
                   <li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>โปรเจคเตอร์</li>
-                    <li>แอร์</li>
-                    <li>อุปกรณ์ทำแลป</li>
-                  </ul>
+                  <li>โปรเจคเตอร์</li>
+                  <li>แอร์</li>
+                  <li>อุปกรณ์ทำแลป</li>
+
+                </ul>
                 </ul>
               ),
             },
@@ -192,10 +208,11 @@ const Home = () => {
                   <li>ความจุ: 30 คน</li>
                   <li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>โปรเจคเตอร์</li>
-                    <li>แอร์</li>
-                    <li>อุปกรณ์ทำแลป</li>
-                  </ul>
+                  <li>โปรเจคเตอร์</li>
+                  <li>แอร์</li>
+                  <li>อุปกรณ์ทำแลป</li>
+
+                </ul>
                 </ul>
               ),
             },
@@ -209,10 +226,11 @@ const Home = () => {
                   <li>ความจุ: 30 คน</li>
                   <li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>โปรเจคเตอร์</li>
-                    <li>แอร์</li>
-                    <li>อุปกรณ์ทำแลป</li>
-                  </ul>
+                  <li>โปรเจคเตอร์</li>
+                  <li>แอร์</li>
+                  <li>อุปกรณ์ทำแลป</li>
+
+                </ul>
                 </ul>
               ),
             },
@@ -226,10 +244,11 @@ const Home = () => {
                   <li>ความจุ: 30 คน</li>
                   <li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>โปรเจคเตอร์</li>
-                    <li>แอร์</li>
-                    <li>อุปกรณ์ทำแลป</li>
-                  </ul>
+                  <li>โปรเจคเตอร์</li>
+                  <li>แอร์</li>
+                  <li>อุปกรณ์ทำแลป</li>
+
+                </ul>
                 </ul>
               ),
             },
@@ -243,10 +262,11 @@ const Home = () => {
                   <li>ความจุ: 30 คน</li>
                   <li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>โปรเจคเตอร์</li>
-                    <li>แอร์</li>
-                    <li>อุปกรณ์ทำแลป</li>
-                  </ul>
+                  <li>โปรเจคเตอร์</li>
+                  <li>แอร์</li>
+                  <li>อุปกรณ์ทำแลป</li>
+
+                </ul>
                 </ul>
               ),
             },
@@ -260,7 +280,7 @@ const Home = () => {
         {/* E111 */}
         <Sliderhome
           roomCode="E111"
-          fetchPath="/api/rooms/E111/images"
+          fetchPath="/api/rooms/E111/images" // ← ดึงจาก DB
           details={[
             {
               title: "Meeting",
@@ -272,11 +292,11 @@ const Home = () => {
                   <li>ความจุ: 40 คน</li>
                   <li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>โปรเจคเตอร์</li>
-                    <li>แอร์</li>
-                    <li>white board</li>
-                    <li>working space</li>
-                  </ul>
+                  <li>โปรเจคเตอร์</li>
+                  <li>แอร์</li>
+                  <li>white board</li>
+                  <li>working space</li>
+                </ul>
                 </ul>
               ),
             },
@@ -290,11 +310,11 @@ const Home = () => {
                   <li>ความจุ: 40 คน</li>
                   <li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>โปรเจคเตอร์</li>
-                    <li>แอร์</li>
-                    <li>white board</li>
-                    <li>working space</li>
-                  </ul>
+                  <li>โปรเจคเตอร์</li>
+                  <li>แอร์</li>
+                  <li>white board</li>
+                  <li>working space</li>
+                </ul>
                 </ul>
               ),
             },
@@ -308,11 +328,11 @@ const Home = () => {
                   <li>ความจุ: 40 คน</li>
                   <li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>โปรเจคเตอร์</li>
-                    <li>แอร์</li>
-                    <li>white board</li>
-                    <li>working space</li>
-                  </ul>
+                  <li>โปรเจคเตอร์</li>
+                  <li>แอร์</li>
+                  <li>white board</li>
+                  <li>working space</li>
+                </ul>
                 </ul>
               ),
             },
@@ -326,11 +346,11 @@ const Home = () => {
                   <li>ความจุ: 40 คน</li>
                   <li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>โปรเจคเตอร์</li>
-                    <li>แอร์</li>
-                    <li>white board</li>
-                    <li>working space</li>
-                  </ul>
+                  <li>โปรเจคเตอร์</li>
+                  <li>แอร์</li>
+                  <li>white board</li>
+                  <li>working space</li>
+                </ul>
                 </ul>
               ),
             },
@@ -343,7 +363,7 @@ const Home = () => {
         {/* E113 */}
         <Sliderhome
           roomCode="E113"
-          fetchPath="/api/rooms/E113/images"
+          fetchPath="/api/rooms/E113/images" // ← ดึงจาก DB
           details={[
             {
               title: "Computer Club",
@@ -355,11 +375,11 @@ const Home = () => {
                   <li>ความจุ: 30 คน</li>
                   <li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>TV</li>
-                    <li>แอร์</li>
-                    <li>3D Printer</li>
-                    <li>working space</li>
-                  </ul>
+                  <li>TV</li>
+                  <li>แอร์</li>
+                  <li>3D Printer</li>
+                  <li>working space</li>
+                </ul>
                 </ul>
               ),
             },
@@ -373,11 +393,11 @@ const Home = () => {
                   <li>ความจุ: 30 คน</li>
                   <li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>TV</li>
-                    <li>แอร์</li>
-                    <li>3D Printer</li>
-                    <li>working space</li>
-                  </ul>
+                  <li>TV</li>
+                  <li>แอร์</li>
+                  <li>3D Printer</li>
+                  <li>working space</li>
+                </ul>
                 </ul>
               ),
             },
@@ -391,11 +411,11 @@ const Home = () => {
                   <li>ความจุ: 30 คน</li>
                   <li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>TV</li>
-                    <li>แอร์</li>
-                    <li>3D Printer</li>
-                    <li>working space</li>
-                  </ul>
+                  <li>TV</li>
+                  <li>แอร์</li>
+                  <li>3D Printer</li>
+                  <li>working space</li>
+                </ul>
                 </ul>
               ),
             },
@@ -409,11 +429,11 @@ const Home = () => {
                   <li>ความจุ: 30 คน</li>
                   <li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>TV</li>
-                    <li>แอร์</li>
-                    <li>3D Printer</li>
-                    <li>working space</li>
-                  </ul>
+                  <li>TV</li>
+                  <li>แอร์</li>
+                  <li>3D Printer</li>
+                  <li>working space</li>
+                </ul>
                 </ul>
               ),
             },
@@ -427,11 +447,11 @@ const Home = () => {
                   <li>ความจุ: 30 คน</li>
                   <li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>TV</li>
-                    <li>แอร์</li>
-                    <li>3D Printer</li>
-                    <li>working space</li>
-                  </ul>
+                  <li>TV</li>
+                  <li>แอร์</li>
+                  <li>3D Printer</li>
+                  <li>working space</li>
+                </ul>
                 </ul>
               ),
             },
@@ -458,10 +478,10 @@ const Home = () => {
                   <li>ความจุ: 50 คน</li>
                   <li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ตู้ Server</li>
-                    <li>แอร์</li>
-                    <li>อุปกรณ์ Network</li>
-                  </ul>
+                  <li>ตู้ Server</li>
+                  <li>แอร์</li>
+                  <li>อุปกรณ์ Network</li>
+                </ul>
                 </ul>
               ),
             },
@@ -475,10 +495,10 @@ const Home = () => {
                   <li>ความจุ: 50 คน</li>
                   <li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ตู้ Server</li>
-                    <li>แอร์</li>
-                    <li>อุปกรณ์ Network</li>
-                  </ul>
+                  <li>ตู้ Server</li>
+                  <li>แอร์</li>
+                  <li>อุปกรณ์ Network</li>
+                </ul>
                 </ul>
               ),
             },
@@ -492,10 +512,10 @@ const Home = () => {
                   <li>ความจุ: 50 คน</li>
                   <li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ตู้ Server</li>
-                    <li>แอร์</li>
-                    <li>อุปกรณ์ Network</li>
-                  </ul>
+                  <li>ตู้ Server</li>
+                  <li>แอร์</li>
+                  <li>อุปกรณ์ Network</li>
+                </ul>
                 </ul>
               ),
             },
@@ -509,10 +529,10 @@ const Home = () => {
                   <li>ความจุ: 50 คน</li>
                   <li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ตู้ Server</li>
-                    <li>แอร์</li>
-                    <li>อุปกรณ์ Network</li>
-                  </ul>
+                  <li>ตู้ Server</li>
+                  <li>แอร์</li>
+                  <li>อุปกรณ์ Network</li>
+                </ul>
                 </ul>
               ),
             },
