@@ -38,7 +38,38 @@ const Home = () => {
 
   // เก็บค่าเดิมไว้เปรียบเทียบ
   const prevRef = useRef(stat);
+  useEffect(() => {
+    // --- กำหนด URL ให้ 'ตรงกับ <img> hero' เป๊ะ ---
+    const href = "/CHP_4173.jpg"; // ถ้าคุณเปลี่ยน <img src> ต้องเปลี่ยนให้ตรงกันตรงนี้ด้วย
 
+    // ป้องกันซ้ำ
+    const EXISTING_ID = "preload-hero-chp-4173";
+    if (document.getElementById(EXISTING_ID)) return;
+
+    const link = document.createElement("link");
+    link.id = EXISTING_ID;
+    link.rel = "preload";
+    link.as = "image";
+    link.href = href;
+
+    // ถ้าไฟล์อยู่ข้ามโดเมนค่อยใส่ crossorigin
+    // link.crossOrigin = "anonymous";
+
+    // (ทางเลือก) ถ้าอยากทำ responsive preload ให้ใส่ imagesrcset/imagesizes
+    // หมายเหตุ: ต้อง "ตรงกับ" srcset/sizes ที่ <img> ใช้จริง ไม่งั้นจะยังเตือน
+    // link.setAttribute("imagesrcset", [
+    //   "/CHP_4173-768.jpg 768w",
+    //   "/CHP_4173-1280.jpg 1280w",
+    //   "/CHP_4173.jpg 1920w",
+    // ].join(", "));
+    // link.setAttribute("imagesizes", "(max-width: 768px) 100vw, 1280px");
+
+    document.head.appendChild(link);
+
+    return () => {
+      link.remove(); // cleanup ตอนออกจากหน้านี้
+    };
+  }, []);
   // ดึงสถานะห้องเป็นระยะ ๆ (หยุดเมื่อแท็บไม่โฟกัส)
   useEffect(() => {
     let mounted = true;
