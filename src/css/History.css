@@ -6,6 +6,7 @@
   justify-content: center;
   align-items: flex-start;
   padding: 24px;
+  margin: 30px auto;
   /* เดิมมี height คงที่ -> เอาออกเพื่อให้ยืดตามเนื้อหา */
 }
 
