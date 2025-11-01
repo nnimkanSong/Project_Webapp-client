@@ -7,10 +7,10 @@ function normalizeFromApi(data, { roomCode = "" } = {}) {
   const raw = Array.isArray(data)
     ? data
     : Array.isArray(data?.items)
-    ? data.items
-    : Array.isArray(data?.data)
-    ? data.data
-    : [];
+      ? data.items
+      : Array.isArray(data?.data)
+        ? data.data
+        : [];
 
   return raw
     .map((it, i) => {
@@ -145,7 +145,7 @@ const Sliderhome = ({
       { root: null, threshold: 0.15 }
     );
     io.observe(wrapperRef.current);
-    const onVis = () => {}; // แค่ reference เพื่อถ้าจะต่อยอด
+    const onVis = () => { }; // แค่ reference เพื่อถ้าจะต่อยอด
     document.addEventListener("visibilitychange", onVis);
     return () => {
       io.disconnect();
@@ -258,10 +258,26 @@ const Sliderhome = ({
       )}
 
       {expanded && (
-        <div className={styles.expandedOverlay} role="dialog" aria-modal="true" aria-label="Image detail">
-          <div className={`${styles.expandedCard} ${rounded ? styles.rounded : ""}`}>
+        <div
+          className={styles.expandedOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image detail"
+          tabIndex={-1}
+          onKeyDown={(e) => { if (e.key === "Escape") closeExpanded(); }}
+        >
+          <div
+            className={styles.expandedCard}
+            role="document"
+            onClick={(e) => e.stopPropagation()} // กันคลิกภายใน card ไหลไป backdrop
+          >
             <div className={styles.split}>
-              <div className={styles.media} onClick={closeExpanded} style={{ aspectRatio: aspect }}>
+              <div
+                className={styles.media}
+                style={{ aspectRatio: aspect }}
+                onClick={(e) => e.stopPropagation()}     // กันคลิกบนรูปไหลไปปิด
+                onDoubleClick={(e) => e.preventDefault()} // กัน double-tap ยิง click ซ้ำบนมือถือ
+              >
                 {!!len && (
                   <img
                     src={items[idx]?.src}
@@ -273,6 +289,7 @@ const Sliderhome = ({
                     fetchPriority="high"
                   />
                 )}
+
                 {showStatus && (
                   <div
                     className={`${styles.statusBadge} ${styles[`st_${roomStatus}`]} ${styles.statusOnMedia}`}
@@ -287,13 +304,16 @@ const Sliderhome = ({
                   </div>
                 )}
               </div>
+
               <aside className={styles.info}>
                 <div className={styles.infoHeader}>
                   <h3 className={styles.infoTitle}>{info.title}</h3>
                   <button className={styles.closeBtn} onClick={closeExpanded} aria-label="Close">✕</button>
                 </div>
+
                 <p className={styles.infoDesc}>{info.description}</p>
                 {info.extra && <div className={styles.infoExtra}>{info.extra}</div>}
+
                 {len > 1 && (
                   <div className={styles.expandedNav}>
                     <button onClick={() => setIdx((p) => safeIdx(p - 1))} aria-label="Previous">‹</button>
@@ -304,9 +324,17 @@ const Sliderhome = ({
               </aside>
             </div>
           </div>
-          <div className={styles.backdrop} onClick={closeExpanded} />
+
+          {/* คลิก “ฉากหลัง” เท่านั้นถึงจะปิด */}
+          <div
+            className={styles.backdrop}
+            onClick={(e) => {
+              if (e.currentTarget === e.target) closeExpanded();
+            }}
+          />
         </div>
       )}
+
     </div>
   );
 };

@@ -226,3 +226,17 @@
   .st_in-use .dot,
   .st_renovation .dot { animation: none !important; }
 }
+
+/* ให้ซูมแล้วเลื่อนรูปได้ และไม่บล็อก pinch-zoom */
+.media {
+  position: relative;
+  background: #000;
+  cursor: zoom-out;
+  contain: paint;
+  overflow: auto;
+  touch-action: pan-x pan-y;
+}
+
+/* กันเคสคลิกทะลุ */
+.expandedCard { pointer-events: auto; }
+.backdrop     { pointer-events: auto; }
