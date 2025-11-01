@@ -28,27 +28,9 @@ const Home = () => {
     reno: false,
   });
 
-  // เก็บค่าเดิมไว้เปรียบเทียบ + กัน re-render เกินจำเป็น
+
   const prevRef = useRef(stat);
 
-  // ✅ Preload HERO เพื่อ LCP เร็วขึ้น (เฉพาะ CHP_4173.jpg)
-  useEffect(() => {
-    const HREF = "/CHP_4173.jpg";
-    const ID = "preload-hero-chp-4173";
-    if (document.getElementById(ID)) return;
-    const link = document.createElement("link");
-    link.id = ID;
-    link.rel = "preload";
-    link.as = "image";
-    link.href = HREF;
-    document.head.appendChild(link);
-    return () => link.remove();
-  }, []);
-
-  // ✅ ดึงสถานะ + ทำให้เร็วขึ้น:
-  // - หยุด poll เมื่อแท็บไม่โฟกัส
-  // - กัน request ซ้อนด้วย AbortController + inFlight guard
-  // - อัปเดต state เฉพาะเมื่อมี diff จริง ๆ
   useEffect(() => {
     let mounted = true;
     let timerId = null;
