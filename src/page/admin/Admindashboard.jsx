@@ -7,7 +7,7 @@ import { ResponsivePie } from "@nivo/pie";
 import { ResponsiveLine } from "@nivo/line";
 import { ResponsiveBar } from "@nivo/bar";
 import { api } from "../../api";
-
+import { useNonZeroSize } from "../../lib/useNonZeroSize"; // ✅ เพิ่มฮุคเช็คขนาด
 
 const KPI = ({ icon, title, value, sub, tone = "blue" }) => (
   <div className={`kpi kpi-${tone} card-premium`}>
@@ -25,19 +25,29 @@ const KPI = ({ icon, title, value, sub, tone = "blue" }) => (
 );
 
 const MyPie = ({ data = [] }) => {
-  const total = useMemo(() => data.reduce((s, d) => s + (d?.value || 0), 0) || 1, [data]);
+  const [ref, ready] = useNonZeroSize();
+  const clean = (Array.isArray(data) ? data : [])
+    .filter(d => Number.isFinite(+d?.value))
+    .map(d => ({ id: String(d?.id ?? "Unknown"), label: String(d?.label ?? d?.id ?? "Unknown"), value: +d.value }));
+
+  const total = useMemo(() => clean.reduce((s, d) => s + d.value, 0) || 1, [clean]);
+
+  // รอกล่องมีขนาด + มีข้อมูลก่อน
+  if (!ready || clean.length === 0) return <div className="pieBox" ref={ref} />;
+
   return (
-    <div className="pieBox">
+    <div className="pieBox" ref={ref}>
       <ResponsivePie
-        data={data}
+        data={clean}
         margin={{ top: 20, right: 24, bottom: 40, left: 24 }}
         innerRadius={0.62}
         padAngle={0.7}
         cornerRadius={9}
         activeOuterRadiusOffset={10}
         colors={({ id }) => (id === "Active" ? "#3B82F6" : "#D4E2F4")}
-        arcLabel={(d) => `${Math.round(((d.value || 0) / total) * 100)}%`}
+        arcLabel={(d) => `${Math.round((d.value / total) * 100)}%`}
         arcLabelsSkipAngle={8}
+        enableArcLinkLabels={false} // กัน layout เพี้ยนตอนเริ่ม
         arcLabelsTextColor={{ from: "color", modifiers: [["darker", 2.2]] }}
         legends={[
           { anchor: "bottom", direction: "row", translateY: 30, itemWidth: 100, itemHeight: 16, symbolSize: 10 }
@@ -45,7 +55,7 @@ const MyPie = ({ data = [] }) => {
         theme={{
           labels: { text: { fontSize: 12 } },
           legends: { text: { fontSize: 12 } },
-          tooltip: { container: { fontSize: 13, } }
+          tooltip: { container: { fontSize: 13 } }
         }}
       />
     </div>
@@ -53,11 +63,19 @@ const MyPie = ({ data = [] }) => {
 };
 
 const MyPieRooms = ({ data = [] }) => {
+  const [ref, ready] = useNonZeroSize();
   const palette = ["#3B82F6", "#22C55E", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4"];
+
+  const clean = (Array.isArray(data) ? data : [])
+    .filter(d => Number.isFinite(+d?.value))
+    .map(d => ({ id: String(d?.id ?? "Unknown"), label: String(d?.label ?? d?.id ?? "Unknown"), value: +d.value }));
+
+  if (!ready || clean.length === 0) return <div className="pieBox" ref={ref} />;
+
   return (
-    <div className="pieBox">
+    <div className="pieBox" ref={ref}>
       <ResponsivePie
-        data={data}
+        data={clean}
         margin={{ top: 20, right: 24, bottom: 40, left: 24 }}
         innerRadius={0.58}
         padAngle={0.7}
@@ -65,6 +83,7 @@ const MyPieRooms = ({ data = [] }) => {
         activeOuterRadiusOffset={12}
         colors={palette}
         arcLabelsSkipAngle={10}
+        enableArcLinkLabels={false}
         arcLabelsTextColor={{ from: "color", modifiers: [["darker", 2.2]] }}
         legends={[
           { anchor: "bottom", direction: "row", translateY: 30, itemWidth: 80, itemHeight: 16, symbolSize: 10 }
@@ -75,23 +94,22 @@ const MyPieRooms = ({ data = [] }) => {
 };
 
 const MyTimeSeriesChart = ({ series = [], mode = "line" }) => {
+  const [ref, ready] = useNonZeroSize();
   const palette = ["#2563EB", "#16A34A", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4"];
 
-  // ทำความสะอาด + ติดสี
+  // sanitize + ติดสี
   const safeSeries = (Array.isArray(series) ? series : []).map((s, i) => ({
     id: s?.id ?? `Series ${i + 1}`,
     color: palette[i % palette.length],
-    data: (s?.data ?? []).map((p) => ({
-      x: p?.x ?? "",
-      y: Number.isFinite(p?.y) ? p.y : 0,
-    })),
+    data: (s?.data ?? [])
+      .filter(p => p?.x != null)                                 // ต้องมี x
+      .map(p => ({ x: String(p.x), y: Number.isFinite(+p.y) ? +p.y : 0 })),
   }));
 
-  if (!safeSeries.length || !safeSeries.some((s) => s.data?.length)) {
-    return <div className="empty-graph">No data</div>;
-  }
+  const hasData = safeSeries.some(s => s.data?.length);
+  if (!ready || !hasData) return <div className="lineBox" ref={ref} />;
 
-  // แปลงข้อมูลสำหรับ Bar: [{month:'Jan', A:10, B:5}, ...]
+  // สำหรับ Bar: [{month:'Jan', ...}]
   const barIndex = "month";
   const barKeys = safeSeries.map((s) => s.id);
   const allX = Array.from(new Set(safeSeries.flatMap((s) => s.data.map((d) => d.x))));
@@ -116,9 +134,8 @@ const MyTimeSeriesChart = ({ series = [], mode = "line" }) => {
     tooltip: { container: { fontSize: 12 } },
   };
 
-
   return (
-    <div className="lineBox" style={{ height: 340 }}>
+    <div className="lineBox" ref={ref} style={{ height: 340 }}>
       {mode === "bar" ? (
         <ResponsiveBar
           data={barData}
@@ -168,7 +185,6 @@ const MyTimeSeriesChart = ({ series = [], mode = "line" }) => {
             <div
               className="nivo-tip premium-tip"
               style={{
-                width: "max-content",
                 background: "#fff",
                 padding: "8px 10px",
                 border: "1px solid #e5e7eb",
@@ -292,22 +308,17 @@ const RecentTable = ({ rows = [] }) => (
         <tbody>
           {rows.map(r => {
             const raw = String(r.status || "").toLowerCase();
-
-            // map คีย์เวิร์ดจาก BE เป็นคลาสที่เราสตางไว้
             const statusClass = raw.includes("pending")
               ? "pending"
               : raw.includes("cancel")
-                ? "cancelled"     // รวม cancel/canceled/cancelled
+                ? "cancelled"
                 : raw.includes("active") || raw.includes("success") || raw.includes("approve")
                   ? "approved"
-                  : "pending";      // default เผื่อกรณีไม่รู้จัก
-
-            // label สวย ๆ
+                  : "pending";
             const label =
               statusClass === "approved" ? "active" :
-                statusClass === "cancelled" ? "cancel" :
-                  "pending";
-
+              statusClass === "cancelled" ? "cancel" :
+              "pending";
             return (
               <tr key={r.id}>
                 <td>{r.id}</td>
@@ -320,7 +331,6 @@ const RecentTable = ({ rows = [] }) => (
             );
           })}
         </tbody>
-
       </table>
     </div>
   </div>
@@ -427,10 +437,8 @@ export default function Admin_dashboard() {
             </div>
           </div>
 
-          {/* ใช้คอมโพเนนต์ใหม่ */}
           <MyTimeSeriesChart series={series} mode={chartMode} />
         </div>
-
       </div>
 
       {/* Pie row */}
