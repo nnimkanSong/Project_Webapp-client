@@ -139,10 +139,10 @@ const Home = () => {
       <div className="top">
         <picture>
           {/* แนะนำวางไฟล์ใน public/images แล้วใช้ path แบบด้านล่าง */}
-          <source srcSet="/images/CHP_4173.avif" type="image/avif" />
-          <source srcSet="/images/CHP_4173.webp" type="image/webp" />
+          <source srcSet="/public/CHP_4173.avif" type="image/avif" />
+          <source srcSet="/public/CHP_4173.webp" type="image/webp" />
           <img
-            src="/images/CHP_4173.jpg"
+            src="/public/CHP_4173.jpg"
             alt="KMITL CE Building"
             width="1920"
             height="1080"
@@ -224,36 +224,46 @@ const Home = () => {
                   </ul>
                 ),
               },
-              { title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107",
+              {
+                title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107",
                 extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
                   <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
                     <li>โปรเจคเตอร์</li><li>แอร์</li><li>อุปกรณ์ทำแลป</li>
-                  </ul></ul>) },
-              { title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107",
+                  </ul></ul>)
+              },
+              {
+                title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107",
                 extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
                   <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
                     <li>โปรเจคเตอร์</li><li>แอร์</li><li>อุปกรณ์ทำแลป</li>
-                  </ul></ul>) },
-              { title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107",
+                  </ul></ul>)
+              },
+              {
+                title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107",
                 extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
                   <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
                     <li>โปรเจคเตอร์</li><li>แอร์</li><li>อุปกรณ์ทำแลป</li>
-                  </ul></ul>) },
-              { title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107",
+                  </ul></ul>)
+              },
+              {
+                title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107",
                 extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
                   <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
                     <li>โปรเจคเตอร์</li><li>แอร์</li><li>อุปกรณ์ทำแลป</li>
-                  </ul></ul>) },
-              { title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107",
+                  </ul></ul>)
+              },
+              {
+                title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107",
                 extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
                   <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
                     <li>โปรเจคเตอร์</li><li>แอร์</li><li>อุปกรณ์ทำแลป</li>
-                  </ul></ul>) },
+                  </ul></ul>)
+              },
             ]}
             interval={2400}
             rounded
@@ -281,24 +291,30 @@ const Home = () => {
                   </ul>
                 ),
               },
-              { title: "Meeting", subtitle: "Computer Engineering", price: "E111", room: "E111",
+              {
+                title: "Meeting", subtitle: "Computer Engineering", price: "E111", room: "E111",
                 extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
                   <li>ความจุ: 40 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
                     <li>โปรเจคเตอร์</li><li>แอร์</li><li>white board</li><li>working space</li>
-                  </ul></ul>) },
-              { title: "Meeting", subtitle: "Computer Engineering", price: "E111", room: "E111",
+                  </ul></ul>)
+              },
+              {
+                title: "Meeting", subtitle: "Computer Engineering", price: "E111", room: "E111",
                 extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
                   <li>ความจุ: 40 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
                     <li>โปรเจคเตอร์</li><li>แอร์</li><li>white board</li><li>working space</li>
-                  </ul></ul>) },
-              { title: "Meeting", subtitle: "Computer Engineering", price: "E111", room: "E111",
+                  </ul></ul>)
+              },
+              {
+                title: "Meeting", subtitle: "Computer Engineering", price: "E111", room: "E111",
                 extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
                   <li>ความจุ: 40 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
                     <li>โปรเจคเตอร์</li><li>แอร์</li><li>white board</li><li>working space</li>
-                  </ul></ul>) },
+                  </ul></ul>)
+              },
             ]}
             interval={3200}
             statusByRoom={statusByRoom}
@@ -325,30 +341,38 @@ const Home = () => {
                   </ul>
                 ),
               },
-              { title: "Computer Club", subtitle: "Computer Engineering", price: "E113", room: "E113",
+              {
+                title: "Computer Club", subtitle: "Computer Engineering", price: "E113", room: "E113",
                 extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
                   <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
                     <li>TV</li><li>แอร์</li><li>3D Printer</li><li>working space</li>
-                  </ul></ul>) },
-              { title: "Computer Club", subtitle: "Computer Engineering", price: "E113", room: "E113",
+                  </ul></ul>)
+              },
+              {
+                title: "Computer Club", subtitle: "Computer Engineering", price: "E113", room: "E113",
                 extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
                   <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
                     <li>TV</li><li>แอร์</li><li>3D Printer</li><li>working space</li>
-                  </ul></ul>) },
-              { title: "Computer Club", subtitle: "Computer Engineering", price: "E113", room: "E113",
+                  </ul></ul>)
+              },
+              {
+                title: "Computer Club", subtitle: "Computer Engineering", price: "E113", room: "E113",
                 extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
                   <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
                     <li>TV</li><li>แอร์</li><li>3D Printer</li><li>working space</li>
-                  </ul></ul>) },
-              { title: "Computer Club", subtitle: "Computer Engineering", price: "E113", room: "E113",
+                  </ul></ul>)
+              },
+              {
+                title: "Computer Club", subtitle: "Computer Engineering", price: "E113", room: "E113",
                 extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
                   <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
                     <li>TV</li><li>แอร์</li><li>3D Printer</li><li>working space</li>
-                  </ul></ul>) },
+                  </ul></ul>)
+              },
             ]}
             interval={2000}
             rounded={false}
@@ -377,24 +401,30 @@ const Home = () => {
                   </ul>
                 ),
               },
-              { title: "Server", subtitle: "Computer Engineering", price: "B317", room: "B317",
+              {
+                title: "Server", subtitle: "Computer Engineering", price: "B317", room: "B317",
                 extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
                   <li>ความจุ: 50 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
                     <li>ตู้ Server</li><li>แอร์</li><li>อุปกรณ์ Network</li>
-                  </ul></ul>) },
-              { title: "Server", subtitle: "Computer Engineering", price: "B317", room: "B317",
+                  </ul></ul>)
+              },
+              {
+                title: "Server", subtitle: "Computer Engineering", price: "B317", room: "B317",
                 extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
                   <li>ความจุ: 50 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
                     <li>ตู้ Server</li><li>แอร์</li><li>อุปกรณ์ Network</li>
-                  </ul></ul>) },
-              { title: "Server", subtitle: "Computer Engineering", price: "B317", room: "B317",
+                  </ul></ul>)
+              },
+              {
+                title: "Server", subtitle: "Computer Engineering", price: "B317", room: "B317",
                 extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
                   <li>ความจุ: 50 คน</li><li>อุปกรณ์</li>
                   <ul style={{ margin: 0, paddingLeft: "1rem" }}>
                     <li>ตู้ Server</li><li>แอร์</li><li>อุปกรณ์ Network</li>
-                  </ul></ul>) },
+                  </ul></ul>)
+              },
             ]}
           />
         </Suspense>
