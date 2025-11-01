@@ -263,7 +263,7 @@ const Profile = () => {
             )}
           </div>
 
-          <div className="ap-label">Student ID :</div>
+          <div className="ap-label">ID :</div>
           <div className="ap-value">
             <b>{user.studentNumber || "-"}</b>
           </div>
