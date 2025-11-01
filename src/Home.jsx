@@ -9,7 +9,6 @@ import React, {
 } from "react";
 import { Link } from "react-router-dom";
 import "./Home.css";
-// lazy โหลดเพื่อลด bundle แรก
 const Sliderhome = lazy(() => import("./components/Sliderhome"));
 import { api } from "./api";
 import { Clock } from "lucide-react";
@@ -28,7 +27,6 @@ const Home = () => {
     new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   );
 
-  // สำหรับทำ animation เมื่อค่าตัวเลขมีการเปลี่ยน
   const [changed, setChanged] = useState({
     total: false,
     avail: false,
@@ -36,41 +34,47 @@ const Home = () => {
     reno: false,
   });
 
-  // เก็บค่าเดิมไว้เปรียบเทียบ
   const prevRef = useRef(stat);
-  useEffect(() => {
-    // --- กำหนด URL ให้ 'ตรงกับ <img> hero' เป๊ะ ---
-    const href = "/CHP_4173.jpg"; // ถ้าคุณเปลี่ยน <img src> ต้องเปลี่ยนให้ตรงกันตรงนี้ด้วย
 
-    // ป้องกันซ้ำ
+  // ✅ ปรับระบบ preload ปลอดภัย ไม่เตือนอีก
+  useEffect(() => {
+    const href = "/CHP_4173.jpg";
     const EXISTING_ID = "preload-hero-chp-4173";
+
     if (document.getElementById(EXISTING_ID)) return;
 
+    const afterWindowLoad = document.readyState === "complete";
     const link = document.createElement("link");
     link.id = EXISTING_ID;
-    link.rel = "preload";
+    link.rel = afterWindowLoad ? "prefetch" : "preload";
     link.as = "image";
     link.href = href;
 
-    // ถ้าไฟล์อยู่ข้ามโดเมนค่อยใส่ crossorigin
-    // link.crossOrigin = "anonymous";
-
-    // (ทางเลือก) ถ้าอยากทำ responsive preload ให้ใส่ imagesrcset/imagesizes
-    // หมายเหตุ: ต้อง "ตรงกับ" srcset/sizes ที่ <img> ใช้จริง ไม่งั้นจะยังเตือน
-    // link.setAttribute("imagesrcset", [
-    //   "/CHP_4173-768.jpg 768w",
-    //   "/CHP_4173-1280.jpg 1280w",
-    //   "/CHP_4173.jpg 1920w",
-    // ].join(", "));
-    // link.setAttribute("imagesizes", "(max-width: 768px) 100vw, 1280px");
-
     document.head.appendChild(link);
 
+    // ถ้าโหลดเสร็จแล้วแต่ภาพยังไม่ถูกใช้ → ลดชั้นเป็น prefetch
+    let demoteTimer;
+    const demote = () => {
+      if (!document.getElementById(EXISTING_ID)) return;
+      demoteTimer = window.setTimeout(() => {
+        try {
+          if (link.rel === "preload") link.rel = "prefetch";
+        } catch {}
+      }, 4000);
+    };
+
+    if (!afterWindowLoad) {
+      window.addEventListener("load", demote, { once: true });
+    }
+
     return () => {
-      link.remove(); // cleanup ตอนออกจากหน้านี้
+      window.removeEventListener("load", demote);
+      if (demoteTimer) clearTimeout(demoteTimer);
+      link.remove();
     };
   }, []);
-  // ดึงสถานะห้องเป็นระยะ ๆ (หยุดเมื่อแท็บไม่โฟกัส)
+
+  // ✅ โหลดสถานะห้อง
   useEffect(() => {
     let mounted = true;
     let timerId;
@@ -91,7 +95,6 @@ const Home = () => {
           breakdown: data.breakdown ?? [],
         };
 
-        // เช็ค diff เพื่อลด re-render ที่ไม่จำเป็น
         const prev = prevRef.current;
         if (
           prev.totalRooms !== next.totalRooms ||
@@ -108,15 +111,23 @@ const Home = () => {
           });
           setStat(next);
           prevRef.current = next;
-
-          // เอา animation ออกภายใน 800ms
-          setTimeout(() => {
-            setChanged({ total: false, avail: false, inuse: false, reno: false });
-          }, 800);
+          setTimeout(
+            () =>
+              setChanged({
+                total: false,
+                avail: false,
+                inuse: false,
+                reno: false,
+              }),
+            800
+          );
         }
 
         setNowText(
-          new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+          new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
         );
       } catch (err) {
         if (err?.name !== "CanceledError" && err?.name !== "AbortError") {
@@ -125,10 +136,7 @@ const Home = () => {
       }
     };
 
-    // เริ่มโหลดทันที
     load();
-
-    // poll เมื่อแท็บโฟกัสเท่านั้น
     const startPolling = () => {
       if (timerId) return;
       timerId = setInterval(load, 30000);
@@ -137,13 +145,12 @@ const Home = () => {
       if (timerId) clearInterval(timerId);
       timerId = null;
     };
-
     const onVis = () => {
       if (document.visibilityState === "visible") startPolling();
       else stopPolling();
     };
     document.addEventListener("visibilitychange", onVis);
-    onVis(); // ตั้งต้นตามสถานะปัจจุบัน
+    onVis();
 
     return () => {
       mounted = false;
@@ -153,19 +160,17 @@ const Home = () => {
     };
   }, []);
 
-  // ✅ แปลง breakdown เป็น map: { E107:'in-use', E111:'available', ... }
   const statusByRoom = useMemo(() => {
     const map = {};
     (stat.breakdown || []).forEach((b) => {
       const code = String(b.room || "").trim().toUpperCase();
-      map[code] = b.status; // 'available' | 'in-use' | 'renovation'
+      map[code] = b.status;
     });
     return map;
   }, [stat.breakdown]);
 
   return (
     <div className="pg-home">
-      {/* HERO (LCP) */}
       <CookieNotice />
       <div className="top">
         <picture>
@@ -180,10 +185,9 @@ const Home = () => {
             className="hero-img"
           />
         </picture>
-
       </div>
 
-      {/* GLASS STATUS BAR */}
+      {/* STATUS BAR */}
       <div className="midle">
         <div className="field field-clock">
           <div className="label">
@@ -222,239 +226,41 @@ const Home = () => {
         </div>
       </div>
 
-      {/* SECTION TITLE */}
       <div className="able">
         <p>CE Rooms</p>
         <span className="able-underline" />
       </div>
 
-      {/* ROOM CARDS (lazy โหลด) */}
+      {/* ROOM CARDS */}
       <div className="end">
         <Suspense fallback={null}>
-          {/* E107 */}
           <Sliderhome
             roomCode="E107"
             fetchPath="/api/rooms/E107/images"
-            details={[
-              {
-                title: "Laboratory",
-                subtitle: "Computer Engineering",
-                price: "E107",
-                room: "E107",
-                extra: (
-                  <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ความจุ: 30 คน</li>
-                    <li>อุปกรณ์</li>
-                    <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>โปรเจคเตอร์</li>
-                      <li>แอร์</li>
-                      <li>อุปกรณ์ทำแลป</li>
-                    </ul>
-                  </ul>
-                ),
-              },
-              {
-                title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107",
-                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                  <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
-                  <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>โปรเจคเตอร์</li><li>แอร์</li><li>อุปกรณ์ทำแลป</li>
-                  </ul></ul>)
-              },
-              {
-                title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107",
-                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                  <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
-                  <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>โปรเจคเตอร์</li><li>แอร์</li><li>อุปกรณ์ทำแลป</li>
-                  </ul></ul>)
-              },
-              {
-                title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107",
-                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                  <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
-                  <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>โปรเจคเตอร์</li><li>แอร์</li><li>อุปกรณ์ทำแลป</li>
-                  </ul></ul>)
-              },
-              {
-                title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107",
-                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                  <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
-                  <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>โปรเจคเตอร์</li><li>แอร์</li><li>อุปกรณ์ทำแลป</li>
-                  </ul></ul>)
-              },
-              {
-                title: "Laboratory", subtitle: "Computer Engineering", price: "E107", room: "E107",
-                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                  <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
-                  <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>โปรเจคเตอร์</li><li>แอร์</li><li>อุปกรณ์ทำแลป</li>
-                  </ul></ul>)
-              },
-            ]}
             interval={2400}
             rounded
             statusByRoom={statusByRoom}
             showStatus
           />
-
-          {/* E111 */}
           <Sliderhome
             roomCode="E111"
             fetchPath="/api/rooms/E111/images"
-            details={[
-              {
-                title: "Meeting",
-                subtitle: "Computer Engineering",
-                price: "E111",
-                room: "E111",
-                extra: (
-                  <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ความจุ: 40 คน</li>
-                    <li>อุปกรณ์</li>
-                    <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>โปรเจคเตอร์</li><li>แอร์</li><li>white board</li><li>working space</li>
-                    </ul>
-                  </ul>
-                ),
-              },
-              {
-                title: "Meeting", subtitle: "Computer Engineering", price: "E111", room: "E111",
-                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                  <li>ความจุ: 40 คน</li><li>อุปกรณ์</li>
-                  <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>โปรเจคเตอร์</li><li>แอร์</li><li>white board</li><li>working space</li>
-                  </ul></ul>)
-              },
-              {
-                title: "Meeting", subtitle: "Computer Engineering", price: "E111", room: "E111",
-                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                  <li>ความจุ: 40 คน</li><li>อุปกรณ์</li>
-                  <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>โปรเจคเตอร์</li><li>แอร์</li><li>white board</li><li>working space</li>
-                  </ul></ul>)
-              },
-              {
-                title: "Meeting", subtitle: "Computer Engineering", price: "E111", room: "E111",
-                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                  <li>ความจุ: 40 คน</li><li>อุปกรณ์</li>
-                  <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>โปรเจคเตอร์</li><li>แอร์</li><li>white board</li><li>working space</li>
-                  </ul></ul>)
-              },
-            ]}
             interval={3200}
             statusByRoom={statusByRoom}
             showStatus
           />
-
-          {/* E113 */}
           <Sliderhome
             roomCode="E113"
             fetchPath="/api/rooms/E113/images"
-            details={[
-              {
-                title: "Computer Club",
-                subtitle: "Computer Engineering",
-                price: "E113",
-                room: "E113",
-                extra: (
-                  <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ความจุ: 30 คน</li>
-                    <li>อุปกรณ์</li>
-                    <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>TV</li><li>แอร์</li><li>3D Printer</li><li>working space</li>
-                    </ul>
-                  </ul>
-                ),
-              },
-              {
-                title: "Computer Club", subtitle: "Computer Engineering", price: "E113", room: "E113",
-                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                  <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
-                  <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>TV</li><li>แอร์</li><li>3D Printer</li><li>working space</li>
-                  </ul></ul>)
-              },
-              {
-                title: "Computer Club", subtitle: "Computer Engineering", price: "E113", room: "E113",
-                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                  <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
-                  <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>TV</li><li>แอร์</li><li>3D Printer</li><li>working space</li>
-                  </ul></ul>)
-              },
-              {
-                title: "Computer Club", subtitle: "Computer Engineering", price: "E113", room: "E113",
-                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                  <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
-                  <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>TV</li><li>แอร์</li><li>3D Printer</li><li>working space</li>
-                  </ul></ul>)
-              },
-              {
-                title: "Computer Club", subtitle: "Computer Engineering", price: "E113", room: "E113",
-                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                  <li>ความจุ: 30 คน</li><li>อุปกรณ์</li>
-                  <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>TV</li><li>แอร์</li><li>3D Printer</li><li>working space</li>
-                  </ul></ul>)
-              },
-            ]}
             interval={2000}
             rounded={false}
             statusByRoom={statusByRoom}
             showStatus
           />
-
-          {/* B317 */}
           <Sliderhome
             roomCode="B317"
             fetchPath="/api/rooms/B317/images"
             statusByRoom={statusByRoom}
-            details={[
-              {
-                title: "Server",
-                subtitle: "Computer Engineering",
-                price: "B317",
-                room: "B317",
-                extra: (
-                  <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ความจุ: 50 คน</li>
-                    <li>อุปกรณ์</li>
-                    <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                      <li>ตู้ Server</li><li>แอร์</li><li>อุปกรณ์ Network</li>
-                    </ul>
-                  </ul>
-                ),
-              },
-              {
-                title: "Server", subtitle: "Computer Engineering", price: "B317", room: "B317",
-                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                  <li>ความจุ: 50 คน</li><li>อุปกรณ์</li>
-                  <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ตู้ Server</li><li>แอร์</li><li>อุปกรณ์ Network</li>
-                  </ul></ul>)
-              },
-              {
-                title: "Server", subtitle: "Computer Engineering", price: "B317", room: "B317",
-                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                  <li>ความจุ: 50 คน</li><li>อุปกรณ์</li>
-                  <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ตู้ Server</li><li>แอร์</li><li>อุปกรณ์ Network</li>
-                  </ul></ul>)
-              },
-              {
-                title: "Server", subtitle: "Computer Engineering", price: "B317", room: "B317",
-                extra: (<ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                  <li>ความจุ: 50 คน</li><li>อุปกรณ์</li>
-                  <ul style={{ margin: 0, paddingLeft: "1rem" }}>
-                    <li>ตู้ Server</li><li>แอร์</li><li>อุปกรณ์ Network</li>
-                  </ul></ul>)
-              },
-            ]}
           />
         </Suspense>
       </div>
