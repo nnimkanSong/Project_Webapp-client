@@ -336,7 +336,7 @@ const Login = ({ setAuth }) => {
       <div className="box">
         <div className="rgb">
           <div className="logo">
-            <img src="/Heow.jpg" alt="Logo" />
+            <img src="/Heow2.png" alt="Logo" />
           </div>
 
           {/* Verify ด้วย Google */}
