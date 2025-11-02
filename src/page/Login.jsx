@@ -84,12 +84,6 @@ const Login = ({ setAuth }) => {
       typeof credential === "string"
         ? credential
         : credential?.credential || credential?.token || credential?.id_token;
-
-    if (!token) {
-      await Swal.fire({ icon: "error", title: "Verify ล้มเหลว", text: "ไม่พบ Google credential" });
-      return;
-    }
-
     try {
       await axios.post(`${BASE_URL}/api/auth/verify-google-email`,
         { expectedEmail: email, credential: token }
