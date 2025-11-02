@@ -187,7 +187,7 @@ const Profile = () => {
 
             <button
               className="btn reset"
-              onClick={() => (window.location.href = "/Forgot")}
+              onClick={() => (window.location.href = "/reset-password")}
               aria-label="Reset your password"
               title="Reset your password"
             >
